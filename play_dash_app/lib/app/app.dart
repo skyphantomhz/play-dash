@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../shared/widgets/app_shell.dart';
 import 'router/app_router.dart';
 import 'theme/app_theme.dart';
 
@@ -14,6 +15,9 @@ class PlayDashApp extends StatelessWidget {
       darkTheme: AppTheme.dark,
       themeMode: ThemeMode.dark,
       routerConfig: appRouter,
+      builder: (context, child) => AppBackdrop(
+        child: child ?? const SizedBox.shrink(),
+      ),
       debugShowCheckedModeBanner: false,
     );
   }

@@ -3,6 +3,22 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+class AppBackdrop extends StatelessWidget {
+  const AppBackdrop({required this.child, super.key});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        const Positioned.fill(child: _AppBackground()),
+        Positioned.fill(child: child),
+      ],
+    );
+  }
+}
+
 class AppShell extends StatelessWidget {
   const AppShell({
     required this.child,
@@ -32,54 +48,48 @@ class AppShell extends StatelessWidget {
     final isDesktop = width >= 1180;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF060816),
-      body: Stack(
-        children: [
-          const Positioned.fill(child: _AppBackground()),
-          SafeArea(
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1520),
-                child: Padding(
-                  padding: EdgeInsets.all(isDesktop ? 20 : 10),
-                  child: GlassPanel(
-                    radius: 28,
-                    blur: 26,
-                    background: Colors.white.withValues(alpha: 0.05),
-                    borderColor: Colors.white.withValues(alpha: 0.12),
-                    padding: EdgeInsets.all(isDesktop ? 14 : 8),
-                    child: isDesktop
-                        ? Row(
-                            children: [
-                              if (showDesktopSidebar) ...[
-                                const SizedBox(
-                                    width: 220, child: _DesktopSidebar()),
-                                const SizedBox(width: 16),
-                              ],
-                              Expanded(
-                                child: _ShellSurface(
-                                  desktopTopTabs: desktopTopTabs,
-                                  mobileTopTabs: mobileTopTabs,
-                                  showBottomNav: false,
-                                  expandChild: expandChild,
-                                  child: child,
-                                ),
-                              ),
-                            ],
-                          )
-                        : _ShellSurface(
-                            desktopTopTabs: desktopTopTabs,
-                            mobileTopTabs: mobileTopTabs,
-                            showBottomNav: showBottomNav,
-                            expandChild: expandChild,
-                            child: child,
+      backgroundColor: Colors.transparent,
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1520),
+            child: Padding(
+              padding: EdgeInsets.all(isDesktop ? 20 : 10),
+              child: GlassPanel(
+                radius: 28,
+                blur: 26,
+                background: Colors.white.withValues(alpha: 0.05),
+                borderColor: Colors.white.withValues(alpha: 0.12),
+                padding: EdgeInsets.all(isDesktop ? 14 : 8),
+                child: isDesktop
+                    ? Row(
+                        children: [
+                          if (showDesktopSidebar) ...[
+                            const SizedBox(width: 220, child: _DesktopSidebar()),
+                            const SizedBox(width: 16),
+                          ],
+                          Expanded(
+                            child: _ShellSurface(
+                              desktopTopTabs: desktopTopTabs,
+                              mobileTopTabs: mobileTopTabs,
+                              showBottomNav: false,
+                              expandChild: expandChild,
+                              child: child,
+                            ),
                           ),
-                  ),
-                ),
+                        ],
+                      )
+                    : _ShellSurface(
+                        desktopTopTabs: desktopTopTabs,
+                        mobileTopTabs: mobileTopTabs,
+                        showBottomNav: showBottomNav,
+                        expandChild: expandChild,
+                        child: child,
+                      ),
               ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }
