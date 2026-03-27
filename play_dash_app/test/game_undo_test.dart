@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:play_dash_app/features/cricket/application/cricket_controller.dart';
 import 'package:play_dash_app/features/x01/application/x01_controller.dart';
 import 'package:play_dash_app/shared/models/dart_throw.dart';
+import 'package:play_dash_app/shared/models/match_settings.dart';
 
 void main() {
   test('x01 undo restores score and current turn state', () {
@@ -14,14 +15,16 @@ void main() {
     controller.addThrow(const DartThrow(segment: 20, multiplier: 3));
 
     final afterThrow = container.read(x01ControllerProvider);
-    expect(afterThrow.game.scores['player-1'], 241);
+    final startingScore =
+        (afterThrow.settings as X01MatchSettings).startingScore;
+    expect(afterThrow.game.scores['player-1'], startingScore - 60);
     expect(afterThrow.game.currentTurnThrows, hasLength(1));
     expect(container.read(x01CanUndoProvider), isTrue);
 
     controller.undo();
 
     final undone = container.read(x01ControllerProvider);
-    expect(undone.game.scores['player-1'], 301);
+    expect(undone.game.scores['player-1'], startingScore);
     expect(undone.game.currentTurnThrows, isEmpty);
     expect(container.read(x01CanUndoProvider), isFalse);
   });

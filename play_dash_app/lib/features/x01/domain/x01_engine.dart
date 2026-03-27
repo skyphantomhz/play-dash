@@ -29,7 +29,8 @@ class X01Engine {
   }) {
     final countedThrows = <DartThrow>[];
     var score = currentScore;
-    var hasOpenedScoring = !settings.doubleIn || currentScore != settings.startingScore;
+    var hasOpenedScoring =
+        !settings.doubleIn || currentScore != settings.startingScore;
 
     for (final dartThrow in throws) {
       if (!hasOpenedScoring) {
@@ -104,8 +105,10 @@ class X01Engine {
     );
   }
 
-  static int _scoreFor(DartThrow dartThrow) => dartThrow.segment * dartThrow.multiplier;
+  static int _scoreFor(DartThrow dartThrow) =>
+      dartThrow.segment * dartThrow.multiplier;
 
   static bool _isDouble(DartThrow dartThrow) =>
-      dartThrow.multiplier == 2 || (dartThrow.segment == 25 && dartThrow.multiplier == 2);
+      dartThrow.multiplier == 2 ||
+      (dartThrow.segment == 25 && dartThrow.multiplier == 2);
 }

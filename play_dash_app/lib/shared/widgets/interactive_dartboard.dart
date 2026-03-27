@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../models/dart_throw.dart';
 
-class InteractiveDartboard extends StatelessWidget {
+class InteractiveDartboard extends StatefulWidget {
   const InteractiveDartboard({
     required this.onThrow,
     this.enabled = true,
@@ -38,121 +38,228 @@ class InteractiveDartboard extends StatelessWidget {
   ];
 
   @override
+  State<InteractiveDartboard> createState() => _InteractiveDartboardState();
+}
+
+class _InteractiveDartboardState extends State<InteractiveDartboard>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 520),
+  );
+
+  _BoardHit? _lastHit;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Tap the dartboard',
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
+        Text('Precision board', style: theme.textTheme.titleLarge),
         const SizedBox(height: 8),
         Text(
-          'The board detects singles, doubles, triples, bull, outer bull, and misses.',
-          style: Theme.of(context).textTheme.bodySmall,
+          'Tap any segment to register a dart. The last hit pulses and the exact region stays highlighted for quick confirmation.',
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
         ),
-        const SizedBox(height: 12),
-        AspectRatio(
-          aspectRatio: 1,
-          child: IgnorePointer(
-            ignoring: !enabled,
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final size = math.min(
-                  constraints.maxWidth,
-                  constraints.maxHeight,
-                );
+        const SizedBox(height: 16),
+        AnimatedBuilder(
+          animation: _controller,
+          builder: (context, child) {
+            final t = Curves.easeOutBack.transform(_controller.value);
+            final glowOpacity = (1 - _controller.value).clamp(0.0, 1.0);
 
-                return Center(
-                  child: Builder(
-                    builder: (boardContext) {
-                      return GestureDetector(
-                        behavior: HitTestBehavior.opaque,
-                        onTapUp: (details) {
-                          final box = boardContext.findRenderObject() as RenderBox?;
-                          if (box == null) {
-                            return;
-                          }
+            return Transform.scale(
+              scale: 1 + (0.02 * t),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: theme.colorScheme.primary.withValues(
+                        alpha: 0.26 * glowOpacity,
+                      ),
+                      blurRadius: 32 + (20 * t),
+                      spreadRadius: 2 + (5 * t),
+                    ),
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.26),
+                      blurRadius: 38,
+                      offset: const Offset(0, 20),
+                    ),
+                  ],
+                ),
+                child: child,
+              ),
+            );
+          },
+          child: AspectRatio(
+            aspectRatio: 1,
+            child: IgnorePointer(
+              ignoring: !widget.enabled,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final size = math.min(
+                    constraints.maxWidth,
+                    constraints.maxHeight,
+                  );
 
-                          final localPosition = box.globalToLocal(
-                            details.globalPosition,
-                          );
-                          final dartThrow = _throwForPosition(
-                            localPosition,
-                            Size(size, size),
-                          );
-                          onThrow(dartThrow);
-                        },
-                        child: SizedBox(
-                          width: size,
-                          height: size,
-                          child: CustomPaint(
-                            painter: _DartboardPainter(
-                              colorScheme: Theme.of(context).colorScheme,
-                              disabled: !enabled,
+                  return Center(
+                    child: Builder(
+                      builder: (boardContext) {
+                        return GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTapUp: (details) {
+                            final box =
+                                boardContext.findRenderObject() as RenderBox?;
+                            if (box == null) return;
+
+                            final localPosition =
+                                box.globalToLocal(details.globalPosition);
+                            final result = _throwForPosition(
+                                localPosition, Size(size, size));
+                            setState(() => _lastHit = result.hit);
+                            _controller
+                              ..reset()
+                              ..forward();
+                            widget.onThrow(result.dartThrow);
+                          },
+                          child: SizedBox(
+                            width: size,
+                            height: size,
+                            child: CustomPaint(
+                              painter: _DartboardPainter(
+                                colorScheme: theme.colorScheme,
+                                disabled: !widget.enabled,
+                                highlight: _lastHit,
+                                pulseValue: _controller.value,
+                              ),
                             ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
-                );
-              },
+                        );
+                      },
+                    ),
+                  );
+                },
+              ),
             ),
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: const [
-            _LegendChip(label: 'Single', color: Color(0xFF23262D)),
-            _LegendChip(label: 'Double', color: Color(0xFFB22222)),
-            _LegendChip(label: 'Triple', color: Color(0xFF2E8B57)),
-            _LegendChip(label: 'Outer Bull', color: Color(0xFF2E8B57)),
-            _LegendChip(label: 'Bull', color: Color(0xFFB22222)),
-            _LegendChip(label: 'Miss', color: Color(0xFF4A4F5A)),
+          spacing: 10,
+          runSpacing: 10,
+          children: [
+            const _LegendChip(label: 'Single', color: Color(0xFF213142)),
+            const _LegendChip(label: 'Double', color: Color(0xFFFF6B6B)),
+            const _LegendChip(label: 'Triple', color: Color(0xFF00C08B)),
+            const _LegendChip(label: 'Outer Bull', color: Color(0xFF00C08B)),
+            const _LegendChip(label: 'Bull', color: Color(0xFFFF6B6B)),
+            _LegendChip(
+              label: _lastHit == null
+                  ? 'Ready'
+                  : _formatThrow(_lastHit!.dartThrow),
+              color: theme.colorScheme.primary,
+            ),
           ],
         ),
       ],
     );
   }
 
-  DartThrow _throwForPosition(Offset position, Size size) {
+  _ThrowResult _throwForPosition(Offset position, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final dx = position.dx - center.dx;
     final dy = position.dy - center.dy;
     final radius = math.min(size.width, size.height) / 2;
-    final normalizedDistance = dx == 0 && dy == 0
-        ? 0.0
-        : math.sqrt((dx * dx) + (dy * dy)) / radius;
+    final normalizedDistance =
+        dx == 0 && dy == 0 ? 0.0 : math.sqrt((dx * dx) + (dy * dy)) / radius;
 
     if (normalizedDistance > 1) {
-      return const DartThrow(segment: 0, multiplier: 0);
+      const dartThrow = DartThrow(segment: 0, multiplier: 0);
+      return const _ThrowResult(
+        dartThrow: dartThrow,
+        hit: _BoardHit(segment: 0, multiplier: 0, ring: _BoardRing.miss),
+      );
     }
 
     if (normalizedDistance <= 0.05) {
-      return const DartThrow(segment: 25, multiplier: 2);
+      const dartThrow = DartThrow(segment: 25, multiplier: 2);
+      return const _ThrowResult(
+        dartThrow: dartThrow,
+        hit: _BoardHit(segment: 25, multiplier: 2, ring: _BoardRing.bull),
+      );
     }
 
     if (normalizedDistance <= 0.10) {
-      return const DartThrow(segment: 25, multiplier: 1);
+      const dartThrow = DartThrow(segment: 25, multiplier: 1);
+      return const _ThrowResult(
+        dartThrow: dartThrow,
+        hit: _BoardHit(segment: 25, multiplier: 1, ring: _BoardRing.outerBull),
+      );
     }
 
-    final angle = (math.atan2(dy, dx) + (math.pi / 2) + (2 * math.pi)) %
-        (2 * math.pi);
-    final wedge = (angle / (math.pi / 10)).floor() % _segmentOrder.length;
-    final segment = _segmentOrder[wedge];
+    final angle =
+        (math.atan2(dy, dx) + (math.pi / 2) + (2 * math.pi)) % (2 * math.pi);
+    final wedge = (angle / (math.pi / 10)).floor() %
+        InteractiveDartboard._segmentOrder.length;
+    final segment = InteractiveDartboard._segmentOrder[wedge];
 
     if (normalizedDistance >= 0.90) {
-      return DartThrow(segment: segment, multiplier: 2);
+      final dartThrow = DartThrow(segment: segment, multiplier: 2);
+      return _ThrowResult(
+        dartThrow: dartThrow,
+        hit:
+            _BoardHit(segment: segment, multiplier: 2, ring: _BoardRing.double),
+      );
     }
 
     if (normalizedDistance >= 0.54 && normalizedDistance <= 0.62) {
-      return DartThrow(segment: segment, multiplier: 3);
+      final dartThrow = DartThrow(segment: segment, multiplier: 3);
+      return _ThrowResult(
+        dartThrow: dartThrow,
+        hit:
+            _BoardHit(segment: segment, multiplier: 3, ring: _BoardRing.triple),
+      );
     }
 
-    return DartThrow(segment: segment, multiplier: 1);
+    final ring = normalizedDistance < 0.54
+        ? _BoardRing.innerSingle
+        : _BoardRing.outerSingle;
+    final dartThrow = DartThrow(segment: segment, multiplier: 1);
+    return _ThrowResult(
+      dartThrow: dartThrow,
+      hit: _BoardHit(segment: segment, multiplier: 1, ring: ring),
+    );
+  }
+
+  static String _formatThrow(DartThrow dartThrow) {
+    if (dartThrow.segment == 0 || dartThrow.multiplier == 0) {
+      return 'Miss';
+    }
+    if (dartThrow.segment == 25) {
+      return dartThrow.multiplier == 2 ? 'Bull' : 'Outer Bull';
+    }
+
+    switch (dartThrow.multiplier) {
+      case 1:
+        return 'S${dartThrow.segment}';
+      case 2:
+        return 'D${dartThrow.segment}';
+      case 3:
+        return 'T${dartThrow.segment}';
+      default:
+        return '${dartThrow.multiplier}x ${dartThrow.segment}';
+    }
   }
 }
 
@@ -165,8 +272,12 @@ class _LegendChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Chip(
-      avatar: CircleAvatar(backgroundColor: color, radius: 7),
+      avatar: CircleAvatar(backgroundColor: color, radius: 8),
       label: Text(label),
+      backgroundColor: Theme.of(context)
+          .colorScheme
+          .surfaceContainerHighest
+          .withValues(alpha: 0.76),
     );
   }
 }
@@ -175,10 +286,14 @@ class _DartboardPainter extends CustomPainter {
   const _DartboardPainter({
     required this.colorScheme,
     required this.disabled,
+    required this.highlight,
+    required this.pulseValue,
   });
 
   final ColorScheme colorScheme;
   final bool disabled;
+  final _BoardHit? highlight;
+  final double pulseValue;
 
   static const List<int> _segmentOrder = InteractiveDartboard._segmentOrder;
 
@@ -186,74 +301,131 @@ class _DartboardPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = math.min(size.width, size.height) / 2;
-    final overlayColor = disabled
-        ? colorScheme.surface.withValues(alpha: 0.45)
-        : Colors.transparent;
-
-    _drawWedgeRing(
-      canvas,
-      center,
-      radius,
-      innerFactor: 0.62,
-      outerFactor: 0.90,
-      evenColor: const Color(0xFFE8DCC8),
-      oddColor: const Color(0xFF23262D),
-    );
-    _drawWedgeRing(
-      canvas,
-      center,
-      radius,
-      innerFactor: 0.54,
-      outerFactor: 0.62,
-      evenColor: const Color(0xFF2E8B57),
-      oddColor: const Color(0xFFB22222),
-    );
-    _drawWedgeRing(
-      canvas,
-      center,
-      radius,
-      innerFactor: 0.10,
-      outerFactor: 0.54,
-      evenColor: const Color(0xFF23262D),
-      oddColor: const Color(0xFFE8DCC8),
-    );
-    _drawWedgeRing(
-      canvas,
-      center,
-      radius,
-      innerFactor: 0.90,
-      outerFactor: 1.0,
-      evenColor: const Color(0xFFB22222),
-      oddColor: const Color(0xFF2E8B57),
-    );
 
     canvas.drawCircle(
       center,
-      radius * 0.10,
-      Paint()..color = const Color(0xFF2E8B57),
+      radius,
+      Paint()
+        ..shader = RadialGradient(
+          colors: const [Color(0xFF34475F), Color(0xFF111824)],
+          stops: const [0.08, 1],
+        ).createShader(Rect.fromCircle(center: center, radius: radius)),
     );
-    canvas.drawCircle(
-      center,
-      radius * 0.05,
-      Paint()..color = const Color(0xFFB22222),
-    );
-
-    _drawSegmentLabels(canvas, center, radius);
 
     canvas.drawCircle(
       center,
       radius,
       Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 2
-        ..color = colorScheme.outlineVariant,
+        ..strokeWidth = radius * 0.035
+        ..shader = SweepGradient(
+          colors: [
+            Colors.white.withValues(alpha: 0.45),
+            Colors.transparent,
+            Colors.black.withValues(alpha: 0.35),
+            Colors.white.withValues(alpha: 0.18),
+          ],
+        ).createShader(Rect.fromCircle(center: center, radius: radius)),
     );
+
+    _drawWedgeRing(canvas, center, radius,
+        innerFactor: 0.62,
+        outerFactor: 0.90,
+        evenColor: const Color(0xFFF0DFC6),
+        oddColor: const Color(0xFF1A2533),
+        ring: _BoardRing.outerSingle);
+    _drawWedgeRing(canvas, center, radius,
+        innerFactor: 0.54,
+        outerFactor: 0.62,
+        evenColor: const Color(0xFF00C08B),
+        oddColor: const Color(0xFFFF6B6B),
+        ring: _BoardRing.triple);
+    _drawWedgeRing(canvas, center, radius,
+        innerFactor: 0.10,
+        outerFactor: 0.54,
+        evenColor: const Color(0xFF1A2533),
+        oddColor: const Color(0xFFF0DFC6),
+        ring: _BoardRing.innerSingle);
+    _drawWedgeRing(canvas, center, radius,
+        innerFactor: 0.90,
+        outerFactor: 1.0,
+        evenColor: const Color(0xFFFF6B6B),
+        oddColor: const Color(0xFF00C08B),
+        ring: _BoardRing.double);
+
+    _drawBull(canvas, center, radius);
+    _drawRadialWires(canvas, center, radius);
+    _drawSegmentLabels(canvas, center, radius);
+
+    if (highlight?.ring == _BoardRing.miss) {
+      canvas.drawCircle(
+        center,
+        radius * (1.02 + (0.03 * (1 - pulseValue))),
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 6
+          ..color = colorScheme.primary.withValues(alpha: 0.32),
+      );
+    }
 
     if (disabled) {
       canvas.drawCircle(
         center,
         radius,
-        Paint()..color = overlayColor,
+        Paint()..color = colorScheme.surface.withValues(alpha: 0.46),
+      );
+    }
+  }
+
+  void _drawBull(Canvas canvas, Offset center, double radius) {
+    final isOuterBull = highlight?.ring == _BoardRing.outerBull;
+    final isBull = highlight?.ring == _BoardRing.bull;
+
+    if (isOuterBull) {
+      canvas.drawCircle(
+        center,
+        radius * (0.11 + (0.015 * (1 - pulseValue))),
+        Paint()..color = colorScheme.primary.withValues(alpha: 0.18),
+      );
+    }
+
+    if (isBull) {
+      canvas.drawCircle(
+        center,
+        radius * (0.065 + (0.018 * (1 - pulseValue))),
+        Paint()..color = colorScheme.primary.withValues(alpha: 0.28),
+      );
+    }
+
+    canvas.drawCircle(
+      center,
+      radius * 0.10,
+      Paint()
+        ..color = const Color(0xFF00C08B)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2.5),
+    );
+    canvas.drawCircle(
+      center,
+      radius * 0.05,
+      Paint()
+        ..color = const Color(0xFFFF6B6B)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.8),
+    );
+  }
+
+  void _drawRadialWires(Canvas canvas, Offset center, double radius) {
+    final wirePaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.18)
+      ..strokeWidth = 1;
+
+    for (var index = 0; index < _segmentOrder.length; index++) {
+      final angle = (-math.pi / 2) + (index * (math.pi / 10));
+      canvas.drawLine(
+        Offset(center.dx + (radius * 0.10 * math.cos(angle)),
+            center.dy + (radius * 0.10 * math.sin(angle))),
+        Offset(center.dx + (radius * math.cos(angle)),
+            center.dy + (radius * math.sin(angle))),
+        wirePaint,
       );
     }
   }
@@ -266,6 +438,7 @@ class _DartboardPainter extends CustomPainter {
     required double outerFactor,
     required Color evenColor,
     required Color oddColor,
+    required _BoardRing ring,
   }) {
     const sweep = math.pi / 10;
     final innerRadius = radius * innerFactor;
@@ -273,41 +446,64 @@ class _DartboardPainter extends CustomPainter {
 
     for (var index = 0; index < _segmentOrder.length; index++) {
       final start = (-math.pi / 2) + (index * sweep);
+      final segment = _segmentOrder[index];
+      final isHighlighted =
+          highlight?.segment == segment && highlight?.ring == ring;
+      final baseColor = index.isEven ? evenColor : oddColor;
+
       final path = Path()
-        ..moveTo(
-          center.dx + (innerRadius * math.cos(start)),
-          center.dy + (innerRadius * math.sin(start)),
-        )
-        ..arcTo(
-          Rect.fromCircle(center: center, radius: outerRadius),
-          start,
-          sweep,
-          false,
-        )
-        ..lineTo(
-          center.dx + (innerRadius * math.cos(start + sweep)),
-          center.dy + (innerRadius * math.sin(start + sweep)),
-        )
-        ..arcTo(
-          Rect.fromCircle(center: center, radius: innerRadius),
-          start + sweep,
-          -sweep,
-          false,
-        )
+        ..moveTo(center.dx + (innerRadius * math.cos(start)),
+            center.dy + (innerRadius * math.sin(start)))
+        ..arcTo(Rect.fromCircle(center: center, radius: outerRadius), start,
+            sweep, false)
+        ..lineTo(center.dx + (innerRadius * math.cos(start + sweep)),
+            center.dy + (innerRadius * math.sin(start + sweep)))
+        ..arcTo(Rect.fromCircle(center: center, radius: innerRadius),
+            start + sweep, -sweep, false)
         ..close();
+
+      if (isHighlighted) {
+        final pulse = 1 - pulseValue;
+        canvas.drawPath(
+          path,
+          Paint()
+            ..color =
+                colorScheme.primary.withValues(alpha: 0.28 + (0.14 * pulse))
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
+        );
+      }
 
       canvas.drawPath(
         path,
         Paint()
           ..style = PaintingStyle.fill
-          ..color = index.isEven ? evenColor : oddColor,
+          ..shader = LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color.lerp(baseColor, Colors.white, 0.14)!,
+              baseColor,
+              Color.lerp(baseColor, Colors.black, 0.18)!,
+            ],
+          ).createShader(Rect.fromCircle(center: center, radius: outerRadius)),
       );
+
+      if (isHighlighted) {
+        canvas.drawPath(
+          path,
+          Paint()
+            ..style = PaintingStyle.fill
+            ..color = Colors.white
+                .withValues(alpha: 0.12 + (0.08 * (1 - pulseValue))),
+        );
+      }
+
       canvas.drawPath(
         path,
         Paint()
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.2
-          ..color = colorScheme.outlineVariant,
+          ..strokeWidth = 1.1
+          ..color = Colors.white.withValues(alpha: 0.18),
       );
     }
   }
@@ -321,16 +517,19 @@ class _DartboardPainter extends CustomPainter {
     for (var index = 0; index < _segmentOrder.length; index++) {
       final angle = (-math.pi / 2) + ((index + 0.5) * (math.pi / 10));
       final labelOffset = Offset(
-        center.dx + (radius * 0.78 * math.cos(angle)),
-        center.dy + (radius * 0.78 * math.sin(angle)),
+        center.dx + (radius * 0.77 * math.cos(angle)),
+        center.dy + (radius * 0.77 * math.sin(angle)),
       );
 
       textPainter.text = TextSpan(
         text: '${_segmentOrder[index]}',
         style: TextStyle(
           color: colorScheme.onSurface,
-          fontSize: radius * 0.085,
-          fontWeight: FontWeight.w700,
+          fontSize: radius * 0.082,
+          fontWeight: FontWeight.w800,
+          shadows: const [
+            Shadow(color: Colors.black54, blurRadius: 10, offset: Offset(0, 2)),
+          ],
         ),
       );
       textPainter.layout();
@@ -344,6 +543,51 @@ class _DartboardPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _DartboardPainter oldDelegate) {
     return oldDelegate.colorScheme != colorScheme ||
-        oldDelegate.disabled != disabled;
+        oldDelegate.disabled != disabled ||
+        oldDelegate.highlight != highlight ||
+        oldDelegate.pulseValue != pulseValue;
   }
+}
+
+enum _BoardRing {
+  miss,
+  innerSingle,
+  outerSingle,
+  double,
+  triple,
+  outerBull,
+  bull
+}
+
+class _BoardHit {
+  const _BoardHit({
+    required this.segment,
+    required this.multiplier,
+    required this.ring,
+  });
+
+  final int segment;
+  final int multiplier;
+  final _BoardRing ring;
+
+  DartThrow get dartThrow =>
+      DartThrow(segment: segment, multiplier: multiplier);
+
+  @override
+  bool operator ==(Object other) {
+    return other is _BoardHit &&
+        other.segment == segment &&
+        other.multiplier == multiplier &&
+        other.ring == ring;
+  }
+
+  @override
+  int get hashCode => Object.hash(segment, multiplier, ring);
+}
+
+class _ThrowResult {
+  const _ThrowResult({required this.dartThrow, required this.hit});
+
+  final DartThrow dartThrow;
+  final _BoardHit hit;
 }

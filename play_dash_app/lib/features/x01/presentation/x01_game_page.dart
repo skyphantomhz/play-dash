@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/models/dart_throw.dart';
 import '../../../shared/models/match_settings.dart';
 import '../../../shared/models/player.dart';
+import '../../../shared/widgets/app_shell.dart';
 import '../../../shared/widgets/interactive_dartboard.dart';
 import '../application/x01_controller.dart';
 
@@ -21,128 +22,201 @@ class X01GamePage extends ConsumerWidget {
     final activePlayer = _activePlayer(players, state.currentPlayerIndex);
     final winner = _findPlayerById(players, winnerId);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('X01 Game'),
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (winner != null) ...[
-                Card(
-                  color: Theme.of(context).colorScheme.primaryContainer,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.emoji_events_outlined),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            '${winner.name} wins!',
-                            style: Theme.of(context).textTheme.titleLarge,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+    return AppShell(
+      title: 'X01 Match',
+      subtitle:
+          'A two-zone layout keeps the interactive board and score state visible together, reducing eye travel during live play.',
+      actions: [
+        IconButton(
+          onPressed: canUndo ? controller.undo : null,
+          icon: const Icon(Icons.undo),
+          tooltip: 'Undo',
+        ),
+      ],
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final wide = constraints.maxWidth >= 1100;
+          final boardPanel = GlassPanel(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'X01 Game',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  winner == null
+                      ? 'Current player: ${activePlayer?.name ?? '—'}'
+                      : 'Game finished',
+                  style: Theme.of(context).textTheme.headlineSmall,
                 ),
                 const SizedBox(height: 16),
-              ],
-              Text(
-                winner == null
-                    ? 'Current player: ${activePlayer?.name ?? '—'}'
-                    : 'Game finished',
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  FilledButton.icon(
-                    onPressed: canUndo ? controller.undo : null,
-                    icon: const Icon(Icons.undo),
-                    label: const Text('Undo'),
-                  ),
-                  if (state.game.currentTurnThrows.isNotEmpty)
-                    OutlinedButton.icon(
-                      onPressed: winner == null ? controller.resetCurrentTurn : null,
-                      icon: const Icon(Icons.refresh),
-                      label: const Text('Clear current turn'),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              Expanded(
-                child: ListView(
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
                   children: [
-                    Text(
-                      'Scores',
-                      style: Theme.of(context).textTheme.titleLarge,
+                    MetricCard(
+                      label: winner == null ? 'Current player' : 'Winner',
+                      value: winner?.name ?? activePlayer?.name ?? '—',
+                      icon: winner == null
+                          ? Icons.person_pin_circle_outlined
+                          : Icons.emoji_events_outlined,
+                      highlight: true,
                     ),
-                    const SizedBox(height: 12),
-                    ...players.map(
-                      (player) {
-                        final isActive = winner == null && activePlayer?.id == player.id;
-                        final score = state.game.scores[player.id] ?? settings.startingScore;
-
-                        return Card(
-                          child: ListTile(
-                            leading: Icon(
-                              isActive ? Icons.arrow_right_alt : Icons.person_outline,
-                            ),
-                            title: Text(player.name),
-                            subtitle: Text(isActive ? 'Throwing now' : 'Waiting'),
-                            trailing: Text(
-                              '$score',
-                              style: Theme.of(context).textTheme.headlineSmall,
+                    MetricCard(
+                      label: 'Target score',
+                      value: '${settings.startingScore}',
+                      icon: Icons.flag_outlined,
+                    ),
+                    MetricCard(
+                      label: 'Darts this turn',
+                      value: '${state.game.currentTurnThrows.length}/3',
+                      icon: Icons.sports_martial_arts_outlined,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                if (winner != null) ...[
+                  Card(
+                    color: Theme.of(context).colorScheme.primaryContainer,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.emoji_events_outlined),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              '${winner.name} wins!',
+                              style: Theme.of(context).textTheme.titleLarge,
                             ),
                           ),
-                        );
-                      },
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Current turn',
-                      style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 16),
+                ],
+                InteractiveDartboard(
+                  enabled: winner == null,
+                  onThrow: controller.addThrow,
+                ),
+              ],
+            ),
+          );
+
+          final scorePanel = GlassPanel(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SectionHeading(
+                  title: 'Live scoring',
+                  subtitle:
+                      'Prominent numbers, active-player emphasis, and concise throw history help players confirm state fast.',
+                ),
+                const SizedBox(height: 20),
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: [
+                    FilledButton.icon(
+                      onPressed: canUndo ? controller.undo : null,
+                      icon: const Icon(Icons.undo),
+                      label: const Text('Undo'),
                     ),
-                    const SizedBox(height: 12),
-                    if (state.game.currentTurnThrows.isEmpty)
-                      const Card(
-                        child: ListTile(
-                          title: Text('No darts thrown yet'),
+                    if (state.game.currentTurnThrows.isNotEmpty)
+                      OutlinedButton.icon(
+                        onPressed:
+                            winner == null ? controller.resetCurrentTurn : null,
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Clear turn'),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                ...players.map((player) {
+                  final isActive =
+                      winner == null && activePlayer?.id == player.id;
+                  final score =
+                      state.game.scores[player.id] ?? settings.startingScore;
+
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Card(
+                      color: isActive
+                          ? Theme.of(context)
+                              .colorScheme
+                              .primaryContainer
+                              .withValues(alpha: 0.76)
+                          : null,
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 8,
                         ),
-                      )
-                    else
-                      ...state.game.currentTurnThrows.asMap().entries.map(
-                        (entry) => Card(
-                          child: ListTile(
-                            leading: CircleAvatar(
-                              child: Text('${entry.key + 1}'),
-                            ),
-                            title: Text(_formatThrow(entry.value)),
-                            subtitle: Text(
-                              'Score: ${entry.value.segment * entry.value.multiplier}',
+                        leading: Icon(
+                          isActive
+                              ? Icons.arrow_right_alt_rounded
+                              : Icons.person_outline,
+                        ),
+                        title: Text(player.name),
+                        subtitle: Text(isActive ? 'Throwing now' : 'Waiting'),
+                        trailing: Text(
+                          '$score',
+                          style: Theme.of(context).textTheme.headlineSmall,
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+                const SizedBox(height: 8),
+                const SectionHeading(
+                  title: 'Current turn',
+                  subtitle: 'Recent darts are grouped to reduce recall burden.',
+                ),
+                const SizedBox(height: 12),
+                if (state.game.currentTurnThrows.isEmpty)
+                  const Card(
+                    child: ListTile(title: Text('No darts thrown yet')),
+                  )
+                else
+                  ...state.game.currentTurnThrows.asMap().entries.map(
+                        (entry) => Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: Card(
+                            child: ListTile(
+                              leading:
+                                  CircleAvatar(child: Text('${entry.key + 1}')),
+                              title: Text(_formatThrow(entry.value)),
+                              subtitle: Text(
+                                'Score: ${entry.value.segment * entry.value.multiplier}',
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    const SizedBox(height: 16),
-                    InteractiveDartboard(
-                      enabled: winner == null,
-                      onThrow: controller.addThrow,
-                    ),
+              ],
+            ),
+          );
+
+          return wide
+              ? Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(flex: 6, child: boardPanel),
+                    const SizedBox(width: 20),
+                    Expanded(flex: 5, child: scorePanel),
                   ],
-                ),
-              ),
-            ],
-          ),
-        ),
+                )
+              : Column(
+                  children: [
+                    boardPanel,
+                    const SizedBox(height: 20),
+                    scorePanel,
+                  ],
+                );
+        },
       ),
     );
   }

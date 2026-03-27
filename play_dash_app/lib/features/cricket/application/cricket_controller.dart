@@ -7,7 +7,8 @@ import '../../../shared/models/player.dart';
 import '../domain/cricket_engine.dart';
 
 final cricketControllerProvider =
-    NotifierProvider<CricketController, CricketMatchState>(CricketController.new);
+    NotifierProvider<CricketController, CricketMatchState>(
+        CricketController.new);
 
 final cricketCanUndoProvider = Provider<bool>((ref) {
   ref.watch(cricketControllerProvider);
@@ -49,7 +50,8 @@ class CricketController extends Notifier<CricketMatchState> {
 
     final previousState = state;
     final currentPlayer = state.players[state.currentPlayerIndex];
-    final currentMarks = Map<int, int>.from(state.game.marks[currentPlayer.id] ?? _emptyMarks());
+    final currentMarks =
+        Map<int, int>.from(state.game.marks[currentPlayer.id] ?? _emptyMarks());
     final currentScore = state.game.scores[currentPlayer.id] ?? 0;
 
     final settings = state.settings as CricketMatchSettings;
@@ -106,7 +108,8 @@ class CricketController extends Notifier<CricketMatchState> {
       return null;
     }
 
-    closedPlayers.sort((a, b) => (scores[b.id] ?? 0).compareTo(scores[a.id] ?? 0));
+    closedPlayers
+        .sort((a, b) => (scores[b.id] ?? 0).compareTo(scores[a.id] ?? 0));
     return closedPlayers.first.id;
   }
 

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../shared/widgets/app_shell.dart';
+
 class LeaderboardScreen extends StatelessWidget {
   const LeaderboardScreen({super.key});
 
@@ -12,33 +14,73 @@ class LeaderboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
+    return AppShell(
+      title: 'Leaderboard',
+      subtitle:
+          'A compact ranking layout that keeps key stats visible without sacrificing readability on smaller screens.',
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final wide = constraints.maxWidth >= 960;
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Leaderboard')),
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(24),
-          children: [
-            Text(
-              'Season standings',
-              style: theme.textTheme.headlineSmall,
+          const summaryPanel = GlassPanel(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SectionHeading(
+                  title: 'Season standings',
+                  subtitle:
+                      'Modern sports UIs benefit from clear hierarchy, dense but scannable cards, and a strong top-three focus.',
+                ),
+                SizedBox(height: 20),
+                MetricCard(
+                  label: 'Top average',
+                  value: '61.4',
+                  icon: Icons.bolt_outlined,
+                  highlight: true,
+                ),
+                SizedBox(height: 12),
+                MetricCard(
+                  label: 'Most wins',
+                  value: 'Alex · 18',
+                  icon: Icons.emoji_events_outlined,
+                ),
+                SizedBox(height: 12),
+                MetricCard(
+                  label: 'Tracked players',
+                  value: '4 active',
+                  icon: Icons.groups_outlined,
+                ),
+              ],
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Track the players with the hottest form across recent matches.',
-              style: theme.textTheme.bodyLarge,
-            ),
-            const SizedBox(height: 24),
-            for (int index = 0; index < _entries.length; index++) ...[
-              _LeaderboardCard(
-                rank: index + 1,
-                entry: _entries[index],
-              ),
-              const SizedBox(height: 12),
+          );
+
+          final rankingPanel = Column(
+            children: [
+              for (int index = 0; index < _entries.length; index++) ...[
+                _LeaderboardCard(rank: index + 1, entry: _entries[index]),
+                const SizedBox(height: 12),
+              ],
             ],
-          ],
-        ),
+          );
+
+          return wide
+              ? Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Expanded(flex: 3, child: summaryPanel),
+                    const SizedBox(width: 20),
+                    Expanded(flex: 5, child: rankingPanel),
+                  ],
+                )
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    summaryPanel,
+                    const SizedBox(height: 20),
+                    rankingPanel,
+                  ],
+                );
+        },
       ),
     );
   }
@@ -52,45 +94,47 @@ class _LeaderboardCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
+    final theme = Theme.of(context);
+    final highlight = rank == 1;
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            CircleAvatar(
-              child: Text('$rank'),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(entry.name, style: theme.textTheme.titleMedium),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${entry.wins} wins • ${entry.legs} legs won',
-                    style: theme.textTheme.bodyMedium,
-                  ),
-                ],
-              ),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
+    return GlassPanel(
+      padding: const EdgeInsets.all(18),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 24,
+            backgroundColor: highlight
+                ? theme.colorScheme.primaryContainer
+                : theme.colorScheme.surfaceContainerHighest,
+            child: Text('$rank'),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Text(entry.name, style: theme.textTheme.titleLarge),
+                const SizedBox(height: 4),
                 Text(
-                  entry.average.toStringAsFixed(1),
-                  style: theme.textTheme.titleLarge,
-                ),
-                Text(
-                  '3-dart avg',
-                  style: theme.textTheme.bodySmall,
+                  '${entry.wins} wins • ${entry.legs} legs won',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
-          ],
-        ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                entry.average.toStringAsFixed(1),
+                style: theme.textTheme.headlineSmall,
+              ),
+              Text('3-dart avg', style: theme.textTheme.bodySmall),
+            ],
+          ),
+        ],
       ),
     );
   }

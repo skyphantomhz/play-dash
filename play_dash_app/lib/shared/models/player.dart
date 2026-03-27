@@ -10,6 +10,5 @@ abstract class Player with _$Player {
     required String name,
   }) = _Player;
 
-  factory Player.fromJson(Map<String, dynamic> json) =>
-      _$PlayerFromJson(json);
+  factory Player.fromJson(Map<String, dynamic> json) => _$PlayerFromJson(json);
 }

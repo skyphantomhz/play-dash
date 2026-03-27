@@ -26,7 +26,8 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: '/match/x01',
-      builder: (BuildContext context, GoRouterState state) => const X01GamePage(),
+      builder: (BuildContext context, GoRouterState state) =>
+          const X01GamePage(),
     ),
     GoRoute(
       path: '/match/cricket',
@@ -54,4 +55,3 @@ class _PlaceholderScreen extends StatelessWidget {
     );
   }
 }
-

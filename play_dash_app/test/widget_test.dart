@@ -38,13 +38,11 @@ void main() {
 
     await tester.enterText(playerOneField, 'Alice');
     await tester.enterText(playerTwoField, 'Bob');
-    await _scrollToContinue(tester);
-    await tester.tap(find.text('Continue'));
-    await tester.pumpAndSettle();
+    await _tapContinue(tester);
 
     expect(find.text('X01 Game'), findsOneWidget);
-    expect(find.text('Alice'), findsOneWidget);
-    expect(find.text('Bob'), findsOneWidget);
+    expect(find.text('Alice'), findsWidgets);
+    expect(find.text('Bob'), findsWidgets);
     expect(find.text('Current player: Alice'), findsOneWidget);
   });
 
@@ -59,9 +57,7 @@ void main() {
 
     final playerTwoField = find.byType(TextField).at(1);
     await tester.enterText(playerTwoField, '');
-    await _scrollToContinue(tester);
-    await tester.tap(find.text('Continue'));
-    await tester.pumpAndSettle();
+    await _tapContinue(tester);
 
     expect(find.text('X01 Game'), findsOneWidget);
     expect(find.text('Player 1'), findsWidgets);
@@ -69,11 +65,11 @@ void main() {
   });
 }
 
-Future<void> _scrollToContinue(WidgetTester tester) async {
-  while (find.text('Continue').evaluate().isEmpty) {
-    await tester.drag(find.byType(ListView), const Offset(0, -300));
-    await tester.pumpAndSettle();
-  }
+Future<void> _tapContinue(WidgetTester tester) async {
+  final continueFinder = find.text('Continue');
+  await tester.ensureVisible(continueFinder);
+  await tester.tap(continueFinder, warnIfMissed: false);
+  await tester.pumpAndSettle();
 }
 
 class _TestHarness extends StatelessWidget {

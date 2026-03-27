@@ -62,7 +62,8 @@ class X01Controller extends Notifier<X01MatchState> {
     final previousState = state;
     final currentPlayer = state.players[state.currentPlayerIndex];
     final settings = state.settings as X01MatchSettings;
-    final currentScore = state.game.scores[currentPlayer.id] ?? settings.startingScore;
+    final currentScore =
+        state.game.scores[currentPlayer.id] ?? settings.startingScore;
     final updatedThrows = [...state.game.currentTurnThrows, dartThrow];
 
     final turnResult = X01Engine.applyTurn(
@@ -75,7 +76,8 @@ class X01Controller extends Notifier<X01MatchState> {
       ..[currentPlayer.id] = turnResult.endingScore;
 
     final didUseAllDarts = updatedThrows.length >= 3;
-    final shouldAdvanceTurn = turnResult.bust || turnResult.finished || didUseAllDarts;
+    final shouldAdvanceTurn =
+        turnResult.bust || turnResult.finished || didUseAllDarts;
     final shouldMoveToNextPlayer = turnResult.bust || didUseAllDarts;
 
     _history.add(previousState);
@@ -89,7 +91,8 @@ class X01Controller extends Notifier<X01MatchState> {
         currentTurnThrows: shouldAdvanceTurn
             ? const <DartThrow>[]
             : List.unmodifiable(updatedThrows),
-        winnerPlayerId: turnResult.finished ? currentPlayer.id : state.game.winnerPlayerId,
+        winnerPlayerId:
+            turnResult.finished ? currentPlayer.id : state.game.winnerPlayerId,
       ),
     );
   }
