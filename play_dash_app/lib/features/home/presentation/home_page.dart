@@ -27,6 +27,12 @@ class HomePage extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
                   FilledButton.icon(
+                    onPressed: () => context.go('/setup'),
+                    icon: const Icon(Icons.groups_2_outlined),
+                    label: const Text('Player Setup'),
+                  ),
+                  const SizedBox(height: 16),
+                  FilledButton.icon(
                     onPressed: () => context.go('/match/x01'),
                     icon: const Icon(Icons.sports_score_outlined),
                     label: const Text('Play X01'),
@@ -36,6 +42,12 @@ class HomePage extends StatelessWidget {
                     onPressed: () => context.go('/match/cricket'),
                     icon: const Icon(Icons.track_changes_outlined),
                     label: const Text('Play Cricket'),
+                  ),
+                  const SizedBox(height: 16),
+                  OutlinedButton.icon(
+                    onPressed: () => context.go('/leaderboard'),
+                    icon: const Icon(Icons.emoji_events_outlined),
+                    label: const Text('Leaderboard'),
                   ),
                 ],
               ),
