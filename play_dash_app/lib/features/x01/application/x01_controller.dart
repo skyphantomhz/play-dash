@@ -9,7 +9,16 @@ import '../domain/x01_engine.dart';
 final x01ControllerProvider =
     NotifierProvider<X01Controller, X01MatchState>(X01Controller.new);
 
+final x01CanUndoProvider = Provider<bool>((ref) {
+  ref.watch(x01ControllerProvider);
+  return ref.read(x01ControllerProvider.notifier).canUndo;
+});
+
 class X01Controller extends Notifier<X01MatchState> {
+  final List<X01MatchState> _history = <X01MatchState>[];
+
+  bool get canUndo => _history.isNotEmpty;
+
   @override
   X01MatchState build() {
     const X01MatchSettings settings = X01MatchSettings();
@@ -33,6 +42,7 @@ class X01Controller extends Notifier<X01MatchState> {
     required List<Player> players,
     X01MatchSettings settings = const X01MatchSettings(),
   }) {
+    _history.clear();
     state = X01MatchState(
       players: players,
       settings: settings,
@@ -49,6 +59,7 @@ class X01Controller extends Notifier<X01MatchState> {
       return;
     }
 
+    final previousState = state;
     final currentPlayer = state.players[state.currentPlayerIndex];
     final settings = state.settings as X01MatchSettings;
     final currentScore = state.game.scores[currentPlayer.id] ?? settings.startingScore;
@@ -67,6 +78,8 @@ class X01Controller extends Notifier<X01MatchState> {
     final shouldAdvanceTurn = turnResult.bust || turnResult.finished || didUseAllDarts;
     final shouldMoveToNextPlayer = turnResult.bust || didUseAllDarts;
 
+    _history.add(previousState);
+
     state = state.copyWith(
       currentPlayerIndex: shouldMoveToNextPlayer
           ? _nextPlayerIndex(state.currentPlayerIndex, state.players.length)
@@ -81,9 +94,24 @@ class X01Controller extends Notifier<X01MatchState> {
     );
   }
 
+  void undo() {
+    if (_history.isEmpty) {
+      return;
+    }
+
+    state = _history.removeLast();
+  }
+
   void resetCurrentTurn() {
+    if (state.game.currentTurnThrows.isEmpty) {
+      return;
+    }
+
+    _history.add(state);
     state = state.copyWith(
-      game: state.game.copyWith(currentTurnThrows: const <DartThrow>[]),
+      game: state.game.copyWith(
+        currentTurnThrows: const <DartThrow>[],
+      ),
     );
   }
 

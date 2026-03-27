@@ -14,6 +14,7 @@ class X01GamePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(x01ControllerProvider);
     final controller = ref.read(x01ControllerProvider.notifier);
+    final canUndo = ref.watch(x01CanUndoProvider);
     final players = state.players;
     final settings = state.settings as X01MatchSettings;
     final winnerId = state.game.winnerPlayerId;
@@ -57,15 +58,34 @@ class X01GamePage extends ConsumerWidget {
                     : 'Game finished',
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
-              const SizedBox(height: 24),
-              Text(
-                'Scores',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
               const SizedBox(height: 12),
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  FilledButton.icon(
+                    onPressed: canUndo ? controller.undo : null,
+                    icon: const Icon(Icons.undo),
+                    label: const Text('Undo'),
+                  ),
+                  if (state.game.currentTurnThrows.isNotEmpty)
+                    OutlinedButton.icon(
+                      onPressed: winner == null ? controller.resetCurrentTurn : null,
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Clear current turn'),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 24),
               Expanded(
                 child: ListView(
                   children: [
+                    Text(
+                      'Scores',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 12),
                     ...players.map(
                       (player) {
                         final isActive = winner == null && activePlayer?.id == player.id;
@@ -112,13 +132,13 @@ class X01GamePage extends ConsumerWidget {
                           ),
                         ),
                       ),
+                    const SizedBox(height: 16),
+                    InteractiveDartboard(
+                      enabled: winner == null,
+                      onThrow: controller.addThrow,
+                    ),
                   ],
                 ),
-              ),
-              const SizedBox(height: 16),
-              InteractiveDartboard(
-                enabled: winner == null,
-                onThrow: controller.addThrow,
               ),
             ],
           ),

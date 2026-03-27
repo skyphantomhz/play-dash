@@ -14,6 +14,7 @@ class CricketGamePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(cricketControllerProvider);
     final controller = ref.read(cricketControllerProvider.notifier);
+    final canUndo = ref.watch(cricketCanUndoProvider);
     final players = state.players;
     final winnerId = state.game.winnerPlayerId;
     final activePlayer = _activePlayer(players, state.currentPlayerIndex);
@@ -55,6 +56,12 @@ class CricketGamePage extends ConsumerWidget {
                     ? 'Current player: ${activePlayer?.name ?? '—'}'
                     : 'Game finished',
                 style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              const SizedBox(height: 12),
+              FilledButton.icon(
+                onPressed: canUndo ? controller.undo : null,
+                icon: const Icon(Icons.undo),
+                label: const Text('Undo'),
               ),
               const SizedBox(height: 24),
               Expanded(

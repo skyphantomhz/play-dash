@@ -9,8 +9,16 @@ import '../domain/cricket_engine.dart';
 final cricketControllerProvider =
     NotifierProvider<CricketController, CricketMatchState>(CricketController.new);
 
+final cricketCanUndoProvider = Provider<bool>((ref) {
+  ref.watch(cricketControllerProvider);
+  return ref.read(cricketControllerProvider.notifier).canUndo;
+});
+
 class CricketController extends Notifier<CricketMatchState> {
   static const List<int> _segments = <int>[15, 16, 17, 18, 19, 20, 25];
+  final List<CricketMatchState> _history = <CricketMatchState>[];
+
+  bool get canUndo => _history.isNotEmpty;
 
   @override
   CricketMatchState build() {
@@ -39,6 +47,7 @@ class CricketController extends Notifier<CricketMatchState> {
       return;
     }
 
+    final previousState = state;
     final currentPlayer = state.players[state.currentPlayerIndex];
     final currentMarks = Map<int, int>.from(state.game.marks[currentPlayer.id] ?? _emptyMarks());
     final currentScore = state.game.scores[currentPlayer.id] ?? 0;
@@ -58,6 +67,8 @@ class CricketController extends Notifier<CricketMatchState> {
 
     final winnerId = _resolveWinner(updatedMarks, updatedScores);
 
+    _history.add(previousState);
+
     state = state.copyWith(
       currentPlayerIndex: winnerId == null
           ? _nextPlayerIndex(state.currentPlayerIndex, state.players.length)
@@ -68,6 +79,14 @@ class CricketController extends Notifier<CricketMatchState> {
         winnerPlayerId: winnerId,
       ),
     );
+  }
+
+  void undo() {
+    if (_history.isEmpty) {
+      return;
+    }
+
+    state = _history.removeLast();
   }
 
   Map<int, int> _emptyMarks() => {
