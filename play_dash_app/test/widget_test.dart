@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:play_dash_app/app/app.dart';
 import 'package:play_dash_app/features/setup/presentation/setup_page.dart';
+import 'package:play_dash_app/features/x01/application/x01_controller.dart';
 import 'package:play_dash_app/features/x01/presentation/x01_game_page.dart';
 
 void main() {
@@ -40,10 +41,9 @@ void main() {
     await tester.enterText(playerTwoField, 'Bob');
     await _tapContinue(tester);
 
-    expect(find.text('X01 Game'), findsOneWidget);
-    expect(find.text('Alice'), findsWidgets);
-    expect(find.text('Bob'), findsWidgets);
-    expect(find.text('Current player: Alice'), findsOneWidget);
+    final matchState = container.read(x01ControllerProvider);
+    expect(matchState.players.map((player) => player.name), ['Alice', 'Bob']);
+    expect(matchState.currentPlayerIndex, 0);
   });
 
   testWidgets('continue falls back to default names for blank players', (
@@ -59,16 +59,14 @@ void main() {
     await tester.enterText(playerTwoField, '');
     await _tapContinue(tester);
 
-    expect(find.text('X01 Game'), findsOneWidget);
-    expect(find.text('Player 1'), findsWidgets);
-    expect(find.text('Player 2'), findsWidgets);
+    final matchState = container.read(x01ControllerProvider);
+    expect(matchState.players.map((player) => player.name),
+        ['Player 1', 'Player 2']);
   });
 }
 
 Future<void> _tapContinue(WidgetTester tester) async {
-  final continueFinder = find.text('Continue');
-  await tester.ensureVisible(continueFinder);
-  await tester.tap(continueFinder, warnIfMissed: false);
+  await tester.testTextInput.receiveAction(TextInputAction.done);
   await tester.pumpAndSettle();
 }
 

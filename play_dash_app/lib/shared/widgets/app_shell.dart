@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -8,8 +7,8 @@ class AppShell extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.child,
-    this.actions,
     this.hero,
+    this.actions,
     this.floatingOverlay,
     this.floatingOverlayHeight = 0,
     super.key,
@@ -18,20 +17,16 @@ class AppShell extends StatelessWidget {
   final String title;
   final String subtitle;
   final Widget child;
-  final List<Widget>? actions;
   final Widget? hero;
+  final List<Widget>? actions;
   final Widget? floatingOverlay;
   final double floatingOverlayHeight;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
         title: Text(title),
         actions: actions,
       ),
@@ -40,124 +35,100 @@ class AppShell extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF08111F),
-              Color(0xFF151A2F),
-              Color(0xFF05070E),
-            ],
-            stops: [0.0, 0.48, 1.0],
+            colors: [Color(0xFF0B1020), Color(0xFF0F1830), Color(0xFF050811)],
           ),
         ),
         child: Stack(
           children: [
-            const Positioned.fill(child: _GlassmorphismBackground()),
-            Positioned.fill(
-              child: IgnorePointer(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.white.withValues(alpha: 0.035),
-                        Colors.transparent,
-                        Colors.black.withValues(alpha: 0.16),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            Positioned.fill(
-              child: IgnorePointer(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: RadialGradient(
-                      center: const Alignment(0, -0.15),
-                      radius: 1.2,
-                      colors: [
-                        Colors.white.withValues(alpha: 0.028),
-                        Colors.transparent,
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
+            const Positioned.fill(child: _AmbientBackdrop()),
             SafeArea(
               child: LayoutBuilder(
                 builder: (context, constraints) {
-                  final horizontalPadding = constraints.maxWidth >= 1280
+                  final hPadding = constraints.maxWidth >= 1280
                       ? 40.0
                       : constraints.maxWidth >= 900
                           ? 28.0
                           : 16.0;
-                  final headerSpacing =
-                      constraints.maxWidth >= 900 ? 24.0 : 18.0;
-                  final overlayTop = constraints.maxWidth >= 720 ? 20.0 : 12.0;
-                  final overlayVisible = floatingOverlay != null;
-                  final listTopPadding = overlayVisible
-                      ? overlayTop + floatingOverlayHeight + 16
-                      : 12.0;
+                  final topInset = floatingOverlay == null
+                      ? 16.0
+                      : floatingOverlayHeight + 28.0;
 
                   return Center(
                     child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 1320),
+                      constraints: const BoxConstraints(maxWidth: 1360),
                       child: Stack(
                         children: [
                           ListView(
                             padding: EdgeInsets.fromLTRB(
-                              horizontalPadding,
-                              listTopPadding,
-                              horizontalPadding,
-                              28,
-                            ),
+                                hPadding, topInset, hPadding, 28),
                             children: [
-                              GlassPanel(
+                              FrostPanel(
                                 padding: EdgeInsets.all(
-                                  constraints.maxWidth >= 720 ? 28 : 22,
-                                ),
+                                    constraints.maxWidth >= 720 ? 28 : 22),
+                                radius: 34,
+                                blur: 8,
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    if (hero != null) ...[
-                                      hero!,
-                                      const SizedBox(height: 18),
-                                    ],
-                                    Text(
-                                      title,
-                                      style: theme.textTheme.headlineMedium
-                                          ?.copyWith(
-                                        fontWeight: FontWeight.w800,
-                                        letterSpacing: -0.6,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 10),
-                                    ConstrainedBox(
-                                      constraints:
-                                          const BoxConstraints(maxWidth: 860),
-                                      child: Text(
-                                        subtitle,
-                                        style:
-                                            theme.textTheme.bodyLarge?.copyWith(
-                                          color: theme
-                                              .colorScheme.onSurfaceVariant,
-                                          height: 1.45,
+                                    Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                title,
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .headlineMedium
+                                                    ?.copyWith(
+                                                      fontWeight:
+                                                          FontWeight.w800,
+                                                    ),
+                                              ),
+                                              const SizedBox(height: 10),
+                                              ConstrainedBox(
+                                                constraints:
+                                                    const BoxConstraints(
+                                                        maxWidth: 820),
+                                                child: Text(
+                                                  subtitle,
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .bodyLarge
+                                                      ?.copyWith(
+                                                        color: Theme.of(context)
+                                                            .colorScheme
+                                                            .onSurfaceVariant,
+                                                      ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
                                         ),
-                                      ),
+                                        const SizedBox(width: 20),
+                                        _TopBadge(),
+                                      ],
                                     ),
+                                    if (hero != null) ...[
+                                      const SizedBox(height: 20),
+                                      hero!,
+                                    ],
                                   ],
                                 ),
                               ),
-                              SizedBox(height: headerSpacing),
+                              const SizedBox(height: 22),
                               child,
                             ],
                           ),
-                          if (overlayVisible)
+                          if (floatingOverlay != null)
                             Positioned(
-                              top: overlayTop,
-                              left: horizontalPadding,
-                              right: horizontalPadding,
+                              top: 12,
+                              left: hPadding,
+                              right: hPadding,
                               child: floatingOverlay!,
                             ),
                         ],
@@ -174,29 +145,29 @@ class AppShell extends StatelessWidget {
   }
 }
 
-class GlassPanel extends StatelessWidget {
-  const GlassPanel({
+class FrostPanel extends StatelessWidget {
+  const FrostPanel({
     required this.child,
     this.padding = const EdgeInsets.all(20),
-    this.radius = 30,
-    this.opacity = 0.58,
-    this.borderOpacity = 0.14,
-    this.blur = 12,
-    this.gradient,
+    this.radius = 28,
+    this.blur = 7,
+    this.backgroundOpacity = 0.58,
+    this.borderOpacity = 0.16,
+    this.highlight = false,
     super.key,
   });
 
   final Widget child;
   final EdgeInsetsGeometry padding;
   final double radius;
-  final double opacity;
-  final double borderOpacity;
   final double blur;
-  final Gradient? gradient;
+  final double backgroundOpacity;
+  final double borderOpacity;
+  final bool highlight;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final scheme = Theme.of(context).colorScheme;
     final borderRadius = BorderRadius.circular(radius);
 
     return ClipRRect(
@@ -206,42 +177,52 @@ class GlassPanel extends StatelessWidget {
         child: DecoratedBox(
           decoration: BoxDecoration(
             borderRadius: borderRadius,
-            gradient: gradient ??
-                LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Colors.white.withValues(alpha: 0.12),
-                    theme.colorScheme.surfaceContainerHigh
-                        .withValues(alpha: opacity),
-                    theme.colorScheme.surfaceContainer
-                        .withValues(alpha: opacity - 0.12),
-                  ],
-                ),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: borderOpacity),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.white.withValues(alpha: highlight ? 0.18 : 0.12),
+                scheme.surfaceContainerHigh
+                    .withValues(alpha: backgroundOpacity),
+                scheme.surfaceContainer
+                    .withValues(alpha: backgroundOpacity - 0.10),
+              ],
             ),
+            border: Border.all(
+                color: Colors.white.withValues(alpha: borderOpacity)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.18),
-                blurRadius: 28,
-                offset: const Offset(0, 16),
+                color: Colors.black.withValues(alpha: 0.20),
+                blurRadius: 30,
+                offset: const Offset(0, 18),
               ),
               BoxShadow(
-                color: Colors.white.withValues(alpha: 0.025),
-                blurRadius: 10,
-                offset: const Offset(0, -3),
+                color: (highlight ? scheme.primary : Colors.white)
+                    .withValues(alpha: highlight ? 0.12 : 0.03),
+                blurRadius: 18,
+                offset: const Offset(0, -4),
               ),
             ],
           ),
-          child: Padding(
-            padding: padding,
-            child: child,
-          ),
+          child: Padding(padding: padding, child: child),
         ),
       ),
     );
   }
+}
+
+class GlassPanel extends FrostPanel {
+  const GlassPanel({
+    required super.child,
+    super.padding,
+    super.radius,
+    double opacity = 0.58,
+    super.borderOpacity = 0.16,
+    super.blur = 7,
+    super.key,
+  }) : super(
+          backgroundOpacity: opacity,
+        );
 }
 
 class GlassButton extends StatelessWidget {
@@ -260,67 +241,53 @@ class GlassButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final scheme = Theme.of(context).colorScheme;
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
+        borderRadius: BorderRadius.circular(22),
         onTap: onPressed,
-        borderRadius: BorderRadius.circular(20),
         child: Ink(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(22),
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: highlight
                   ? [
-                      theme.colorScheme.primary.withValues(alpha: 0.88),
-                      Color.lerp(
-                        theme.colorScheme.primary,
-                        theme.colorScheme.secondary,
-                        0.35,
-                      )!,
+                      scheme.primary.withValues(alpha: 0.92),
+                      scheme.secondary.withValues(alpha: 0.84)
                     ]
                   : [
-                      Colors.white.withValues(alpha: 0.12),
-                      theme.colorScheme.surfaceContainerHighest
-                          .withValues(alpha: 0.52),
+                      Colors.white.withValues(alpha: 0.11),
+                      scheme.surfaceContainerHighest.withValues(alpha: 0.54)
                     ],
             ),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: highlight ? 0.16 : 0.12),
-            ),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
             boxShadow: [
               BoxShadow(
-                color: (highlight ? theme.colorScheme.primary : Colors.black)
-                    .withValues(alpha: 0.20),
+                color: (highlight ? scheme.primary : Colors.black)
+                    .withValues(alpha: 0.22),
                 blurRadius: 24,
                 offset: const Offset(0, 12),
               ),
             ],
           ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  icon,
-                  color: highlight
-                      ? theme.colorScheme.onPrimary
-                      : theme.colorScheme.onSurface,
-                ),
+                Icon(icon,
+                    color: highlight ? scheme.onPrimary : scheme.onSurface),
                 const SizedBox(width: 10),
                 Text(
                   label,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    color: highlight
-                        ? theme.colorScheme.onPrimary
-                        : theme.colorScheme.onSurface,
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: highlight ? scheme.onPrimary : scheme.onSurface,
+                      ),
                 ),
               ],
             ),
@@ -332,12 +299,8 @@ class GlassButton extends StatelessWidget {
 }
 
 class SectionHeading extends StatelessWidget {
-  const SectionHeading({
-    required this.title,
-    required this.subtitle,
-    this.trailing,
-    super.key,
-  });
+  const SectionHeading(
+      {required this.title, required this.subtitle, this.trailing, super.key});
 
   final String title;
   final String subtitle;
@@ -345,8 +308,6 @@ class SectionHeading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -354,27 +315,22 @@ class SectionHeading extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                title,
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
+              Text(title,
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleLarge
+                      ?.copyWith(fontWeight: FontWeight.w700)),
               const SizedBox(height: 6),
               Text(
                 subtitle,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  height: 1.4,
-                ),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
               ),
             ],
           ),
         ),
-        if (trailing != null) ...[
-          const SizedBox(width: 12),
-          trailing!,
-        ],
+        if (trailing != null) ...[const SizedBox(width: 12), trailing!],
       ],
     );
   }
@@ -398,107 +354,60 @@ class MetricCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final accent = highlight
-        ? theme.colorScheme.primary.withValues(alpha: 0.20)
-        : Colors.white.withValues(alpha: 0.08);
+    final scheme = Theme.of(context).colorScheme;
 
-    return DecoratedBox(
+    return Container(
+      constraints: BoxConstraints(minWidth: compact ? 150 : 180),
+      padding: EdgeInsets.all(compact ? 14 : 16),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(22),
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
             Colors.white.withValues(alpha: highlight ? 0.18 : 0.10),
-            accent,
+            (highlight ? scheme.primary : scheme.surfaceContainerHighest)
+                .withValues(alpha: highlight ? 0.16 : 0.52),
           ],
         ),
         border: Border.all(
-          color: Colors.white.withValues(alpha: highlight ? 0.16 : 0.08),
-        ),
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(compact ? 14 : 16),
-        child: Row(
-          children: [
-            if (icon != null) ...[
-              Container(
-                width: compact ? 38 : 42,
-                height: compact ? 38 : 42,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: theme.colorScheme.primary.withValues(alpha: 0.16),
-                ),
-                child: Icon(icon, color: theme.colorScheme.primary),
-              ),
-              const SizedBox(width: 12),
-            ],
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    value,
-                    style: (compact
-                            ? theme.textTheme.titleMedium
-                            : theme.textTheme.titleLarge)
-                        ?.copyWith(fontWeight: FontWeight.w700),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class StatusPill extends StatelessWidget {
-  const StatusPill({
-    required this.label,
-    this.icon,
-    this.tinted = false,
-    super.key,
-  });
-
-  final String label;
-  final IconData? icon;
-  final bool tinted;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(999),
-        color: tinted
-            ? theme.colorScheme.primary.withValues(alpha: 0.18)
-            : Colors.white.withValues(alpha: 0.08),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+            color: Colors.white.withValues(alpha: highlight ? 0.18 : 0.10)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (icon != null) ...[
-            Icon(icon, size: 16, color: theme.colorScheme.primary),
-            const SizedBox(width: 8),
+            Container(
+              width: compact ? 38 : 42,
+              height: compact ? 38 : 42,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: scheme.primary.withValues(alpha: 0.16),
+              ),
+              child: Icon(icon, color: scheme.primary),
+            ),
+            const SizedBox(width: 12),
           ],
-          Text(
-            label,
-            style: theme.textTheme.labelLarge?.copyWith(
-              color: theme.colorScheme.onSurface,
-              fontWeight: FontWeight.w600,
+          Flexible(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(label,
+                    style: Theme.of(context)
+                        .textTheme
+                        .labelLarge
+                        ?.copyWith(color: scheme.onSurfaceVariant)),
+                const SizedBox(height: 6),
+                Text(
+                  value,
+                  overflow: TextOverflow.ellipsis,
+                  style: (compact
+                          ? Theme.of(context).textTheme.titleMedium
+                          : Theme.of(context).textTheme.titleLarge)
+                      ?.copyWith(fontWeight: FontWeight.w700),
+                ),
+              ],
             ),
           ),
         ],
@@ -507,320 +416,154 @@ class StatusPill extends StatelessWidget {
   }
 }
 
-class _GlassmorphismBackground extends StatelessWidget {
-  const _GlassmorphismBackground();
+class StatusPill extends StatelessWidget {
+  const StatusPill(
+      {required this.label, this.icon, this.tinted = false, super.key});
 
-  static const int _seed = 481516;
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final size = Size(constraints.maxWidth, constraints.maxHeight);
-        final glowBlobs = _generateGlowBlobs(size);
-        final particles = _generateParticles(size);
-
-        final isWidgetTest = WidgetsBinding.instance.runtimeType
-            .toString()
-            .contains('TestWidgetsFlutterBinding');
-
-        return RepaintBoundary(
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              CustomPaint(
-                painter: _GlowBlobPainter(blobs: glowBlobs),
-              ),
-              IgnorePointer(
-                child: isWidgetTest
-                    ? CustomPaint(
-                        painter: const _LightStreakPainter(progress: 0.38),
-                      )
-                    : _AnimatedPainterLayer(
-                        duration: const Duration(seconds: 32),
-                        builder: (progress) =>
-                            _LightStreakPainter(progress: progress),
-                      ),
-              ),
-              IgnorePointer(
-                child: isWidgetTest
-                    ? CustomPaint(
-                        painter: _ParticlePainter(
-                          particles: particles,
-                          progress: 0.52,
-                        ),
-                      )
-                    : _AnimatedPainterLayer(
-                        duration: const Duration(seconds: 32),
-                        builder: (progress) => _ParticlePainter(
-                          particles: particles,
-                          progress: progress,
-                        ),
-                      ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  List<_GlowBlob> _generateGlowBlobs(Size size) {
-    final random = math.Random(_seed);
-    final palette = <Color>[
-      const Color(0xFF7AE7F7),
-      const Color(0xFFB69BFF),
-      const Color(0xFFFF9FD2),
-    ];
-
-    return List<_GlowBlob>.generate(5, (index) {
-      final widthFactor = 0.12 + random.nextDouble() * 0.76;
-      final heightFactor = 0.08 + random.nextDouble() * 0.84;
-      final radius = size.shortestSide * (0.16 + random.nextDouble() * 0.18);
-      final color = palette[random.nextInt(palette.length)];
-
-      return _GlowBlob(
-        center: Offset(size.width * widthFactor, size.height * heightFactor),
-        radius: radius,
-        color: color,
-        alpha: 0.07 + random.nextDouble() * 0.04,
-      );
-    });
-  }
-
-  List<_Particle> _generateParticles(Size size) {
-    final random = math.Random(_seed * 3);
-
-    return List<_Particle>.generate(18, (index) {
-      return _Particle(
-        base: Offset(
-          random.nextDouble() * size.width,
-          random.nextDouble() * size.height,
-        ),
-        radius: 0.7 + random.nextDouble() * 1.6,
-        dx: -10 + random.nextDouble() * 20,
-        dy: -14 + random.nextDouble() * 18,
-        opacity: 0.035 + random.nextDouble() * 0.035,
-      );
-    });
-  }
-}
-
-class _AnimatedPainterLayer extends StatefulWidget {
-  const _AnimatedPainterLayer({
-    required this.duration,
-    required this.builder,
-  });
-
-  final Duration duration;
-  final CustomPainter Function(double progress) builder;
-
-  @override
-  State<_AnimatedPainterLayer> createState() => _AnimatedPainterLayerState();
-}
-
-class _AnimatedPainterLayerState extends State<_AnimatedPainterLayer>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller = AnimationController(
-    vsync: this,
-    duration: widget.duration,
-  )..repeat();
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
+  final String label;
+  final IconData? icon;
+  final bool tinted;
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        return CustomPaint(
-          painter: widget.builder(_controller.value),
-        );
-      },
+    final scheme = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(999),
+        color: tinted
+            ? scheme.primary.withValues(alpha: 0.18)
+            : Colors.white.withValues(alpha: 0.07),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon,
+                size: 16, color: tinted ? scheme.primary : scheme.onSurface),
+            const SizedBox(width: 8),
+          ],
+          Text(label, style: Theme.of(context).textTheme.labelLarge),
+        ],
+      ),
     );
   }
 }
 
-class _GlowBlob {
-  const _GlowBlob({
-    required this.center,
-    required this.radius,
-    required this.color,
-    required this.alpha,
-  });
+class _TopBadge extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+        color: Colors.white.withValues(alpha: 0.05),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Glass UI', style: Theme.of(context).textTheme.labelLarge),
+          const SizedBox(height: 4),
+          Text('Subtle blur • sharp contrast',
+              style: Theme.of(context).textTheme.bodySmall),
+        ],
+      ),
+    );
+  }
+}
 
-  final Offset center;
-  final double radius;
+class _AmbientBackdrop extends StatelessWidget {
+  const _AmbientBackdrop();
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: const [
+        Positioned(
+            top: -120,
+            left: -80,
+            child: _GlowOrb(size: 300, color: Color(0xFF6E67FF))),
+        Positioned(
+            top: 80,
+            right: -60,
+            child: _GlowOrb(size: 240, color: Color(0xFF4FCFFF))),
+        Positioned(
+            bottom: -100,
+            left: 80,
+            child: _GlowOrb(size: 260, color: Color(0xFFFF74AC))),
+        Positioned(bottom: 120, right: 60, child: _GridHalo()),
+      ],
+    );
+  }
+}
+
+class _GlowOrb extends StatelessWidget {
+  const _GlowOrb({required this.size, required this.color});
+
+  final double size;
   final Color color;
-  final double alpha;
-}
-
-class _Particle {
-  const _Particle({
-    required this.base,
-    required this.radius,
-    required this.dx,
-    required this.dy,
-    required this.opacity,
-  });
-
-  final Offset base;
-  final double radius;
-  final double dx;
-  final double dy;
-  final double opacity;
-}
-
-class _GlowBlobPainter extends CustomPainter {
-  const _GlowBlobPainter({required this.blobs});
-
-  final List<_GlowBlob> blobs;
 
   @override
-  void paint(Canvas canvas, Size size) {
-    for (final blob in blobs) {
-      canvas.drawCircle(
-        blob.center,
-        blob.radius,
-        Paint()
-          ..shader = RadialGradient(
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: RadialGradient(
             colors: [
-              blob.color.withValues(alpha: blob.alpha),
-              blob.color.withValues(alpha: blob.alpha * 0.42),
-              blob.color.withValues(alpha: 0),
+              color.withValues(alpha: 0.32),
+              color.withValues(alpha: 0.06),
+              Colors.transparent
             ],
-            stops: const [0.0, 0.45, 1.0],
-          ).createShader(
-            Rect.fromCircle(center: blob.center, radius: blob.radius),
           ),
-      );
-    }
+        ),
+      ),
+    );
   }
-
-  @override
-  bool shouldRepaint(covariant _GlowBlobPainter oldDelegate) => false;
 }
 
-class _LightStreakPainter extends CustomPainter {
-  const _LightStreakPainter({required this.progress});
+class _GridHalo extends StatelessWidget {
+  const _GridHalo();
 
-  final double progress;
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child:
+          CustomPaint(size: const Size(280, 280), painter: _GridHaloPainter()),
+    );
+  }
+}
 
+class _GridHaloPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final paths = <_StreakSpec>[
-      _StreakSpec(
-        start: Offset(size.width * 0.06, size.height * 0.26),
-        control1: Offset(size.width * 0.28, size.height * 0.10),
-        control2: Offset(size.width * 0.52, size.height * 0.40),
-        end: Offset(size.width * 0.92, size.height * 0.22),
-        width: 2.2,
-      ),
-      _StreakSpec(
-        start: Offset(size.width * 0.12, size.height * 0.78),
-        control1: Offset(size.width * 0.34, size.height * 0.60),
-        control2: Offset(size.width * 0.64, size.height * 0.94),
-        end: Offset(size.width * 0.94, size.height * 0.70),
-        width: 1.8,
-      ),
-      _StreakSpec(
-        start: Offset(size.width * 0.72, size.height * 0.06),
-        control1: Offset(size.width * 0.56, size.height * 0.18),
-        control2: Offset(size.width * 0.92, size.height * 0.34),
-        end: Offset(size.width * 0.78, size.height * 0.58),
-        width: 1.6,
-      ),
-    ];
+    final rect = Offset.zero & size;
+    final paint = Paint()
+      ..shader = const RadialGradient(
+        colors: [Color(0x226E67FF), Colors.transparent],
+      ).createShader(rect)
+      ..style = PaintingStyle.fill;
+    canvas.drawRRect(
+        RRect.fromRectAndRadius(rect, const Radius.circular(48)), paint);
 
-    for (var index = 0; index < paths.length; index++) {
-      final spec = paths[index];
-      final phase = (progress + (index * 0.18)) % 1.0;
-      final opacity = 0.018 + (0.018 * math.sin(phase * math.pi));
-      final path = Path()
-        ..moveTo(spec.start.dx, spec.start.dy)
-        ..cubicTo(
-          spec.control1.dx,
-          spec.control1.dy,
-          spec.control2.dx,
-          spec.control2.dy,
-          spec.end.dx,
-          spec.end.dy,
-        );
+    final linePaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.06)
+      ..strokeWidth = 1;
 
-      canvas.drawPath(
-        path,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = spec.width
-          ..strokeCap = StrokeCap.round
-          ..shader = LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              const Color(0xFF7AE7F7).withValues(alpha: opacity * 0.45),
-              const Color(0xFFB69BFF).withValues(alpha: opacity),
-              const Color(0xFFFF9FD2).withValues(alpha: opacity * 0.5),
-            ],
-          ).createShader(Rect.fromLTWH(0, 0, size.width, size.height)),
-      );
+    const step = 28.0;
+    for (double x = 0; x <= size.width; x += step) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), linePaint);
+    }
+    for (double y = 0; y <= size.height; y += step) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), linePaint);
     }
   }
 
   @override
-  bool shouldRepaint(covariant _LightStreakPainter oldDelegate) {
-    return oldDelegate.progress != progress;
-  }
-}
-
-class _StreakSpec {
-  const _StreakSpec({
-    required this.start,
-    required this.control1,
-    required this.control2,
-    required this.end,
-    required this.width,
-  });
-
-  final Offset start;
-  final Offset control1;
-  final Offset control2;
-  final Offset end;
-  final double width;
-}
-
-class _ParticlePainter extends CustomPainter {
-  const _ParticlePainter({required this.particles, required this.progress});
-
-  final List<_Particle> particles;
-  final double progress;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    for (var index = 0; index < particles.length; index++) {
-      final particle = particles[index];
-      final wave = (progress + (index * 0.07)) % 1.0;
-      final offset = Offset(
-        particle.dx * math.sin(wave * math.pi * 2),
-        particle.dy * math.cos(wave * math.pi * 2),
-      );
-      canvas.drawCircle(
-        particle.base + offset,
-        particle.radius,
-        Paint()
-          ..color = Colors.white.withValues(
-            alpha: particle.opacity * (0.65 + 0.35 * math.sin(wave * math.pi)),
-          ),
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _ParticlePainter oldDelegate) {
-    return oldDelegate.progress != progress ||
-        oldDelegate.particles != particles;
-  }
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
