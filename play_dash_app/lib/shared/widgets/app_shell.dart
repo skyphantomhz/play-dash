@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -53,7 +52,8 @@ class AppShell extends StatelessWidget {
                         ? Row(
                             children: [
                               if (showDesktopSidebar) ...[
-                                const SizedBox(width: 220, child: _DesktopSidebar()),
+                                const SizedBox(
+                                    width: 220, child: _DesktopSidebar()),
                                 const SizedBox(width: 16),
                               ],
                               Expanded(
@@ -115,7 +115,8 @@ class _ShellSurface extends StatelessWidget {
           colors: [Color(0xFF0A0F24), Color(0xFF0B1330), Color(0xFF170A2F)],
         ),
         boxShadow: const [
-          BoxShadow(color: Color(0x66000000), blurRadius: 30, offset: Offset(0, 18)),
+          BoxShadow(
+              color: Color(0x66000000), blurRadius: 30, offset: Offset(0, 18)),
         ],
       ),
       child: ClipRRect(
@@ -126,18 +127,24 @@ class _ShellSurface extends StatelessWidget {
             Column(
               children: [
                 Padding(
-                  padding: EdgeInsets.fromLTRB(isDesktop ? 16 : 12, 12, isDesktop ? 16 : 12, 8),
+                  padding: EdgeInsets.fromLTRB(
+                      isDesktop ? 16 : 12, 12, isDesktop ? 16 : 12, 8),
                   child: isDesktop
                       ? _DesktopTopBar(tabs: desktopTopTabs)
                       : _MobileTopBar(tabs: mobileTopTabs ?? desktopTopTabs),
                 ),
                 Expanded(
                   child: Padding(
-                    padding: EdgeInsets.fromLTRB(isDesktop ? 16 : 10, 8, isDesktop ? 16 : 10, showBottomNav ? 10 : 16),
-                    child: expandChild ? child : SingleChildScrollView(child: child),
+                    padding: EdgeInsets.fromLTRB(isDesktop ? 16 : 10, 8,
+                        isDesktop ? 16 : 10, showBottomNav ? 10 : 16),
+                    child: expandChild
+                        ? child
+                        : SingleChildScrollView(child: child),
                   ),
                 ),
-                if (showBottomNav) const Padding(padding: EdgeInsets.all(10), child: _MobileBottomBar()),
+                if (showBottomNav)
+                  const Padding(
+                      padding: EdgeInsets.all(10), child: _MobileBottomBar()),
               ],
             ),
           ],
@@ -186,8 +193,13 @@ class GlassPanel extends StatelessWidget {
             color: background,
             border: Border.all(color: borderColor),
             boxShadow: [
-              BoxShadow(color: shadowColor.withValues(alpha: 0.45), blurRadius: 20, offset: const Offset(0, 10)),
-              if (glowColor != null) BoxShadow(color: glowColor!.withValues(alpha: 0.18), blurRadius: 28),
+              BoxShadow(
+                  color: shadowColor.withValues(alpha: 0.45),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10)),
+              if (glowColor != null)
+                BoxShadow(
+                    color: glowColor!.withValues(alpha: 0.18), blurRadius: 28),
             ],
           ),
           child: child,
@@ -196,7 +208,12 @@ class GlassPanel extends StatelessWidget {
     );
 
     if (onTap == null) return content;
-    return Material(color: Colors.transparent, child: InkWell(onTap: onTap, borderRadius: BorderRadius.circular(radius), child: content));
+    return Material(
+        color: Colors.transparent,
+        child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(radius),
+            child: content));
   }
 }
 
@@ -225,7 +242,9 @@ class NeonCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(radius),
         boxShadow: [
           BoxShadow(color: accent.withValues(alpha: 0.22), blurRadius: 26),
-          BoxShadow(color: (secondaryAccent ?? accent).withValues(alpha: 0.14), blurRadius: 42),
+          BoxShadow(
+              color: (secondaryAccent ?? accent).withValues(alpha: 0.14),
+              blurRadius: 42),
         ],
       ),
       child: GlassPanel(
@@ -291,36 +310,58 @@ class _GlassButtonState extends State<GlassButton> {
                 borderRadius: BorderRadius.circular(widget.compact ? 12 : 16),
                 child: Ink(
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(widget.compact ? 12 : 16),
+                    borderRadius:
+                        BorderRadius.circular(widget.compact ? 12 : 16),
                     gradient: widget.highlight
-                        ? const LinearGradient(colors: [Color(0xFF37D8FF), Color(0xFFFF4FD8)])
-                        : const LinearGradient(colors: [Color(0x22FFFFFF), Color(0x18FFFFFF)]),
-                    border: Border.all(color: Colors.white.withValues(alpha: widget.highlight ? 0 : 0.10)),
+                        ? const LinearGradient(
+                            colors: [Color(0xFF37D8FF), Color(0xFFFF4FD8)])
+                        : const LinearGradient(
+                            colors: [Color(0x22FFFFFF), Color(0x18FFFFFF)]),
+                    border: Border.all(
+                        color: Colors.white
+                            .withValues(alpha: widget.highlight ? 0 : 0.10)),
                     boxShadow: [
                       BoxShadow(
-                        color: (widget.highlight ? const Color(0xFF37D8FF) : Colors.black)
-                            .withValues(alpha: widget.highlight ? (_hovered ? 0.42 : 0.28) : 0.24),
-                        blurRadius: widget.highlight ? (_hovered ? 40 : 30) : 18,
+                        color: (widget.highlight
+                                ? const Color(0xFF37D8FF)
+                                : Colors.black)
+                            .withValues(
+                                alpha: widget.highlight
+                                    ? (_hovered ? 0.42 : 0.28)
+                                    : 0.24),
+                        blurRadius:
+                            widget.highlight ? (_hovered ? 40 : 30) : 18,
                         offset: const Offset(0, 12),
                       ),
                     ],
                   ),
                   child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: widget.compact ? 14 : 18, vertical: widget.compact ? 12 : 14),
+                    padding: EdgeInsets.symmetric(
+                        horizontal: widget.compact ? 14 : 18,
+                        vertical: widget.compact ? 12 : 14),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         if (widget.icon != null) ...[
-                          Icon(widget.icon, size: widget.compact ? 16 : 18, color: Colors.white),
+                          Icon(widget.icon,
+                              size: widget.compact ? 16 : 18,
+                              color: Colors.white),
                           const SizedBox(width: 8),
                         ],
                         Flexible(
-                          child: Text(widget.label, overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.white, fontSize: widget.compact ? 14 : 16, fontWeight: FontWeight.w700)),
+                          child: Text(widget.label,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: widget.compact ? 14 : 16,
+                                  fontWeight: FontWeight.w700)),
                         ),
                         if (widget.trailingIcon != Icons.not_interested) ...[
                           const SizedBox(width: 8),
-                          Icon(widget.trailingIcon, size: widget.compact ? 16 : 18, color: Colors.white),
+                          Icon(widget.trailingIcon,
+                              size: widget.compact ? 16 : 18,
+                              color: Colors.white),
                         ],
                       ],
                     ),
@@ -336,7 +377,11 @@ class _GlassButtonState extends State<GlassButton> {
 }
 
 class ScoreBadge extends StatelessWidget {
-  const ScoreBadge({required this.value, this.highlight = false, this.large = false, super.key});
+  const ScoreBadge(
+      {required this.value,
+      this.highlight = false,
+      this.large = false,
+      super.key});
 
   final String value;
   final bool highlight;
@@ -345,20 +390,29 @@ class ScoreBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: large ? 16 : 12, vertical: large ? 10 : 7),
+      padding: EdgeInsets.symmetric(
+          horizontal: large ? 16 : 12, vertical: large ? 10 : 7),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
-        gradient: highlight ? const LinearGradient(colors: [Color(0xFF37D8FF), Color(0xFF8B5CF6)]) : null,
+        gradient: highlight
+            ? const LinearGradient(
+                colors: [Color(0xFF37D8FF), Color(0xFF8B5CF6)])
+            : null,
         color: highlight ? null : Colors.white.withValues(alpha: 0.06),
         border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
       ),
-      child: Text(value, style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: large ? 18 : 13)),
+      child: Text(value,
+          style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w800,
+              fontSize: large ? 18 : 13)),
     );
   }
 }
 
 class StatusPill extends StatelessWidget {
-  const StatusPill({required this.label, this.icon, this.tinted = false, super.key});
+  const StatusPill(
+      {required this.label, this.icon, this.tinted = false, super.key});
 
   final String label;
   final IconData? icon;
@@ -370,7 +424,9 @@ class StatusPill extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(999),
-        color: tinted ? const Color(0x2237D8FF) : Colors.white.withValues(alpha: 0.06),
+        color: tinted
+            ? const Color(0x2237D8FF)
+            : Colors.white.withValues(alpha: 0.06),
         border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
       ),
       child: Row(
@@ -380,7 +436,11 @@ class StatusPill extends StatelessWidget {
             Icon(icon, size: 12, color: const Color(0xFF9FEFFF)),
             const SizedBox(width: 6),
           ],
-          Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 11.5)),
+          Text(label,
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 11.5)),
         ],
       ),
     );
@@ -388,7 +448,12 @@ class StatusPill extends StatelessWidget {
 }
 
 class SectionHeading extends StatelessWidget {
-  const SectionHeading({required this.title, this.subtitle, this.trailing, this.compact = false, super.key});
+  const SectionHeading(
+      {required this.title,
+      this.subtitle,
+      this.trailing,
+      this.compact = false,
+      super.key});
 
   final String title;
   final String? subtitle;
@@ -404,10 +469,20 @@ class SectionHeading extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: TextStyle(color: Colors.white, fontSize: compact ? 16 : 20, fontWeight: FontWeight.w800, letterSpacing: -0.4)),
+              Text(title,
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: compact ? 16 : 20,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.4)),
               if (subtitle != null) ...[
                 const SizedBox(height: 4),
-                Text(subtitle!, style: const TextStyle(color: Color(0xB3FFFFFF), fontSize: 12.5, fontWeight: FontWeight.w500, height: 1.4)),
+                Text(subtitle!,
+                    style: const TextStyle(
+                        color: Color(0xB3FFFFFF),
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w500,
+                        height: 1.4)),
               ],
             ],
           ),
@@ -419,7 +494,12 @@ class SectionHeading extends StatelessWidget {
 }
 
 class MetricCard extends StatelessWidget {
-  const MetricCard({required this.label, required this.value, this.icon, this.highlight = false, super.key});
+  const MetricCard(
+      {required this.label,
+      required this.value,
+      this.icon,
+      this.highlight = false,
+      super.key});
 
   final String label;
   final String value;
@@ -439,15 +519,23 @@ class MetricCard extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (icon != null) ...[
-            Icon(icon, color: highlight ? const Color(0xFF8EEBFF) : Colors.white70, size: 16),
+            Icon(icon,
+                color: highlight ? const Color(0xFF8EEBFF) : Colors.white70,
+                size: 16),
             const SizedBox(width: 8),
           ],
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label, style: const TextStyle(color: Color(0xB3FFFFFF), fontSize: 11.5)),
+              Text(label,
+                  style: const TextStyle(
+                      color: Color(0xB3FFFFFF), fontSize: 11.5)),
               const SizedBox(height: 4),
-              Text(value, style: const TextStyle(color: Colors.white, fontSize: 14.5, fontWeight: FontWeight.w800)),
+              Text(value,
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w800)),
             ],
           ),
         ],
@@ -457,7 +545,13 @@ class MetricCard extends StatelessWidget {
 }
 
 class PanelListTile extends StatelessWidget {
-  const PanelListTile({required this.title, required this.subtitle, this.leading, this.trailing, this.highlight = false, super.key});
+  const PanelListTile(
+      {required this.title,
+      required this.subtitle,
+      this.leading,
+      this.trailing,
+      this.highlight = false,
+      super.key});
 
   final String title;
   final String subtitle;
@@ -481,9 +575,17 @@ class PanelListTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14)),
+                Text(title,
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14)),
                 const SizedBox(height: 3),
-                Text(subtitle, style: const TextStyle(color: Color(0xB3FFFFFF), fontSize: 11.5, height: 1.35)),
+                Text(subtitle,
+                    style: const TextStyle(
+                        color: Color(0xB3FFFFFF),
+                        fontSize: 11.5,
+                        height: 1.35)),
               ],
             ),
           ),
@@ -495,7 +597,8 @@ class PanelListTile extends StatelessWidget {
 }
 
 class PlayerAvatar extends StatelessWidget {
-  const PlayerAvatar({required this.name, required this.colors, this.radius = 22, super.key});
+  const PlayerAvatar(
+      {required this.name, required this.colors, this.radius = 22, super.key});
 
   final String name;
   final List<Color> colors;
@@ -509,11 +612,21 @@ class PlayerAvatar extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         gradient: LinearGradient(colors: colors),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.65), width: 2),
-        boxShadow: [BoxShadow(color: colors.first.withValues(alpha: 0.35), blurRadius: 20)],
+        border:
+            Border.all(color: Colors.white.withValues(alpha: 0.65), width: 2),
+        boxShadow: [
+          BoxShadow(color: colors.first.withValues(alpha: 0.35), blurRadius: 20)
+        ],
       ),
       alignment: Alignment.center,
-      child: Text(name.trim().isEmpty ? '?' : name.trim().characters.first.toUpperCase(), style: TextStyle(color: Colors.white, fontSize: radius * 0.86, fontWeight: FontWeight.w800)),
+      child: Text(
+          name.trim().isEmpty
+              ? '?'
+              : name.trim().characters.first.toUpperCase(),
+          style: TextStyle(
+              color: Colors.white,
+              fontSize: radius * 0.86,
+              fontWeight: FontWeight.w800)),
     );
   }
 }
@@ -542,11 +655,15 @@ class _DesktopTopBar extends StatelessWidget {
           const SizedBox(width: 8),
         ],
         const Spacer(),
-        const Icon(Icons.notifications_none_rounded, size: 18, color: Colors.white70),
+        const Icon(Icons.notifications_none_rounded,
+            size: 18, color: Colors.white70),
         const SizedBox(width: 12),
         const Icon(Icons.search_rounded, size: 18, color: Colors.white70),
         const SizedBox(width: 12),
-        _TopTabChip(tab: const ShellTab(label: 'Settings', route: '/settings'), selected: location == '/settings', icon: Icons.settings_outlined),
+        _TopTabChip(
+            tab: const ShellTab(label: 'Settings', route: '/settings'),
+            selected: location == '/settings',
+            icon: Icons.settings_outlined),
       ],
     );
   }
@@ -562,7 +679,10 @@ class _MobileTopBar extends StatelessWidget {
     final location = GoRouterState.of(context).uri.toString();
     return Row(
       children: [
-        const CircleAvatar(radius: 12, backgroundColor: Color(0x2237D8FF), child: Icon(Icons.person, color: Colors.white, size: 14)),
+        const CircleAvatar(
+            radius: 12,
+            backgroundColor: Color(0x2237D8FF),
+            child: Icon(Icons.person, color: Colors.white, size: 14)),
         const SizedBox(width: 8),
         Expanded(
           child: SingleChildScrollView(
@@ -570,7 +690,8 @@ class _MobileTopBar extends StatelessWidget {
             child: Row(
               children: [
                 for (final tab in tabs.take(4)) ...[
-                  _TopTabChip(tab: tab, selected: location == tab.route, mobile: true),
+                  _TopTabChip(
+                      tab: tab, selected: location == tab.route, mobile: true),
                   const SizedBox(width: 6),
                 ],
               ],
@@ -610,7 +731,9 @@ class _DesktopSidebar extends StatelessWidget {
             background: Color(0x14FFFFFF),
             borderColor: Color(0x1FFFFFFF),
             padding: EdgeInsets.all(12),
-            child: Text('Cosmic glass UI\nwith cyan + pink glow.', style: TextStyle(color: Color(0xB3FFFFFF), fontSize: 12.5, height: 1.35)),
+            child: Text('Cosmic glass UI\nwith cyan + pink glow.',
+                style: TextStyle(
+                    color: Color(0xB3FFFFFF), fontSize: 12.5, height: 1.35)),
           ),
         ],
       ),
@@ -619,7 +742,11 @@ class _DesktopSidebar extends StatelessWidget {
 }
 
 class _TopTabChip extends StatelessWidget {
-  const _TopTabChip({required this.tab, required this.selected, this.mobile = false, this.icon});
+  const _TopTabChip(
+      {required this.tab,
+      required this.selected,
+      this.mobile = false,
+      this.icon});
 
   final ShellTab tab;
   final bool selected;
@@ -634,11 +761,15 @@ class _TopTabChip extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         curve: Curves.easeInOut,
-        padding: EdgeInsets.symmetric(horizontal: mobile ? 10 : 12, vertical: mobile ? 7 : 8),
+        padding: EdgeInsets.symmetric(
+            horizontal: mobile ? 10 : 12, vertical: mobile ? 7 : 8),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(999),
-          color: selected ? Colors.white.withValues(alpha: 0.08) : Colors.transparent,
-          border: Border.all(color: Colors.white.withValues(alpha: selected ? 0.14 : 0.0)),
+          color: selected
+              ? Colors.white.withValues(alpha: 0.08)
+              : Colors.transparent,
+          border: Border.all(
+              color: Colors.white.withValues(alpha: selected ? 0.14 : 0.0)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -647,7 +778,11 @@ class _TopTabChip extends StatelessWidget {
               Icon(icon, size: mobile ? 12 : 14, color: Colors.white70),
               const SizedBox(width: 6),
             ],
-            Text(tab.label, style: TextStyle(color: Colors.white, fontSize: mobile ? 11 : 12.5, fontWeight: selected ? FontWeight.w700 : FontWeight.w500)),
+            Text(tab.label,
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: mobile ? 11 : 12.5,
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500)),
           ],
         ),
       ),
@@ -673,15 +808,24 @@ class _SidebarNavTile extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
-          color: selected ? Colors.white.withValues(alpha: 0.08) : Colors.transparent,
-          border: Border.all(color: Colors.white.withValues(alpha: selected ? 0.14 : 0.03)),
-          boxShadow: selected ? [const BoxShadow(color: Color(0x4437D8FF), blurRadius: 20)] : null,
+          color: selected
+              ? Colors.white.withValues(alpha: 0.08)
+              : Colors.transparent,
+          border: Border.all(
+              color: Colors.white.withValues(alpha: selected ? 0.14 : 0.03)),
+          boxShadow: selected
+              ? [const BoxShadow(color: Color(0x4437D8FF), blurRadius: 20)]
+              : null,
         ),
         child: Row(
           children: [
             Icon(item.icon, size: 18, color: Colors.white),
             const SizedBox(width: 10),
-            Text(item.label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13)),
+            Text(item.label,
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13)),
           ],
         ),
       ),
@@ -703,14 +847,23 @@ class _BrandBadge extends StatelessWidget {
           height: compact ? 32 : 30,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10),
-            gradient: const LinearGradient(colors: [Color(0xFF133C69), Color(0xFF091B35)]),
+            gradient: const LinearGradient(
+                colors: [Color(0xFF133C69), Color(0xFF091B35)]),
             border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
           ),
           alignment: Alignment.center,
-          child: Text('Wb', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: compact ? 12 : 11.5)),
+          child: Text('Wb',
+              style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: compact ? 12 : 11.5)),
         ),
         const SizedBox(width: 10),
-        Text('ORAITIES', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: compact ? 13 : 12)),
+        Text('ORAITIES',
+            style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w800,
+                fontSize: compact ? 13 : 12)),
       ],
     );
   }
@@ -739,14 +892,21 @@ class _MobileBottomBar extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(14),
-                  gradient: selected ? const LinearGradient(colors: [Color(0xFF37D8FF), Color(0xFF8B5CF6)]) : null,
+                  gradient: selected
+                      ? const LinearGradient(
+                          colors: [Color(0xFF37D8FF), Color(0xFF8B5CF6)])
+                      : null,
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(item.icon, size: 18, color: Colors.white),
                     const SizedBox(height: 4),
-                    Text(item.shortLabel, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 10.5)),
+                    Text(item.shortLabel,
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 10.5)),
                   ],
                 ),
               ),
@@ -763,19 +923,23 @@ class _AppBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: const [
+    return const Stack(
+      children: [
         Positioned.fill(
           child: DecoratedBox(
             decoration: BoxDecoration(
-              gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFF060816), Color(0xFF0B1330), Color(0xFF140A2E)]),
+              gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFF060816),
+                    Color(0xFF0B1330),
+                    Color(0xFF140A2E)
+                  ]),
             ),
           ),
         ),
-        Positioned(top: -40, left: -40, child: _GlowBlob(color: Color(0x4037D8FF), size: 320)),
-        Positioned(right: -80, top: 220, child: _GlowBlob(color: Color(0x33FF4FD8), size: 320)),
-        Positioned(left: 120, bottom: -80, child: _GlowBlob(color: Color(0x2E8B5CF6), size: 320)),
-        Positioned.fill(child: _BackgroundStreaks()),
+        Positioned.fill(child: _BackgroundStreaks(dense: false)),
       ],
     );
   }
@@ -786,92 +950,285 @@ class _InnerCosmos extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: const [
+    return const Stack(
+      children: [
         Positioned.fill(
           child: DecoratedBox(
             decoration: BoxDecoration(
-              gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFF050917), Color(0xFF0B1330), Color(0xFF160B31)]),
+              gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFF050917),
+                    Color(0xFF0B1330),
+                    Color(0xFF160B31)
+                  ]),
             ),
           ),
         ),
-        Positioned(left: -30, top: 80, child: _GlowBlob(color: Color(0x4437D8FF), size: 250)),
-        Positioned(right: -70, top: 140, child: _GlowBlob(color: Color(0x33FF4FD8), size: 280)),
-        Positioned(left: 120, bottom: -70, child: _GlowBlob(color: Color(0x2B8B5CF6), size: 260)),
         Positioned.fill(child: _BackgroundStreaks()),
       ],
     );
   }
 }
 
-class _GlowBlob extends StatelessWidget {
-  const _GlowBlob({required this.color, required this.size});
+class _BackgroundStreaks extends StatefulWidget {
+  const _BackgroundStreaks({this.dense = true});
 
-  final Color color;
-  final double size;
+  final bool dense;
+
+  @override
+  State<_BackgroundStreaks> createState() => _BackgroundStreaksState();
+}
+
+class _BackgroundStreaksState extends State<_BackgroundStreaks>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: Duration(seconds: widget.dense ? 28 : 36),
+  )..repeat();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return IgnorePointer(
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: RadialGradient(colors: [color, color.withValues(alpha: color.a * 0.4), Colors.transparent]),
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, _) => CustomPaint(
+          painter:
+              _StreakPainter(progress: _controller.value, dense: widget.dense),
+          child: const SizedBox.expand(),
         ),
       ),
     );
   }
 }
 
-class _BackgroundStreaks extends StatelessWidget {
-  const _BackgroundStreaks();
-
-  @override
-  Widget build(BuildContext context) {
-    return IgnorePointer(child: CustomPaint(painter: _StreakPainter()));
-  }
-}
-
 class _StreakPainter extends CustomPainter {
+  const _StreakPainter({required this.progress, required this.dense});
+
+  final double progress;
+  final bool dense;
+
+  static const List<Color> _blobColors = [
+    Color(0x4037D8FF),
+    Color(0x33FF4FD8),
+    Color(0x2E8B5CF6),
+    Color(0x2237D8FF),
+  ];
+
   @override
   void paint(Canvas canvas, Size size) {
-    final cyan = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5
-      ..shader = const LinearGradient(colors: [Colors.transparent, Color(0x4437D8FF), Colors.transparent]).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
-    final pink = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.2
-      ..shader = const LinearGradient(colors: [Colors.transparent, Color(0x33FF4FD8), Colors.transparent]).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+    _paintGlowBlobs(canvas, size);
+    _paintStreaks(canvas, size);
+    _paintParticles(canvas, size);
+  }
 
-    final p1 = Path()
-      ..moveTo(size.width * 0.05, size.height * 0.18)
-      ..quadraticBezierTo(size.width * 0.32, size.height * 0.08, size.width * 0.55, size.height * 0.2)
-      ..quadraticBezierTo(size.width * 0.75, size.height * 0.28, size.width * 0.95, size.height * 0.18);
-    final p2 = Path()
-      ..moveTo(size.width * 0.08, size.height * 0.75)
-      ..quadraticBezierTo(size.width * 0.28, size.height * 0.62, size.width * 0.52, size.height * 0.7)
-      ..quadraticBezierTo(size.width * 0.74, size.height * 0.76, size.width * 0.94, size.height * 0.62);
+  void _paintGlowBlobs(Canvas canvas, Size size) {
+    final blobs = dense
+        ? const [
+            (Offset(0.12, 0.16), 0.28, 0.08, 0.06),
+            (Offset(0.88, 0.22), 0.26, -0.07, 0.05),
+            (Offset(0.24, 0.82), 0.30, 0.06, -0.05),
+            (Offset(0.78, 0.72), 0.22, -0.05, -0.04),
+          ]
+        : const [
+            (Offset(0.10, 0.12), 0.34, 0.08, 0.05),
+            (Offset(0.90, 0.28), 0.30, -0.08, 0.06),
+            (Offset(0.22, 0.88), 0.32, 0.07, -0.04),
+          ];
 
-    canvas.drawPath(p1, cyan);
-    canvas.drawPath(p2, pink);
-
-    final dot = Paint()..color = Colors.white.withValues(alpha: 0.18);
-    for (var i = 0; i < 70; i++) {
-      final x = (i * 73 % 997) / 997 * size.width;
-      final y = (i * 41 % 991) / 991 * size.height;
-      canvas.drawCircle(Offset(x, y), i % 7 == 0 ? 1.5 : 1, dot);
+    for (var i = 0; i < blobs.length; i++) {
+      final blob = blobs[i];
+      final dx = _wave(progress + i * 0.13) * blob.$3 * size.width;
+      final dy = _wave(progress * 0.8 + i * 0.21) * blob.$4 * size.height;
+      final center =
+          Offset(blob.$1.dx * size.width + dx, blob.$1.dy * size.height + dy);
+      final radius = size.shortestSide * blob.$2;
+      final color = _blobColors[i % _blobColors.length];
+      final rect = Rect.fromCircle(center: center, radius: radius);
+      canvas.drawCircle(
+        center,
+        radius,
+        Paint()
+          ..shader = RadialGradient(
+            colors: [
+              color,
+              color.withValues(alpha: color.a * 0.45),
+              Colors.transparent
+            ],
+          ).createShader(rect),
+      );
     }
   }
 
+  void _paintStreaks(Canvas canvas, Size size) {
+    final streaks = [
+      _AnimatedStreak(
+        color: const Color(0xFF37D8FF),
+        alpha: dense ? 0.26 : 0.22,
+        width: dense ? 1.7 : 1.45,
+        start: Offset(0.04, 0.17),
+        controlA: Offset(0.28, 0.02),
+        controlB: Offset(0.70, 0.32),
+        end: Offset(0.98, 0.16),
+        speed: 1.0,
+        phase: 0.0,
+      ),
+      _AnimatedStreak(
+        color: const Color(0xFFFF4FD8),
+        alpha: dense ? 0.22 : 0.18,
+        width: dense ? 1.35 : 1.2,
+        start: Offset(0.06, 0.74),
+        controlA: Offset(0.22, 0.56),
+        controlB: Offset(0.72, 0.86),
+        end: Offset(0.97, 0.60),
+        speed: 0.82,
+        phase: 0.22,
+      ),
+      _AnimatedStreak(
+        color: const Color(0xFF8B5CF6),
+        alpha: dense ? 0.14 : 0.12,
+        width: 1.1,
+        start: Offset(0.12, 0.46),
+        controlA: Offset(0.36, 0.30),
+        controlB: Offset(0.58, 0.58),
+        end: Offset(0.90, 0.42),
+        speed: 0.64,
+        phase: 0.47,
+      ),
+    ];
+
+    for (final streak in streaks) {
+      final shiftX =
+          _wave(progress * streak.speed + streak.phase) * 0.04 * size.width;
+      final shiftY =
+          _wave(progress * (streak.speed * 0.9) + streak.phase + 0.11) *
+              0.03 *
+              size.height;
+      final path = Path()
+        ..moveTo(streak.start.dx * size.width + shiftX,
+            streak.start.dy * size.height + shiftY)
+        ..cubicTo(
+          streak.controlA.dx * size.width - shiftX * 0.2,
+          streak.controlA.dy * size.height + shiftY * 1.3,
+          streak.controlB.dx * size.width + shiftX * 0.9,
+          streak.controlB.dy * size.height - shiftY,
+          streak.end.dx * size.width - shiftX * 0.4,
+          streak.end.dy * size.height + shiftY * 0.4,
+        );
+
+      final basePaint = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = streak.width
+        ..shader = LinearGradient(
+          colors: [
+            Colors.transparent,
+            streak.color.withValues(alpha: streak.alpha),
+            Colors.transparent,
+          ],
+        ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+      canvas.drawPath(path, basePaint);
+
+      final pulse = _unitWave(progress * streak.speed + streak.phase);
+      final metrics = path.computeMetrics().toList();
+      for (final metric in metrics) {
+        final start = (metric.length * pulse).clamp(0.0, metric.length);
+        final end = (start + metric.length * 0.18).clamp(0.0, metric.length);
+        final highlight = metric.extractPath(start, end);
+        canvas.drawPath(
+          highlight,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = streak.width + 0.9
+            ..strokeCap = StrokeCap.round
+            ..shader = LinearGradient(
+              colors: [
+                streak.color.withValues(alpha: 0.0),
+                streak.color.withValues(alpha: dense ? 0.72 : 0.62),
+                Colors.white.withValues(alpha: dense ? 0.18 : 0.12),
+              ],
+            ).createShader(Rect.fromLTWH(0, 0, size.width, size.height)),
+        );
+      }
+    }
+  }
+
+  void _paintParticles(Canvas canvas, Size size) {
+    final count = dense ? 48 : 36;
+    for (var i = 0; i < count; i++) {
+      final seed = i + 1;
+      final baseX = ((seed * 67) % 997) / 997;
+      final baseY = ((seed * 41) % 991) / 991;
+      final driftX =
+          _wave(progress * (0.10 + (i % 5) * 0.015) + i * 0.17) * 0.055;
+      final driftY =
+          _wave(progress * (0.08 + (i % 7) * 0.012) + i * 0.11) * 0.075;
+      final radius = i % 9 == 0 ? 1.8 : (i % 4 == 0 ? 1.3 : 1.0);
+      final opacity = 0.05 + ((i % 6) * 0.018);
+      final color =
+          i.isEven ? const Color(0xFFB9F6FF) : const Color(0xFFFFD2F4);
+      final offset = Offset(
+        (baseX + driftX).clamp(0.0, 1.0) * size.width,
+        (baseY + driftY).clamp(0.0, 1.0) * size.height,
+      );
+      canvas.drawCircle(
+          offset, radius, Paint()..color = color.withValues(alpha: opacity));
+    }
+  }
+
+  double _wave(double value) {
+    final fractional = value - value.floorToDouble();
+    return fractional < 0.5
+        ? fractional * 2 - 0.5
+        : 0.5 - ((fractional - 0.5) * 2);
+  }
+
+  double _unitWave(double value) {
+    final fractional = value - value.floorToDouble();
+    return Curves.easeInOut.transform(fractional);
+  }
+
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _StreakPainter oldDelegate) =>
+      oldDelegate.progress != progress || oldDelegate.dense != dense;
+}
+
+class _AnimatedStreak {
+  const _AnimatedStreak({
+    required this.color,
+    required this.alpha,
+    required this.width,
+    required this.start,
+    required this.controlA,
+    required this.controlB,
+    required this.end,
+    required this.speed,
+    required this.phase,
+  });
+
+  final Color color;
+  final double alpha;
+  final double width;
+  final Offset start;
+  final Offset controlA;
+  final Offset controlB;
+  final Offset end;
+  final double speed;
+  final double phase;
 }
 
 class _NavItem {
-  const _NavItem({required this.label, required this.shortLabel, required this.route, required this.icon});
+  const _NavItem(
+      {required this.label,
+      required this.shortLabel,
+      required this.route,
+      required this.icon});
 
   final String label;
   final String shortLabel;
@@ -880,9 +1237,26 @@ class _NavItem {
 }
 
 const _navItems = <_NavItem>[
-  _NavItem(label: 'Home', shortLabel: 'Home', route: '/', icon: Icons.home_filled),
-  _NavItem(label: 'Leaderboard', shortLabel: 'Leads', route: '/leaderboard', icon: Icons.emoji_events_outlined),
-  _NavItem(label: 'Stats', shortLabel: 'Stats', route: '/leaderboard', icon: Icons.bar_chart_rounded),
-  _NavItem(label: 'History', shortLabel: 'History', route: '/leaderboard', icon: Icons.history_rounded),
-  _NavItem(label: 'Settings', shortLabel: 'Setup', route: '/settings', icon: Icons.settings_outlined),
+  _NavItem(
+      label: 'Home', shortLabel: 'Home', route: '/', icon: Icons.home_filled),
+  _NavItem(
+      label: 'Leaderboard',
+      shortLabel: 'Leads',
+      route: '/leaderboard',
+      icon: Icons.emoji_events_outlined),
+  _NavItem(
+      label: 'Stats',
+      shortLabel: 'Stats',
+      route: '/leaderboard',
+      icon: Icons.bar_chart_rounded),
+  _NavItem(
+      label: 'History',
+      shortLabel: 'History',
+      route: '/leaderboard',
+      icon: Icons.history_rounded),
+  _NavItem(
+      label: 'Settings',
+      shortLabel: 'Setup',
+      route: '/settings',
+      icon: Icons.settings_outlined),
 ];
