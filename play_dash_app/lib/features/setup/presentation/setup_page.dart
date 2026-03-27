@@ -22,9 +22,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   bool _showMatchScreen = false;
   late final List<TextEditingController> _nameControllers = List.generate(
     _maxPlayers,
-    (index) => TextEditingController(
-      text: ['Mike Johnson', 'Dipti Williams', 'Camme Davis', 'Sarah Williams', 'Leo', 'Noah', 'Ava', 'Luca'][index],
-    ),
+    (index) => TextEditingController(text: ['Mike Johnson', 'Dipti Williams', 'Camme Davis', 'Sarah Williams', 'Leo', 'Noah', 'Ava', 'Luca'][index]),
   );
 
   @override
@@ -59,20 +57,25 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     return AppShell(
       expandChild: true,
       mobileTopTabs: const [
-        ShellTab(label: 'Home', route: '/'),
         ShellTab(label: 'Setup', route: '/setup'),
         ShellTab(label: 'Game', route: '/match/x01'),
-        ShellTab(label: 'Stats', route: '/leaderboard'),
+        ShellTab(label: 'Scores', route: '/leaderboard'),
       ],
       child: LayoutBuilder(
         builder: (context, constraints) {
           final desktop = constraints.maxWidth >= 1180;
           return desktop
               ? Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
+                      flex: 30,
+                      child: _SetupHero(playerName: preview.last),
+                    ),
+                    const SizedBox(width: 18),
+                    Expanded(
                       flex: 38,
-                      child: _SetupConfiguration(
+                      child: _SetupConfig(
                         playerCount: _playerCount,
                         minPlayers: _minPlayers,
                         maxPlayers: _maxPlayers,
@@ -82,19 +85,14 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                       ),
                     ),
                     const SizedBox(width: 18),
-                    Expanded(flex: 26, child: _SetupRoster(preview: preview)),
-                    const SizedBox(width: 18),
-                    Expanded(
-                      flex: 24,
-                      child: _SetupActions(playerCount: _playerCount, onStart: _startMatch),
-                    ),
+                    Expanded(flex: 28, child: _SetupSideRail(preview: preview, playerCount: _playerCount, onStart: _startMatch)),
                   ],
                 )
               : Column(
                   children: [
-                    _MobileSetupScore(preview: preview),
+                    _SetupHero(playerName: preview.last, compact: true),
                     const SizedBox(height: 12),
-                    _SetupConfiguration(
+                    _SetupConfig(
                       playerCount: _playerCount,
                       minPlayers: _minPlayers,
                       maxPlayers: _maxPlayers,
@@ -104,7 +102,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                       compact: true,
                     ),
                     const SizedBox(height: 12),
-                    _SetupActions(playerCount: _playerCount, onStart: _startMatch, compact: true),
+                    _SetupSideRail(preview: preview, playerCount: _playerCount, onStart: _startMatch, compact: true),
                   ],
                 );
         },
@@ -113,8 +111,58 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   }
 }
 
-class _SetupConfiguration extends StatelessWidget {
-  const _SetupConfiguration({
+class _SetupHero extends StatelessWidget {
+  const _SetupHero({required this.playerName, this.compact = false});
+
+  final String playerName;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    return NeonCard(
+      accent: const Color(0xFFFF4FD8),
+      secondaryAccent: const Color(0xFF8B5CF6),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const PlayerAvatar(name: 'Sarah', colors: [Color(0xFFFF4FD8), Color(0xFF8B5CF6)]),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Setup Game', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: compact ? 18 : 20)),
+                    const SizedBox(height: 4),
+                    Text('$playerName  ·  24/10  ·  Days', style: const TextStyle(color: Color(0xB3FFFFFF), fontSize: 11.5)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Text('301', style: TextStyle(color: const Color(0xFFBDF5FF), fontSize: compact ? 56 : 68, fontWeight: FontWeight.w900, height: 0.95)),
+          const SizedBox(height: 8),
+          const Text('S.01  |  Score 5', style: TextStyle(color: Color(0xB3FFFFFF), fontWeight: FontWeight.w600)),
+          const SizedBox(height: 16),
+          Row(
+            children: const [
+              Expanded(child: _SetupTab(label: 'Global', active: true)),
+              SizedBox(width: 8),
+              Expanded(child: _SetupTab(label: 'Friends')),
+              SizedBox(width: 8),
+              Expanded(child: _SetupTab(label: 'This Month')),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SetupConfig extends StatelessWidget {
+  const _SetupConfig({
     required this.playerCount,
     required this.minPlayers,
     required this.maxPlayers,
@@ -135,36 +183,15 @@ class _SetupConfiguration extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return NeonCard(
-      accent: const Color(0xFF2DB6FF),
-      secondaryAccent: const Color(0xFF6E49FF),
-      radius: compact ? 20 : 24,
+      accent: const Color(0xFF37D8FF),
+      secondaryAccent: const Color(0xFF8B5CF6),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SectionHeading(
-            title: 'Setup Game',
-            subtitle: compact ? 'Stay / Header / Single re-entry' : 'Select mode, roster, and scoring before launch.',
-            trailing: ScoreBadge(value: '$playerCount Players', highlight: true),
-          ),
-          const SizedBox(height: 14),
-          Row(
-            children: const [
-              Expanded(child: _SegmentToggle(label: 'Global', active: true)),
-              SizedBox(width: 8),
-              Expanded(child: _SegmentToggle(label: 'Friends')),
-              SizedBox(width: 8),
-              Expanded(child: _SegmentToggle(label: 'This Month')),
-            ],
-          ),
-          const SizedBox(height: 14),
-          Slider(
-            value: playerCount.toDouble(),
-            min: minPlayers.toDouble(),
-            max: maxPlayers.toDouble(),
-            divisions: maxPlayers - minPlayers,
-            onChanged: onPlayerCountChanged,
-          ),
-          const SizedBox(height: 8),
+          SectionHeading(title: 'Setup Game', subtitle: 'Glass inputs, cyan focus, and stacked controls to match the mobile setup panel.', trailing: ScoreBadge(value: '$playerCount Players', highlight: true)),
+          const SizedBox(height: 16),
+          Slider(value: playerCount.toDouble(), min: minPlayers.toDouble(), max: maxPlayers.toDouble(), divisions: maxPlayers - minPlayers, onChanged: onPlayerCountChanged),
+          const SizedBox(height: 10),
           Wrap(
             spacing: 10,
             runSpacing: 10,
@@ -175,23 +202,12 @@ class _SetupConfiguration extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          for (int index = 0; index < playerCount; index++) ...[
-            FrostPanel(
-              radius: 18,
-              backgroundOpacity: 0.12,
-              borderOpacity: 0.16,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              child: TextField(
-                controller: nameControllers[index],
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-                onChanged: (_) => onChanged(),
-                decoration: InputDecoration(
-                  border: InputBorder.none,
-                  labelText: 'Player ${index + 1}',
-                  labelStyle: const TextStyle(color: Color(0xB3E8EDFF)),
-                  prefixIcon: const Icon(Icons.person_outline_rounded, color: Colors.white70),
-                ),
-              ),
+          for (int i = 0; i < playerCount; i++) ...[
+            TextField(
+              controller: nameControllers[i],
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+              onChanged: (_) => onChanged(),
+              decoration: InputDecoration(labelText: 'Player ${i + 1}', prefixIcon: const Icon(Icons.person_outline_rounded)),
             ),
             const SizedBox(height: 10),
           ],
@@ -201,110 +217,58 @@ class _SetupConfiguration extends StatelessWidget {
   }
 }
 
-class _SetupRoster extends StatelessWidget {
-  const _SetupRoster({required this.preview});
+class _SetupSideRail extends StatelessWidget {
+  const _SetupSideRail({required this.preview, required this.playerCount, required this.onStart, this.compact = false});
 
   final List<String> preview;
-
-  @override
-  Widget build(BuildContext context) {
-    return NeonCard(
-      accent: const Color(0xFFFF4BDD),
-      secondaryAccent: const Color(0xFF6E49FF),
-      child: Column(
-        children: [
-          const SectionHeading(title: 'Best Order', subtitle: 'Drag-free stacked roster with bright score chips.'),
-          const SizedBox(height: 14),
-          for (int index = 0; index < preview.length; index++) ...[
-            PanelListTile(
-              title: preview[index],
-              subtitle: index == 0 ? '00' : index == 1 ? '40' : '00',
-              leading: PlayerAvatar(
-                name: preview[index],
-                colors: [index.isEven ? const Color(0xFF2DB6FF) : const Color(0xFFFF5A87), const Color(0xFF6E49FF)],
-              ),
-              trailing: ScoreBadge(value: index == 0 ? '80' : index == 1 ? '40' : '00', highlight: index == 1),
-            ),
-            const SizedBox(height: 10),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _SetupActions extends StatelessWidget {
-  const _SetupActions({required this.playerCount, required this.onStart, this.compact = false});
-
   final int playerCount;
   final VoidCallback onStart;
   final bool compact;
 
   @override
   Widget build(BuildContext context) {
-    return NeonCard(
-      accent: const Color(0xFFFF4BDD),
-      secondaryAccent: const Color(0xFF2DB6FF),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SectionHeading(title: 'Game Settings', subtitle: 'Mirror the mobile setup panel shown in the reference.'),
-          const SizedBox(height: 14),
-          const _DropdownLine(title: 'Stay Game', value: 'X01'),
-          const SizedBox(height: 10),
-          const _DropdownLine(title: 'Start Order', value: 'Mike Johnson'),
-          const SizedBox(height: 10),
-          const _DropdownLine(title: 'Scoring', value: 'Single Out'),
-          const SizedBox(height: 10),
-          const _DropdownLine(title: 'Round Count', value: 'Best of 5'),
-          const SizedBox(height: 10),
-          _DropdownLine(title: 'Roster', value: '$playerCount Players'),
-          const SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity,
-            child: GlassButton(
-              label: 'Start Game',
-              icon: Icons.play_arrow_rounded,
-              onPressed: onStart,
-              highlight: true,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MobileSetupScore extends StatelessWidget {
-  const _MobileSetupScore({required this.preview});
-
-  final List<String> preview;
-
-  @override
-  Widget build(BuildContext context) {
-    return const NeonCard(
-      accent: Color(0xFFFF4BDD),
-      secondaryAccent: Color(0xFF6E49FF),
-      child: Column(
-        children: [
-          Row(
+    return Column(
+      children: [
+        NeonCard(
+          accent: const Color(0xFFFF4FD8),
+          secondaryAccent: const Color(0xFF8B5CF6),
+          child: Column(
             children: [
-              PlayerAvatar(name: 'Sarah', colors: [Color(0xFFFF5A87), Color(0xFF6E49FF)]),
-              SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Setup Game', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 18)),
-                    Text('Warm Corness  ·  24/10  ·  Deym', style: TextStyle(color: Color(0xB3E8EDFF), fontSize: 11.5)),
-                  ],
+              const SectionHeading(title: 'Best Order', subtitle: 'Shortlist the roster with bright chips and compact player rows.'),
+              const SizedBox(height: 14),
+              for (final entry in preview.asMap().entries) ...[
+                PanelListTile(
+                  title: entry.value,
+                  subtitle: entry.key == 0 ? '80' : entry.key == 1 ? '40' : '00',
+                  leading: PlayerAvatar(name: entry.value, colors: [entry.key.isEven ? const Color(0xFF37D8FF) : const Color(0xFFFF4FD8), const Color(0xFF8B5CF6)], radius: 18),
+                  trailing: ScoreBadge(value: entry.key == 0 ? '80' : entry.key == 1 ? '40' : '00', highlight: entry.key == 1),
                 ),
-              ),
-              ScoreBadge(value: '301', highlight: true, large: true),
+                const SizedBox(height: 10),
+              ],
             ],
           ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 14),
+        NeonCard(
+          accent: const Color(0xFFFF4FD8),
+          secondaryAccent: const Color(0xFF37D8FF),
+          child: Column(
+            children: [
+              const _DropdownLine(title: 'Stay Game', value: 'X01'),
+              const SizedBox(height: 10),
+              const _DropdownLine(title: 'Start Order', value: 'Mike Johnson'),
+              const SizedBox(height: 10),
+              const _DropdownLine(title: 'Scoring', value: 'Single Out'),
+              const SizedBox(height: 10),
+              const _DropdownLine(title: 'Best Games', value: 'Best 7 legs'),
+              const SizedBox(height: 10),
+              _DropdownLine(title: 'Speaker & Scoreboard', value: '$playerCount Players'),
+              const SizedBox(height: 18),
+              SizedBox(width: double.infinity, child: GlassButton(label: 'Start Game', icon: Icons.play_arrow_rounded, highlight: true, onPressed: onStart)),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
@@ -317,15 +281,16 @@ class _DropdownLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FrostPanel(
+    return GlassPanel(
       radius: 16,
-      backgroundOpacity: 0.12,
-      borderOpacity: 0.16,
+      blur: 18,
+      background: Colors.white.withValues(alpha: 0.05),
+      borderColor: Colors.white.withValues(alpha: 0.10),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       child: Row(
         children: [
           Expanded(child: Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700))),
-          Text(value, style: const TextStyle(color: Color(0xFF7FE5FF), fontWeight: FontWeight.w700)),
+          Text(value, style: const TextStyle(color: Color(0xFF9FEFFF), fontWeight: FontWeight.w700)),
           const SizedBox(width: 8),
           const Icon(Icons.expand_more_rounded, color: Colors.white70, size: 18),
         ],
@@ -334,8 +299,8 @@ class _DropdownLine extends StatelessWidget {
   }
 }
 
-class _SegmentToggle extends StatelessWidget {
-  const _SegmentToggle({required this.label, this.active = false});
+class _SetupTab extends StatelessWidget {
+  const _SetupTab({required this.label, this.active = false});
 
   final String label;
   final bool active;
@@ -344,14 +309,14 @@ class _SegmentToggle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 9),
+      alignment: Alignment.center,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(999),
-        gradient: active ? const LinearGradient(colors: [Color(0xFF2DB6FF), Color(0xFF6E49FF)]) : null,
+        gradient: active ? const LinearGradient(colors: [Color(0xFF37D8FF), Color(0xFF4DA3FF)]) : null,
         color: active ? null : Colors.white.withValues(alpha: 0.05),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
       ),
-      alignment: Alignment.center,
-      child: Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 12)),
+      child: Text(label, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
     );
   }
 }

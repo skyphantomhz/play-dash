@@ -35,26 +35,23 @@ class X01GamePage extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
-                      flex: 22,
-                      child: _PlayerStatusCard(
+                      flex: 24,
+                      child: _PlayerPanel(
                         name: activePlayer?.name ?? 'Latest Johnson',
                         score: state.game.scores[activePlayer?.id] ?? settings.startingScore,
-                        accent: const Color(0xFF2DB6FF),
+                        accent: const Color(0xFF37D8FF),
                         meta: 'S.01  |  Score ${state.game.currentTurnThrows.length + 2}',
+                        active: true,
                       ),
                     ),
-                    const SizedBox(width: 14),
+                    const SizedBox(width: 18),
                     Expanded(
-                      flex: 44,
-                      child: _BoardPanel(
-                        controller: controller,
-                        winner: winner,
-                        canUndo: canUndo,
-                      ),
+                      flex: 42,
+                      child: _BoardStage(controller: controller, winner: winner, canUndo: canUndo),
                     ),
-                    const SizedBox(width: 14),
+                    const SizedBox(width: 18),
                     Expanded(
-                      flex: 24,
+                      flex: 26,
                       child: _ScoreRail(
                         players: state.players,
                         activePlayer: activePlayer,
@@ -68,14 +65,15 @@ class X01GamePage extends ConsumerWidget {
                 )
               : Column(
                   children: [
-                    _PlayerStatusCard(
+                    _PlayerPanel(
                       name: activePlayer?.name ?? 'Latest Johnson',
                       score: state.game.scores[activePlayer?.id] ?? settings.startingScore,
-                      accent: const Color(0xFF2DB6FF),
+                      accent: const Color(0xFF37D8FF),
                       meta: 'S.01  |  Score ${state.game.currentTurnThrows.length + 2}',
+                      active: true,
                     ),
                     const SizedBox(height: 12),
-                    _BoardPanel(controller: controller, winner: winner, canUndo: canUndo),
+                    _BoardStage(controller: controller, winner: winner, canUndo: canUndo),
                     const SizedBox(height: 12),
                     _BottomActions(controller: controller, canUndo: canUndo),
                   ],
@@ -107,48 +105,62 @@ class X01GamePage extends ConsumerWidget {
   }
 }
 
-class _PlayerStatusCard extends StatelessWidget {
-  const _PlayerStatusCard({required this.name, required this.score, required this.accent, required this.meta});
+class _PlayerPanel extends StatelessWidget {
+  const _PlayerPanel({required this.name, required this.score, required this.accent, required this.meta, this.active = false});
 
   final String name;
   final int score;
   final Color accent;
   final String meta;
+  final bool active;
 
   @override
   Widget build(BuildContext context) {
     return NeonCard(
       accent: accent,
-      secondaryAccent: const Color(0xFF6E49FF),
+      secondaryAccent: const Color(0xFF4DA3FF),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              PlayerAvatar(name: name, colors: [accent, const Color(0xFF6E49FF)]),
+              PlayerAvatar(name: name, colors: [accent, const Color(0xFF4DA3FF)]),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 16)),
+                    Text(name, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w800)),
                     const SizedBox(height: 4),
-                    Text(meta, style: const TextStyle(color: Color(0xB3E8EDFF), fontSize: 11.5)),
+                    Text(meta, style: const TextStyle(color: Color(0xB3FFFFFF), fontSize: 11.5)),
                   ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 14),
-          Center(child: Text('$score', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 54, letterSpacing: -2))),
+          const SizedBox(height: 16),
+          Center(
+            child: Text(
+              '$score',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 66,
+                fontWeight: FontWeight.w900,
+                letterSpacing: -2,
+                shadows: active ? [Shadow(color: accent.withValues(alpha: 0.45), blurRadius: 24)] : null,
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
+          const Center(child: Text('S.01  |  Score 5', style: TextStyle(color: Color(0xB3FFFFFF), fontWeight: FontWeight.w600))),
         ],
       ),
     );
   }
 }
 
-class _BoardPanel extends StatelessWidget {
-  const _BoardPanel({required this.controller, required this.winner, required this.canUndo});
+class _BoardStage extends StatelessWidget {
+  const _BoardStage({required this.controller, required this.winner, required this.canUndo});
 
   final dynamic controller;
   final Player? winner;
@@ -157,21 +169,38 @@ class _BoardPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return NeonCard(
-      accent: const Color(0xFF2DB6FF),
-      secondaryAccent: const Color(0xFFFF4BDD),
+      accent: const Color(0xFF37D8FF),
+      secondaryAccent: const Color(0xFFFF4FD8),
       child: Column(
         children: [
-          const SectionHeading(title: 'Tap scoring to score', subtitle: 'Reduced blur and tighter edge lighting match the design.'),
-          const SizedBox(height: 12),
+          const SectionHeading(title: 'Game Screen', subtitle: 'Tap the board to score. Large centered board with bottom action rail mirrors the reference.'),
+          const SizedBox(height: 14),
           InteractiveDartboard(enabled: winner == null, onThrow: controller.addThrow),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           Row(
             children: [
-              Expanded(child: ScoreBadge(value: canUndo ? 'Undo Ready' : 'No Undo', highlight: canUndo)),
-              const SizedBox(width: 10),
-              const Expanded(child: ScoreBadge(value: '60', large: true)),
-              const SizedBox(width: 10),
-              Expanded(child: ScoreBadge(value: winner == null ? 'Live Turn' : 'Winner', highlight: winner != null)),
+              Expanded(
+                child: GlassPanel(
+                  radius: 18,
+                  blur: 16,
+                  background: Colors.white.withValues(alpha: 0.06),
+                  borderColor: Colors.white.withValues(alpha: 0.12),
+                  glowColor: const Color(0xFF37D8FF),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  child: Row(children: [const Icon(Icons.undo_rounded, color: Colors.white, size: 18), const SizedBox(width: 8), Text(canUndo ? 'Undo Ready' : 'Undo Locked', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 14))]),
+                ),
+              ),
+              const SizedBox(width: 12),
+              GlassPanel(
+                radius: 18,
+                blur: 16,
+                background: Colors.white.withValues(alpha: 0.08),
+                borderColor: Colors.white.withValues(alpha: 0.14),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                child: const Column(children: [Text('60', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 42, letterSpacing: -1.2)), Text('Latest Scored', style: TextStyle(color: Color(0xB3FFFFFF), fontSize: 11.5))]),
+              ),
+              const SizedBox(width: 12),
+              Expanded(child: GlassButton(label: 'End Turn', icon: Icons.bolt_rounded, highlight: true, onPressed: controller.resetCurrentTurn)),
             ],
           ),
         ],
@@ -193,24 +222,16 @@ class _ScoreRail extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return NeonCard(
-      accent: const Color(0xFFFF4BDD),
-      secondaryAccent: const Color(0xFF6E49FF),
+      accent: const Color(0xFFFF4FD8),
+      secondaryAccent: const Color(0xFF8B5CF6),
       child: Column(
         children: [
           for (final player in players.take(4)) ...[
             PanelListTile(
               title: player.name,
               subtitle: player.id == activePlayer?.id ? 'Current Player' : 'Waiting',
-              leading: PlayerAvatar(
-                name: player.name,
-                colors: [player.id == activePlayer?.id ? const Color(0xFF2DB6FF) : const Color(0xFFFF5A87), const Color(0xFF6E49FF)],
-                radius: 18,
-              ),
-              trailing: ScoreBadge(
-                value: '${scores[player.id] ?? settings.startingScore}',
-                highlight: player.id == activePlayer?.id,
-                large: player.id == activePlayer?.id,
-              ),
+              leading: PlayerAvatar(name: player.name, colors: [player.id == activePlayer?.id ? const Color(0xFF37D8FF) : const Color(0xFFFF4FD8), const Color(0xFF8B5CF6)], radius: 18),
+              trailing: ScoreBadge(value: '${scores[player.id] ?? settings.startingScore}', highlight: player.id == activePlayer?.id, large: player.id == activePlayer?.id),
               highlight: player.id == activePlayer?.id,
             ),
             const SizedBox(height: 10),
@@ -232,12 +253,7 @@ class _ScoreRail extends StatelessWidget {
             ],
           if (winner != null) ...[
             const SizedBox(height: 12),
-            PanelListTile(
-              title: '${winner!.name} wins',
-              subtitle: 'Checkout completed',
-              leading: const Icon(Icons.emoji_events_rounded, color: Color(0xFFFFD95B)),
-              highlight: true,
-            ),
+            PanelListTile(title: '${winner!.name} wins', subtitle: 'Checkout completed', leading: const Icon(Icons.emoji_events_rounded, color: Color(0xFFFFD95B)), highlight: true),
           ],
         ],
       ),
@@ -255,22 +271,9 @@ class _BottomActions extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Expanded(
-          child: GlassButton(
-            label: 'Undo',
-            icon: Icons.undo_rounded,
-            onPressed: canUndo ? controller.undo : null,
-          ),
-        ),
+        Expanded(child: GlassButton(label: 'Undo', icon: Icons.undo_rounded, onPressed: canUndo ? controller.undo : null)),
         const SizedBox(width: 10),
-        Expanded(
-          child: GlassButton(
-            label: 'End Turn',
-            icon: Icons.bolt_rounded,
-            onPressed: controller.resetCurrentTurn,
-            highlight: true,
-          ),
-        ),
+        Expanded(child: GlassButton(label: 'End Turn', icon: Icons.bolt_rounded, highlight: true, onPressed: controller.resetCurrentTurn)),
       ],
     );
   }

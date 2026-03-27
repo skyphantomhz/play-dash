@@ -31,31 +31,37 @@ class CricketGamePage extends ConsumerWidget {
           final desktop = constraints.maxWidth >= 1180;
           return desktop
               ? Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
-                      flex: 42,
+                      flex: 28,
+                      child: _CricketHero(player: activePlayer, score: activePlayer == null ? 0 : state.game.scores[activePlayer.id] ?? 0),
+                    ),
+                    const SizedBox(width: 18),
+                    Expanded(
+                      flex: 40,
                       child: NeonCard(
-                        accent: const Color(0xFF2DB6FF),
-                        secondaryAccent: const Color(0xFFFF4BDD),
+                        accent: const Color(0xFF37D8FF),
+                        secondaryAccent: const Color(0xFFFF4FD8),
                         child: Column(
                           children: [
                             SectionHeading(
                               title: winner == null ? 'Cricket Board' : '${winner.name} Wins',
-                              subtitle: 'Glassmorphism tuned down to match the reference intensity.',
+                              subtitle: 'Large center board with lighter glass and neon accent ring.',
                               trailing: ScoreBadge(value: canUndo ? 'Undo Ready' : 'Locked', highlight: canUndo),
                             ),
-                            const SizedBox(height: 14),
+                            const SizedBox(height: 16),
                             InteractiveDartboard(enabled: winner == null, onThrow: controller.addThrow),
                           ],
                         ),
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: 18),
                     Expanded(
-                      flex: 30,
+                      flex: 28,
                       child: NeonCard(
-                        accent: const Color(0xFFFF4BDD),
-                        secondaryAccent: const Color(0xFF6E49FF),
+                        accent: const Color(0xFFFF4FD8),
+                        secondaryAccent: const Color(0xFF8B5CF6),
                         child: Column(
                           children: [
                             for (final player in state.players) ...[
@@ -75,12 +81,14 @@ class CricketGamePage extends ConsumerWidget {
                 )
               : Column(
                   children: [
+                    _CricketHero(player: activePlayer, score: activePlayer == null ? 0 : state.game.scores[activePlayer.id] ?? 0),
+                    const SizedBox(height: 12),
                     NeonCard(
-                      accent: const Color(0xFF2DB6FF),
-                      secondaryAccent: const Color(0xFFFF4BDD),
+                      accent: const Color(0xFF37D8FF),
+                      secondaryAccent: const Color(0xFFFF4FD8),
                       child: Column(
                         children: [
-                          SectionHeading(title: winner == null ? 'Cricket Board' : '${winner.name} Wins', subtitle: 'Mobile board view rebuilt from the same visual system.'),
+                          SectionHeading(title: winner == null ? 'Cricket Board' : '${winner.name} Wins', subtitle: 'Mobile board view uses the same glass-and-neon system.'),
                           const SizedBox(height: 14),
                           InteractiveDartboard(enabled: winner == null, onThrow: controller.addThrow),
                         ],
@@ -114,6 +122,46 @@ class CricketGamePage extends ConsumerWidget {
   }
 }
 
+class _CricketHero extends StatelessWidget {
+  const _CricketHero({required this.player, required this.score});
+
+  final Player? player;
+  final int score;
+
+  @override
+  Widget build(BuildContext context) {
+    return NeonCard(
+      accent: const Color(0xFF37D8FF),
+      secondaryAccent: const Color(0xFF4DA3FF),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              PlayerAvatar(name: player?.name ?? 'P', colors: const [Color(0xFF37D8FF), Color(0xFF4DA3FF)]),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(player?.name ?? 'Current Player', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 16)),
+                    const SizedBox(height: 4),
+                    const Text('Classic Cricket', style: TextStyle(color: Color(0xB3FFFFFF), fontSize: 11.5)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Center(child: Text('$score', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 64, letterSpacing: -2))),
+          const SizedBox(height: 6),
+          const Center(child: Text('Marks & points live', style: TextStyle(color: Color(0xB3FFFFFF), fontWeight: FontWeight.w600))),
+        ],
+      ),
+    );
+  }
+}
+
 class _CricketPlayerCard extends StatelessWidget {
   const _CricketPlayerCard({required this.player, required this.isActive, required this.score, required this.marks});
 
@@ -125,15 +173,15 @@ class _CricketPlayerCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return NeonCard(
-      accent: isActive ? const Color(0xFF2DB6FF) : const Color(0xFFFF4BDD),
-      secondaryAccent: const Color(0xFF6E49FF),
+      accent: isActive ? const Color(0xFF37D8FF) : const Color(0xFFFF4FD8),
+      secondaryAccent: const Color(0xFF8B5CF6),
       radius: 20,
       padding: const EdgeInsets.all(14),
       child: Column(
         children: [
           Row(
             children: [
-              PlayerAvatar(name: player.name, colors: [isActive ? const Color(0xFF2DB6FF) : const Color(0xFFFF5A87), const Color(0xFF6E49FF)], radius: 18),
+              PlayerAvatar(name: player.name, colors: [isActive ? const Color(0xFF37D8FF) : const Color(0xFFFF4FD8), const Color(0xFF8B5CF6)], radius: 18),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(
@@ -141,7 +189,7 @@ class _CricketPlayerCard extends StatelessWidget {
                   children: [
                     Text(player.name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 16)),
                     const SizedBox(height: 4),
-                    Text(isActive ? 'Current Player' : 'Waiting', style: const TextStyle(color: Color(0xB3E8EDFF), fontSize: 11.5)),
+                    Text(isActive ? 'Current Player' : 'Waiting', style: const TextStyle(color: Color(0xB3FFFFFF), fontSize: 11.5)),
                   ],
                 ),
               ),
@@ -154,10 +202,11 @@ class _CricketPlayerCard extends StatelessWidget {
             runSpacing: 8,
             children: CricketGamePage.segments.map((segment) {
               final value = (marks[segment] ?? 0).clamp(0, 3);
-              return FrostPanel(
+              return GlassPanel(
                 radius: 14,
-                backgroundOpacity: 0.10,
-                borderOpacity: 0.14,
+                blur: 16,
+                background: Colors.white.withValues(alpha: 0.05),
+                borderColor: Colors.white.withValues(alpha: 0.10),
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 child: Column(
                   children: [
@@ -171,10 +220,7 @@ class _CricketPlayerCard extends StatelessWidget {
                           width: 8,
                           height: 8,
                           margin: const EdgeInsets.symmetric(horizontal: 2),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: filled ? const Color(0xFF7FE5FF) : Colors.white.withValues(alpha: 0.12),
-                          ),
+                          decoration: BoxDecoration(shape: BoxShape.circle, color: filled ? const Color(0xFF9FEFFF) : Colors.white.withValues(alpha: 0.12)),
                         );
                       }),
                     ),
