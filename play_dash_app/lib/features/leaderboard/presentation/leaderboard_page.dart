@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-
 import '../../../shared/widgets/app_shell.dart';
+
 
 class LeaderboardScreen extends StatelessWidget {
   const LeaderboardScreen({super.key});
@@ -16,19 +16,11 @@ class LeaderboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppShell(
-      expandChild: true,
-      mobileTopTabs: const [
-        ShellTab(label: 'Home', route: '/'),
-        ShellTab(label: 'Trofies', route: '/leaderboard'),
-        ShellTab(label: 'Stats', route: '/leaderboard'),
-      ],
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final desktop = constraints.maxWidth >= 1180;
-          return desktop ? const _DesktopLeaderboard() : const _MobileLeaderboard();
-        },
-      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final desktop = constraints.maxWidth >= 1180;
+        return desktop ? const _DesktopLeaderboard() : const _MobileLeaderboard();
+      },
     );
   }
 }

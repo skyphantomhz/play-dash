@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../shared/widgets/app_shell.dart';
 
+
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
@@ -13,16 +14,7 @@ class HomePage extends StatelessWidget {
     final width = MediaQuery.sizeOf(context).width;
     final desktop = width >= 1180;
 
-    return AppShell(
-      expandChild: true,
-      mobileTopTabs: const [
-        ShellTab(label: 'Home', route: '/'),
-        ShellTab(label: 'Account', route: '/leaderboard'),
-        ShellTab(label: 'Stats', route: '/leaderboard'),
-        ShellTab(label: 'Voice', route: '/settings'),
-      ],
-      child: desktop ? const _DesktopHomeLayout() : const _MobileHomeLayout(),
-    );
+    return desktop ? const _DesktopHomeLayout() : const _MobileHomeLayout();
   }
 }
 

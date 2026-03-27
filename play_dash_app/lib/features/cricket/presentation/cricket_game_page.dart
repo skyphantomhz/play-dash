@@ -19,14 +19,7 @@ class CricketGamePage extends ConsumerWidget {
     final activePlayer = _activePlayer(state.players, state.currentPlayerIndex);
     final winner = _findPlayerById(state.players, state.game.winnerPlayerId);
 
-    return AppShell(
-      expandChild: true,
-      mobileTopTabs: const [
-        ShellTab(label: 'Cricket', route: '/match/cricket'),
-        ShellTab(label: 'Setup', route: '/setup'),
-        ShellTab(label: 'Stats', route: '/leaderboard'),
-      ],
-      child: LayoutBuilder(
+    return LayoutBuilder(
         builder: (context, constraints) {
           final desktop = constraints.maxWidth >= 1180;
           return desktop
@@ -106,8 +99,7 @@ class CricketGamePage extends ConsumerWidget {
                     ],
                   ],
                 );
-        },
-      ),
+      },
     );
   }
 

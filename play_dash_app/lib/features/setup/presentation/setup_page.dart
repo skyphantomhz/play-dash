@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../shared/models/player.dart';
 import '../../../shared/widgets/app_shell.dart';
+
+import '../../../shared/models/player.dart';
 import '../../x01/application/x01_controller.dart';
-import '../../x01/presentation/x01_game_page.dart';
 
 class SetupScreen extends ConsumerStatefulWidget {
   const SetupScreen({super.key});
@@ -19,7 +19,6 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   static const int _maxPlayers = 8;
 
   int _playerCount = 4;
-  bool _showMatchScreen = false;
   late final List<TextEditingController> _nameControllers = List.generate(
     _maxPlayers,
     (index) => TextEditingController(
@@ -51,7 +50,6 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
           name: value.isEmpty ? 'Player ${index + 1}' : value);
     });
     ref.read(x01ControllerProvider.notifier).startMatch(players: players);
-    setState(() => _showMatchScreen = true);
     try {
       context.go('/match/x01');
     } catch (_) {}
@@ -59,82 +57,74 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_showMatchScreen) return const X01GamePage();
-
     final preview = List<String>.generate(_playerCount, (index) {
       final value = _nameControllers[index].text.trim();
       return value.isEmpty ? 'Player ${index + 1}' : value;
     });
 
-    return AppShell(
-      expandChild: true,
-      mobileTopTabs: const [
-        ShellTab(label: 'Setup', route: '/setup'),
-        ShellTab(label: 'Game', route: '/match/x01'),
-        ShellTab(label: 'Scores', route: '/leaderboard'),
-      ],
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final desktop = constraints.maxWidth >= 1180;
-          return desktop
-              ? Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      flex: 30,
-                      child: _SetupHero(playerName: preview.last),
-                    ),
-                    const SizedBox(width: 18),
-                    Expanded(
-                      flex: 38,
-                      child: _SetupConfig(
-                        playerCount: _playerCount,
-                        minPlayers: _minPlayers,
-                        maxPlayers: _maxPlayers,
-                        nameControllers: _nameControllers,
-                        onPlayerCountChanged: (value) =>
-                            setState(() => _playerCount = value.round()),
-                        onChanged: () => setState(() {}),
-                      ),
-                    ),
-                    const SizedBox(width: 18),
-                    Expanded(
-                        flex: 28,
-                        child: _SetupSideRail(
-                            preview: preview,
-                            playerCount: _playerCount,
-                            onStart: _startMatch)),
-                  ],
-                )
-              : SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      _SetupHero(playerName: preview.last, compact: true),
-                      const SizedBox(height: 12),
-                      _SetupConfig(
-                        playerCount: _playerCount,
-                        minPlayers: _minPlayers,
-                        maxPlayers: _maxPlayers,
-                        nameControllers: _nameControllers,
-                        onPlayerCountChanged: (value) =>
-                            setState(() => _playerCount = value.round()),
-                        onChanged: () => setState(() {}),
-                        compact: true,
-                      ),
-                      const SizedBox(height: 12),
-                      _SetupSideRail(
-                          preview: preview,
-                          playerCount: _playerCount,
-                          onStart: _startMatch,
-                          compact: true),
-                    ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final desktop = constraints.maxWidth >= 1180;
+        return desktop
+            ? Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 30,
+                    child: _SetupHero(playerName: preview.last),
                   ),
-                );
-        },
-      ),
+                  const SizedBox(width: 18),
+                  Expanded(
+                    flex: 38,
+                    child: _SetupConfig(
+                      playerCount: _playerCount,
+                      minPlayers: _minPlayers,
+                      maxPlayers: _maxPlayers,
+                      nameControllers: _nameControllers,
+                      onPlayerCountChanged: (value) =>
+                          setState(() => _playerCount = value.round()),
+                      onChanged: () => setState(() {}),
+                    ),
+                  ),
+                  const SizedBox(width: 18),
+                  Expanded(
+                    flex: 28,
+                    child: _SetupSideRail(
+                      preview: preview,
+                      playerCount: _playerCount,
+                      onStart: _startMatch,
+                    ),
+                  ),
+                ],
+              )
+            : SingleChildScrollView(
+                child: Column(
+                  children: [
+                    _SetupHero(playerName: preview.last, compact: true),
+                    const SizedBox(height: 12),
+                    _SetupConfig(
+                      playerCount: _playerCount,
+                      minPlayers: _minPlayers,
+                      maxPlayers: _maxPlayers,
+                      nameControllers: _nameControllers,
+                      onPlayerCountChanged: (value) =>
+                          setState(() => _playerCount = value.round()),
+                      onChanged: () => setState(() {}),
+                      compact: true,
+                    ),
+                    const SizedBox(height: 12),
+                    _SetupSideRail(
+                      preview: preview,
+                      playerCount: _playerCount,
+                      onStart: _startMatch,
+                      compact: true,
+                    ),
+                  ],
+                ),
+              );
+      },
     );
   }
-}
 
 class _SetupHero extends StatelessWidget {
   const _SetupHero({required this.playerName, this.compact = false});

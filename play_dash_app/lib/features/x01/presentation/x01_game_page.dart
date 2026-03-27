@@ -20,14 +20,7 @@ class X01GamePage extends ConsumerWidget {
     final activePlayer = _activePlayer(state.players, state.currentPlayerIndex);
     final winner = _findPlayerById(state.players, state.game.winnerPlayerId);
 
-    return AppShell(
-      expandChild: true,
-      mobileTopTabs: const [
-        ShellTab(label: 'Score', route: '/match/x01'),
-        ShellTab(label: 'Header', route: '/setup'),
-        ShellTab(label: 'Single', route: '/match/x01'),
-      ],
-      child: LayoutBuilder(
+    return LayoutBuilder(
         builder: (context, constraints) {
           final desktop = constraints.maxWidth >= 1180;
           return desktop
@@ -90,8 +83,7 @@ class X01GamePage extends ConsumerWidget {
                     ],
                   ),
                 );
-        },
-      ),
+      },
     );
   }
 
