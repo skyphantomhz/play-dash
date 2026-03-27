@@ -17,7 +17,7 @@ class LeaderboardScreen extends StatelessWidget {
     return AppShell(
       title: 'Leaderboard',
       subtitle:
-          'The standings view was rebuilt into a glass statistics board with denser ranking rows, a stronger top-player hero, and cleaner season metrics.',
+          'The standings screen is rebuilt as a compact season board with a hero summary, ranked player cards, and a more deliberate glass hierarchy.',
       hero: Wrap(
         spacing: 10,
         runSpacing: 10,
@@ -37,18 +37,18 @@ class LeaderboardScreen extends StatelessWidget {
         builder: (context, constraints) {
           final wide = constraints.maxWidth >= 1120;
           return wide
-              ? Row(
+              ? const Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Expanded(flex: 3, child: _SummaryPanel()),
-                    const SizedBox(width: 20),
+                    Expanded(flex: 3, child: _SummaryPanel()),
+                    SizedBox(width: 18),
                     Expanded(flex: 5, child: _RankingsPanel()),
                   ],
                 )
               : const Column(
                   children: [
                     _SummaryPanel(),
-                    SizedBox(height: 20),
+                    SizedBox(height: 18),
                     _RankingsPanel(),
                   ],
                 );
@@ -64,9 +64,9 @@ class _SummaryPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GlassPanel(
-      radius: 34,
-      blur: 9,
-      opacity: 0.48,
+      radius: 36,
+      blur: 6,
+      opacity: 0.42,
       padding: const EdgeInsets.all(22),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -74,31 +74,31 @@ class _SummaryPanel extends StatelessWidget {
           SectionHeading(
             title: 'Season snapshot',
             subtitle:
-                'A focused metric rail keeps the leaderboard easy to read before scanning the full ranked list.',
+                'A focused side summary keeps the key numbers visible before scanning the full rankings list.',
           ),
-          SizedBox(height: 20),
+          SizedBox(height: 18),
           MetricCard(
             label: 'Top average',
             value: '61.4',
-            icon: Icons.bolt_outlined,
+            icon: Icons.bolt_rounded,
             highlight: true,
           ),
           SizedBox(height: 12),
           MetricCard(
             label: 'Most wins',
             value: 'Alex · 18',
-            icon: Icons.emoji_events_outlined,
+            icon: Icons.emoji_events_rounded,
           ),
           SizedBox(height: 12),
           MetricCard(
             label: 'Tracked players',
             value: '4 active',
-            icon: Icons.groups_outlined,
+            icon: Icons.groups_rounded,
           ),
-          SizedBox(height: 20),
+          SizedBox(height: 18),
           PanelListTile(
             title: 'Sharper hierarchy',
-            subtitle: 'Top rank is highlighted, while lower ranks remain compact and readable.',
+            subtitle: 'Top rank receives stronger emphasis while lower ranks stay dense and readable.',
             leading: Icon(Icons.format_paint_rounded),
           ),
         ],
@@ -113,9 +113,9 @@ class _RankingsPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GlassPanel(
-      radius: 34,
-      blur: 9,
-      opacity: 0.48,
+      radius: 36,
+      blur: 6,
+      opacity: 0.42,
       padding: const EdgeInsets.all(22),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -123,9 +123,9 @@ class _RankingsPanel extends StatelessWidget {
           const SectionHeading(
             title: 'Rankings',
             subtitle:
-                'Player rows are rebuilt as translucent cards with stronger score emphasis and clearer spacing.',
+                'Player rows are rebuilt as translucent cards with clearer score emphasis, calmer backgrounds, and tighter spacing.',
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 18),
           for (var i = 0; i < LeaderboardScreen.entries.length; i++) ...[
             _LeaderboardCard(rank: i + 1, entry: LeaderboardScreen.entries[i]),
             const SizedBox(height: 12),
@@ -147,26 +147,28 @@ class _LeaderboardCard extends StatelessWidget {
     final highlight = rank == 1;
     return FrostPanel(
       radius: 28,
-      blur: 8,
-      backgroundOpacity: highlight ? 0.48 : 0.38,
+      blur: 5,
+      backgroundOpacity: highlight ? 0.36 : 0.30,
       highlight: highlight,
       child: Row(
         children: [
           Container(
             width: 58,
             height: 58,
+            alignment: Alignment.center,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
                 colors: highlight
-                    ? const [Color(0xFF8E7BFF), Color(0xFF52CFFF)]
+                    ? const [Color(0xFF8C80FF), Color(0xFF5AD4FF)]
                     : [
                         Colors.white.withValues(alpha: 0.14),
-                        Colors.white.withValues(alpha: 0.06),
+                        Colors.white.withValues(alpha: 0.05),
                       ],
               ),
             ),
-            alignment: Alignment.center,
             child: Text(
               '$rank',
               style: Theme.of(context)
@@ -191,10 +193,8 @@ class _LeaderboardCard extends StatelessWidget {
                 Text(
                   '${entry.wins} wins • ${entry.legs} legs won',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .onSurfaceVariant,
-                      ),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),

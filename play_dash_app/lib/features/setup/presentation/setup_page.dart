@@ -66,19 +66,19 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     return AppShell(
       title: 'Player setup',
       subtitle:
-          'Rebuilt as a glass command sheet with a clearer left-to-right flow: roster controls, live preview, and a compact launch summary.',
+          'The roster screen was rebuilt into a two-stage launch sheet: player controls on one side, session preview and readiness feedback on the other.',
       hero: Wrap(
         spacing: 10,
         runSpacing: 10,
         children: const [
           StatusPill(
-            label: 'Quick roster editing',
+            label: 'Roster editing',
             icon: Icons.badge_outlined,
             tinted: true,
           ),
           StatusPill(
-            label: 'Launch-ready summary',
-            icon: Icons.rocket_launch_outlined,
+            label: 'Live launch preview',
+            icon: Icons.rocket_launch_rounded,
           ),
         ],
       ),
@@ -102,7 +102,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                         onStart: _startMatch,
                       ),
                     ),
-                    const SizedBox(width: 20),
+                    const SizedBox(width: 18),
                     Expanded(
                       flex: 4,
                       child: _PreviewRail(
@@ -124,7 +124,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                       onChanged: () => setState(() {}),
                       onStart: _startMatch,
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 18),
                     _PreviewRail(playerCount: _playerCount, preview: preview),
                   ],
                 );
@@ -156,9 +156,9 @@ class _SetupForm extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GlassPanel(
-      radius: 34,
-      blur: 9,
-      opacity: 0.48,
+      radius: 36,
+      blur: 6,
+      opacity: 0.42,
       padding: const EdgeInsets.all(22),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -166,19 +166,23 @@ class _SetupForm extends StatelessWidget {
           const SectionHeading(
             title: 'Roster builder',
             subtitle:
-                'The setup form was rebuilt into one primary composition with more generous input rhythm and a stronger pre-match checkpoint.',
+                'The launch form is torn down and rebuilt as a clear sequence: choose player count, name the roster, then start the match.',
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 18),
           FrostPanel(
             radius: 28,
-            blur: 8,
-            backgroundOpacity: 0.42,
+            blur: 5,
+            backgroundOpacity: 0.34,
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
-                    const Expanded(
-                      child: Text('Player count'),
+                    Expanded(
+                      child: Text(
+                        'Player count',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
                     ),
                     ScoreBadge(value: '$playerCount', highlight: true),
                   ],
@@ -192,17 +196,12 @@ class _SetupForm extends StatelessWidget {
                   label: '$playerCount players',
                   onChanged: onPlayerCountChanged,
                 ),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    playerCount == 1
-                        ? 'Solo practice profile selected.'
-                        : '$playerCount-player local session is ready.',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurfaceVariant,
-                        ),
+                Text(
+                  playerCount == 1
+                      ? 'Solo practice profile selected.'
+                      : '$playerCount-player local session is ready.',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -213,14 +212,14 @@ class _SetupForm extends StatelessWidget {
             spacing: 12,
             runSpacing: 12,
             children: [
-              MetricCard(
-                label: 'Mode',
-                value: 'X01 launch',
-                icon: Icons.sports_score_outlined,
+              const MetricCard(
+                label: 'Ruleset',
+                value: '501 · Double out',
+                icon: Icons.rule_folder_rounded,
                 highlight: true,
               ),
               MetricCard(
-                label: 'Players',
+                label: 'Ready slots',
                 value: '$playerCount active',
                 icon: Icons.groups_outlined,
               ),
@@ -230,13 +229,14 @@ class _SetupForm extends StatelessWidget {
           for (var index = 0; index < playerCount; index++) ...[
             FrostPanel(
               radius: 24,
-              blur: 7,
-              backgroundOpacity: 0.34,
+              blur: 5,
+              backgroundOpacity: 0.30,
               padding: const EdgeInsets.all(6),
               child: TextField(
                 controller: nameControllers[index],
-                textInputAction:
-                    index == playerCount - 1 ? TextInputAction.done : TextInputAction.next,
+                textInputAction: index == playerCount - 1
+                    ? TextInputAction.done
+                    : TextInputAction.next,
                 onChanged: (_) => onChanged(),
                 onSubmitted: (_) {
                   if (index == playerCount - 1) onStart();
@@ -271,9 +271,9 @@ class _PreviewRail extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GlassPanel(
-      radius: 34,
-      blur: 9,
-      opacity: 0.48,
+      radius: 36,
+      blur: 6,
+      opacity: 0.42,
       padding: const EdgeInsets.all(22),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -281,13 +281,13 @@ class _PreviewRail extends StatelessWidget {
           const SectionHeading(
             title: 'Launch preview',
             subtitle:
-                'A compact side rail mirrors the dashboard language with match badges, player initials, and a quick readiness summary.',
+                'The companion rail mirrors the main dashboard language with concise readiness cards and a compact player list.',
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 18),
           const MetricCard(
-            label: 'Ruleset',
-            value: '501 · Double out',
-            icon: Icons.rule_folder_outlined,
+            label: 'Mode',
+            value: 'X01 launch',
+            icon: Icons.sports_score_rounded,
             highlight: true,
           ),
           const SizedBox(height: 12),
@@ -299,8 +299,8 @@ class _PreviewRail extends StatelessWidget {
           const SizedBox(height: 18),
           FrostPanel(
             radius: 28,
-            blur: 8,
-            backgroundOpacity: 0.4,
+            blur: 5,
+            backgroundOpacity: 0.34,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -333,7 +333,7 @@ class _PreviewRail extends StatelessWidget {
           const SizedBox(height: 18),
           const PanelListTile(
             title: 'Touch-first controls',
-            subtitle: 'Large interactive targets and simplified scan order for phones and tablets.',
+            subtitle: 'Inputs are larger, cleaner, and easier to scan on phones, tablets, and desktop web.',
             leading: Icon(Icons.touch_app_rounded),
           ),
         ],

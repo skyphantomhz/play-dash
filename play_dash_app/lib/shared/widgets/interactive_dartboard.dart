@@ -6,8 +6,11 @@ import '../models/dart_throw.dart';
 import 'app_shell.dart';
 
 class InteractiveDartboard extends StatefulWidget {
-  const InteractiveDartboard(
-      {required this.onThrow, this.enabled = true, super.key});
+  const InteractiveDartboard({
+    required this.onThrow,
+    this.enabled = true,
+    super.key,
+  });
 
   final ValueChanged<DartThrow> onThrow;
   final bool enabled;
@@ -32,7 +35,7 @@ class InteractiveDartboard extends StatefulWidget {
     14,
     9,
     12,
-    5
+    5,
   ];
 
   @override
@@ -43,7 +46,7 @@ class _InteractiveDartboardState extends State<InteractiveDartboard>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 520),
+    duration: const Duration(milliseconds: 420),
   );
 
   _BoardHit? _lastHit;
@@ -62,9 +65,9 @@ class _InteractiveDartboardState extends State<InteractiveDartboard>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SectionHeading(
-          title: 'X01 Game',
+          title: 'Interactive board',
           subtitle:
-              'Tap any ring or segment. The board keeps precise hit feedback, but with tighter and more restrained glow treatment.',
+              'Tap any segment or ring. Hit feedback is cleaner and more precise, with reduced glow and tighter highlight framing.',
         ),
         const SizedBox(height: 18),
         AnimatedBuilder(
@@ -76,14 +79,14 @@ class _InteractiveDartboardState extends State<InteractiveDartboard>
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: scheme.primary.withValues(alpha: 0.12 * pulse),
-                    blurRadius: 28,
-                    spreadRadius: 2,
+                    color: scheme.primary.withValues(alpha: 0.08 * pulse),
+                    blurRadius: 18,
+                    spreadRadius: 1,
                   ),
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.24),
-                    blurRadius: 24,
-                    offset: const Offset(0, 16),
+                    color: Colors.black.withValues(alpha: 0.26),
+                    blurRadius: 20,
+                    offset: const Offset(0, 14),
                   ),
                 ],
               ),
@@ -94,19 +97,15 @@ class _InteractiveDartboardState extends State<InteractiveDartboard>
             aspectRatio: 1,
             child: LayoutBuilder(
               builder: (context, constraints) {
-                final size =
-                    math.min(constraints.maxWidth, constraints.maxHeight);
+                final size = math.min(constraints.maxWidth, constraints.maxHeight);
                 return Center(
                   child: GestureDetector(
                     onTapUp: widget.enabled
                         ? (details) {
-                            final box =
-                                context.findRenderObject() as RenderBox?;
+                            final box = context.findRenderObject() as RenderBox?;
                             if (box == null) return;
-                            final local =
-                                box.globalToLocal(details.globalPosition);
-                            final result =
-                                _throwForPosition(local, Size(size, size));
+                            final local = box.globalToLocal(details.globalPosition);
+                            final result = _throwForPosition(local, Size(size, size));
                             setState(() => _lastHit = result.hit);
                             _controller
                               ..reset()
@@ -137,13 +136,11 @@ class _InteractiveDartboardState extends State<InteractiveDartboard>
           spacing: 10,
           runSpacing: 10,
           children: [
-            const _LegendChip(label: 'Single', color: Color(0xFF1C2434)),
+            const _LegendChip(label: 'Single', color: Color(0xFFF0E2CA)),
             const _LegendChip(label: 'Double', color: Color(0xFFE56A6E)),
             const _LegendChip(label: 'Triple', color: Color(0xFF3CC9A3)),
             _LegendChip(
-              label: _lastHit == null
-                  ? 'Ready'
-                  : _formatThrow(_lastHit!.dartThrow),
+              label: _lastHit == null ? 'Ready' : _formatThrow(_lastHit!.dartThrow),
               color: scheme.primary,
             ),
           ],
@@ -162,21 +159,23 @@ class _InteractiveDartboardState extends State<InteractiveDartboard>
     if (normalizedDistance > 1) {
       const miss = DartThrow(segment: 0, multiplier: 0);
       return const _ThrowResult(
-          dartThrow: miss,
-          hit: _BoardHit(segment: 0, multiplier: 0, ring: _BoardRing.miss));
+        dartThrow: miss,
+        hit: _BoardHit(segment: 0, multiplier: 0, ring: _BoardRing.miss),
+      );
     }
     if (normalizedDistance <= 0.05) {
       const bull = DartThrow(segment: 25, multiplier: 2);
       return const _ThrowResult(
-          dartThrow: bull,
-          hit: _BoardHit(segment: 25, multiplier: 2, ring: _BoardRing.bull));
+        dartThrow: bull,
+        hit: _BoardHit(segment: 25, multiplier: 2, ring: _BoardRing.bull),
+      );
     }
     if (normalizedDistance <= 0.10) {
       const outerBull = DartThrow(segment: 25, multiplier: 1);
       return const _ThrowResult(
-          dartThrow: outerBull,
-          hit: _BoardHit(
-              segment: 25, multiplier: 1, ring: _BoardRing.outerBull));
+        dartThrow: outerBull,
+        hit: _BoardHit(segment: 25, multiplier: 1, ring: _BoardRing.outerBull),
+      );
     }
 
     final angle =
@@ -188,16 +187,16 @@ class _InteractiveDartboardState extends State<InteractiveDartboard>
     if (normalizedDistance >= 0.90) {
       final dart = DartThrow(segment: segment, multiplier: 2);
       return _ThrowResult(
-          dartThrow: dart,
-          hit: _BoardHit(
-              segment: segment, multiplier: 2, ring: _BoardRing.double));
+        dartThrow: dart,
+        hit: _BoardHit(segment: segment, multiplier: 2, ring: _BoardRing.double),
+      );
     }
     if (normalizedDistance >= 0.54 && normalizedDistance <= 0.62) {
       final dart = DartThrow(segment: segment, multiplier: 3);
       return _ThrowResult(
-          dartThrow: dart,
-          hit: _BoardHit(
-              segment: segment, multiplier: 3, ring: _BoardRing.triple));
+        dartThrow: dart,
+        hit: _BoardHit(segment: segment, multiplier: 3, ring: _BoardRing.triple),
+      );
     }
 
     final ring = normalizedDistance < 0.54
@@ -205,8 +204,9 @@ class _InteractiveDartboardState extends State<InteractiveDartboard>
         : _BoardRing.outerSingle;
     final dart = DartThrow(segment: segment, multiplier: 1);
     return _ThrowResult(
-        dartThrow: dart,
-        hit: _BoardHit(segment: segment, multiplier: 1, ring: ring));
+      dartThrow: dart,
+      hit: _BoardHit(segment: segment, multiplier: 1, ring: ring),
+    );
   }
 
   static String _formatThrow(DartThrow dartThrow) {
@@ -235,16 +235,17 @@ class _LegendChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(999),
-        color: Colors.white.withValues(alpha: 0.08),
+        color: Colors.white.withValues(alpha: 0.06),
         border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-              width: 10,
-              height: 10,
-              decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
           const SizedBox(width: 8),
           Text(label),
         ],
@@ -254,11 +255,12 @@ class _LegendChip extends StatelessWidget {
 }
 
 class _DartboardPainter extends CustomPainter {
-  const _DartboardPainter(
-      {required this.colorScheme,
-      required this.highlight,
-      required this.progress,
-      required this.disabled});
+  const _DartboardPainter({
+    required this.colorScheme,
+    required this.highlight,
+    required this.progress,
+    required this.disabled,
+  });
 
   final ColorScheme colorScheme;
   final _BoardHit? highlight;
@@ -276,17 +278,17 @@ class _DartboardPainter extends CustomPainter {
       radius,
       Paint()
         ..shader = const RadialGradient(
-          colors: [Color(0xFF263449), Color(0xFF0E1522)],
+          colors: [Color(0xFF223149), Color(0xFF0A101B)],
           stops: [0.12, 1],
         ).createShader(Rect.fromCircle(center: center, radius: radius)),
     );
 
-    _drawRing(canvas, center, radius, 0.62, 0.90, const Color(0xFFF1E4CC),
-        const Color(0xFF1A2232), _BoardRing.outerSingle, pulse);
+    _drawRing(canvas, center, radius, 0.62, 0.90, const Color(0xFFF0E2CA),
+        const Color(0xFF17202F), _BoardRing.outerSingle, pulse);
     _drawRing(canvas, center, radius, 0.54, 0.62, const Color(0xFF3CC9A3),
         const Color(0xFFE56A6E), _BoardRing.triple, pulse);
-    _drawRing(canvas, center, radius, 0.10, 0.54, const Color(0xFF1A2232),
-        const Color(0xFFF1E4CC), _BoardRing.innerSingle, pulse);
+    _drawRing(canvas, center, radius, 0.10, 0.54, const Color(0xFF17202F),
+        const Color(0xFFF0E2CA), _BoardRing.innerSingle, pulse);
     _drawRing(canvas, center, radius, 0.90, 1.0, const Color(0xFFE56A6E),
         const Color(0xFF3CC9A3), _BoardRing.double, pulse);
 
@@ -299,42 +301,42 @@ class _DartboardPainter extends CustomPainter {
       radius,
       Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = radius * 0.028
-        ..color = Colors.white.withValues(alpha: 0.18),
+        ..strokeWidth = radius * 0.022
+        ..color = Colors.white.withValues(alpha: 0.14),
     );
 
     if (disabled) {
-      canvas.drawCircle(center, radius,
-          Paint()..color = Colors.black.withValues(alpha: 0.36));
+      canvas.drawCircle(
+        center,
+        radius,
+        Paint()..color = Colors.black.withValues(alpha: 0.34),
+      );
     }
   }
 
   void _drawRing(
-      Canvas canvas,
-      Offset center,
-      double radius,
-      double innerFactor,
-      double outerFactor,
-      Color evenColor,
-      Color oddColor,
-      _BoardRing ring,
-      double pulse) {
+    Canvas canvas,
+    Offset center,
+    double radius,
+    double innerFactor,
+    double outerFactor,
+    Color evenColor,
+    Color oddColor,
+    _BoardRing ring,
+    double pulse,
+  ) {
     const sweep = math.pi / 10;
     final innerRadius = radius * innerFactor;
     final outerRadius = radius * outerFactor;
 
-    for (var index = 0;
-        index < InteractiveDartboard._segmentOrder.length;
-        index++) {
+    for (var index = 0; index < InteractiveDartboard._segmentOrder.length; index++) {
       final segment = InteractiveDartboard._segmentOrder[index];
       final start = (-math.pi / 2) + (index * sweep);
-      final isHighlighted =
-          highlight?.segment == segment && highlight?.ring == ring;
+      final isHighlighted = highlight?.segment == segment && highlight?.ring == ring;
       final path = Path()
         ..moveTo(center.dx + (innerRadius * math.cos(start)),
             center.dy + (innerRadius * math.sin(start)))
-        ..arcTo(Rect.fromCircle(center: center, radius: outerRadius), start,
-            sweep, false)
+        ..arcTo(Rect.fromCircle(center: center, radius: outerRadius), start, sweep, false)
         ..lineTo(center.dx + (innerRadius * math.cos(start + sweep)),
             center.dy + (innerRadius * math.sin(start + sweep)))
         ..arcTo(Rect.fromCircle(center: center, radius: innerRadius),
@@ -349,9 +351,9 @@ class _DartboardPainter extends CustomPainter {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color.lerp(base, Colors.white, 0.08)!,
+              Color.lerp(base, Colors.white, 0.07)!,
               base,
-              Color.lerp(base, Colors.black, 0.10)!
+              Color.lerp(base, Colors.black, 0.08)!,
             ],
           ).createShader(Rect.fromCircle(center: center, radius: outerRadius)),
       );
@@ -362,14 +364,12 @@ class _DartboardPainter extends CustomPainter {
           path,
           Paint()
             ..style = PaintingStyle.stroke
-            ..strokeWidth = 5
-            ..color = color.withValues(alpha: 0.90 - (0.12 * progress)),
+            ..strokeWidth = 4
+            ..color = color.withValues(alpha: 0.86 - (0.10 * progress)),
         );
         canvas.drawPath(
           path,
-          Paint()
-            ..style = PaintingStyle.fill
-            ..color = color.withValues(alpha: 0.18 + (0.10 * pulse)),
+          Paint()..color = color.withValues(alpha: 0.14 + (0.06 * pulse)),
         );
       }
 
@@ -378,7 +378,7 @@ class _DartboardPainter extends CustomPainter {
         Paint()
           ..style = PaintingStyle.stroke
           ..strokeWidth = 1
-          ..color = Colors.white.withValues(alpha: 0.16),
+          ..color = Colors.white.withValues(alpha: 0.14),
       );
     }
   }
@@ -387,10 +387,8 @@ class _DartboardPainter extends CustomPainter {
     final outerBullSelected = highlight?.ring == _BoardRing.outerBull;
     final bullSelected = highlight?.ring == _BoardRing.bull;
 
-    canvas.drawCircle(
-        center, radius * 0.10, Paint()..color = const Color(0xFF3CC9A3));
-    canvas.drawCircle(
-        center, radius * 0.05, Paint()..color = const Color(0xFFE56A6E));
+    canvas.drawCircle(center, radius * 0.10, Paint()..color = const Color(0xFF3CC9A3));
+    canvas.drawCircle(center, radius * 0.05, Paint()..color = const Color(0xFFE56A6E));
 
     if (outerBullSelected || bullSelected) {
       canvas.drawCircle(
@@ -398,17 +396,14 @@ class _DartboardPainter extends CustomPainter {
         radius * (outerBullSelected ? 0.12 : 0.07),
         Paint()
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 4
+          ..strokeWidth = 3.5
           ..color = _highlightColor(highlight!.ring)
-              .withValues(alpha: 0.9 - (0.1 * progress)),
+              .withValues(alpha: 0.88 - (0.08 * progress)),
       );
       canvas.drawCircle(
         center,
-        radius * (outerBullSelected ? 0.14 : 0.09),
-        Paint()
-          ..color = _highlightColor(highlight!.ring)
-              .withValues(alpha: 0.12 + (0.08 * pulse))
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10),
+        radius * (outerBullSelected ? 0.13 : 0.08),
+        Paint()..color = _highlightColor(highlight!.ring).withValues(alpha: 0.08 + (0.04 * pulse)),
       );
     }
   }
@@ -418,9 +413,7 @@ class _DartboardPainter extends CustomPainter {
       ..color = Colors.white.withValues(alpha: 0.18)
       ..strokeWidth = 1;
 
-    for (var index = 0;
-        index < InteractiveDartboard._segmentOrder.length;
-        index++) {
+    for (var index = 0; index < InteractiveDartboard._segmentOrder.length; index++) {
       final angle = (-math.pi / 2) + (index * (math.pi / 10));
       canvas.drawLine(
         Offset(center.dx + radius * 0.10 * math.cos(angle),
@@ -434,10 +427,10 @@ class _DartboardPainter extends CustomPainter {
 
   void _drawLabels(Canvas canvas, Offset center, double radius) {
     final painter = TextPainter(
-        textDirection: TextDirection.ltr, textAlign: TextAlign.center);
-    for (var index = 0;
-        index < InteractiveDartboard._segmentOrder.length;
-        index++) {
+      textDirection: TextDirection.ltr,
+      textAlign: TextAlign.center,
+    );
+    for (var index = 0; index < InteractiveDartboard._segmentOrder.length; index++) {
       final angle = (-math.pi / 2) + ((index + 0.5) * (math.pi / 10));
       final point = Offset(center.dx + radius * 0.77 * math.cos(angle),
           center.dy + radius * 0.77 * math.sin(angle));
@@ -446,21 +439,20 @@ class _DartboardPainter extends CustomPainter {
         style: TextStyle(
           color: colorScheme.onSurface,
           fontWeight: FontWeight.w800,
-          fontSize: radius * 0.08,
+          fontSize: radius * 0.075,
           shadows: const [
-            Shadow(color: Colors.black54, blurRadius: 10, offset: Offset(0, 2))
+            Shadow(color: Colors.black54, blurRadius: 8, offset: Offset(0, 2)),
           ],
         ),
       );
       painter.layout();
-      painter.paint(
-          canvas, point - Offset(painter.width / 2, painter.height / 2));
+      painter.paint(canvas, point - Offset(painter.width / 2, painter.height / 2));
     }
   }
 
   Color _highlightColor(_BoardRing ring) {
     return switch (ring) {
-      _BoardRing.double || _BoardRing.bull => const Color(0xFFFFA0A0),
+      _BoardRing.double || _BoardRing.bull => const Color(0xFFFFA1A1),
       _BoardRing.triple || _BoardRing.outerBull => const Color(0xFF7AEDD0),
       _ => colorScheme.primary,
     };
@@ -483,23 +475,17 @@ class _ThrowResult {
 }
 
 class _BoardHit {
-  const _BoardHit(
-      {required this.segment, required this.multiplier, required this.ring});
+  const _BoardHit({
+    required this.segment,
+    required this.multiplier,
+    required this.ring,
+  });
 
   final int segment;
   final int multiplier;
   final _BoardRing ring;
 
-  DartThrow get dartThrow =>
-      DartThrow(segment: segment, multiplier: multiplier);
+  DartThrow get dartThrow => DartThrow(segment: segment, multiplier: multiplier);
 }
 
-enum _BoardRing {
-  miss,
-  innerSingle,
-  outerSingle,
-  double,
-  triple,
-  outerBull,
-  bull
-}
+enum _BoardRing { miss, innerSingle, outerSingle, double, triple, outerBull, bull }

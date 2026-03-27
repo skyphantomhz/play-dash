@@ -11,23 +11,23 @@ class HomePage extends StatelessWidget {
     return AppShell(
       title: 'Play Dash',
       subtitle:
-          'A rebuilt glassmorphism control surface for darts night — quieter blur, stronger structure, and fast navigation across setup, live play, and standings.',
+          'A rebuilt darts dashboard with crisp hierarchy, restrained glass panels, and a responsive split layout designed for live scoring.',
       hero: Wrap(
         spacing: 10,
         runSpacing: 10,
         children: const [
           StatusPill(
-            label: 'Responsive shell',
-            icon: Icons.devices_rounded,
+            label: 'Low-blur glassmorphism',
+            icon: Icons.blur_on_rounded,
             tinted: true,
           ),
           StatusPill(
-            label: 'Live match controls',
-            icon: Icons.motion_photos_on_rounded,
+            label: 'Touch-first match flow',
+            icon: Icons.touch_app_rounded,
           ),
           StatusPill(
-            label: 'Reduced blur / sharper contrast',
-            icon: Icons.blur_on_rounded,
+            label: 'Desktop + mobile responsive',
+            icon: Icons.devices_rounded,
           ),
         ],
       ),
@@ -35,19 +35,19 @@ class HomePage extends StatelessWidget {
         builder: (context, constraints) {
           final wide = constraints.maxWidth >= 1120;
           return wide
-              ? Row(
+              ? const Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(flex: 7, child: _OverviewPanel()),
-                    const SizedBox(width: 20),
-                    Expanded(flex: 4, child: _ActionRail()),
+                    Expanded(flex: 7, child: _HomeOverview()),
+                    SizedBox(width: 18),
+                    Expanded(flex: 4, child: _HomeActions()),
                   ],
                 )
-              : Column(
-                  children: const [
-                    _OverviewPanel(),
-                    SizedBox(height: 20),
-                    _ActionRail(),
+              : const Column(
+                  children: [
+                    _HomeOverview(),
+                    SizedBox(height: 18),
+                    _HomeActions(),
                   ],
                 );
         },
@@ -56,15 +56,15 @@ class HomePage extends StatelessWidget {
   }
 }
 
-class _OverviewPanel extends StatelessWidget {
-  const _OverviewPanel();
+class _HomeOverview extends StatelessWidget {
+  const _HomeOverview();
 
   @override
   Widget build(BuildContext context) {
     return GlassPanel(
-      radius: 34,
-      blur: 9,
-      opacity: 0.48,
+      radius: 36,
+      blur: 6,
+      opacity: 0.42,
       padding: const EdgeInsets.all(22),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -72,40 +72,40 @@ class _OverviewPanel extends StatelessWidget {
           const SectionHeading(
             title: 'Arena overview',
             subtitle:
-                'The home screen was rebuilt as a dashboard: a single visual hierarchy with summary metrics, a hero visual panel, and a clean action rail that scales from phone to desktop.',
+                'The landing screen is rebuilt into one primary dashboard: headline metrics, a hero composition, and concise secondary cards for quick scanning.',
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 18),
           Wrap(
             spacing: 12,
             runSpacing: 12,
             children: const [
               MetricCard(
-                label: 'Game modes',
+                label: 'Modes',
                 value: 'X01 + Cricket',
-                icon: Icons.sports_score_outlined,
+                icon: Icons.sports_score_rounded,
                 highlight: true,
+              ),
+              MetricCard(
+                label: 'Sessions',
+                value: '1 to 8 players',
+                icon: Icons.groups_2_rounded,
               ),
               MetricCard(
                 label: 'Input',
                 value: 'Interactive board',
-                icon: Icons.touch_app_outlined,
-              ),
-              MetricCard(
-                label: 'Players',
-                value: '1 to 8 local',
-                icon: Icons.groups_2_outlined,
+                icon: Icons.ads_click_rounded,
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 18),
           FrostPanel(
             radius: 30,
-            blur: 8,
-            backgroundOpacity: 0.4,
+            blur: 5,
+            backgroundOpacity: 0.34,
             child: LayoutBuilder(
               builder: (context, constraints) {
                 final stacked = constraints.maxWidth < 760;
-                final stats = Column(
+                final summary = Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const StatusPill(
@@ -113,9 +113,9 @@ class _OverviewPanel extends StatelessWidget {
                       icon: Icons.auto_awesome_rounded,
                       tinted: true,
                     ),
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 16),
                     Text(
-                      'Focused scoring dashboard',
+                      'Focused scoring, minimal visual noise',
                       style: Theme.of(context)
                           .textTheme
                           .headlineMedium
@@ -123,100 +123,95 @@ class _OverviewPanel extends StatelessWidget {
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      'Cards are denser, edges are cleaner, and the background blur is intentionally restrained so score data stays legible while the glass look still reads clearly.',
+                      'Cards are denser, blur is softer, and borders are more deliberate so the glass look stays elegant without sacrificing legibility during play.',
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurfaceVariant,
-                          ),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                     const SizedBox(height: 18),
                     Wrap(
-                      spacing: 12,
-                      runSpacing: 12,
+                      spacing: 10,
+                      runSpacing: 10,
                       children: const [
                         ScoreBadge(value: '501 ready', highlight: true),
                         ScoreBadge(value: 'Tap board to throw'),
-                        ScoreBadge(value: 'Fast turn tracking'),
+                        ScoreBadge(value: 'Live standings'),
                       ],
                     ),
                   ],
                 );
 
-                final art = AspectRatio(
-                  aspectRatio: stacked ? 1.7 : 1.15,
-                  child: Container(
+                final visual = AspectRatio(
+                  aspectRatio: stacked ? 1.6 : 1.05,
+                  child: DecoratedBox(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(28),
                       gradient: const LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          Color(0x338E7BFF),
-                          Color(0x224FCFFF),
-                          Color(0x12FFFFFF),
+                          Color(0x338A7BFF),
+                          Color(0x224FCBFF),
+                          Color(0x0DFFFFFF),
                         ],
                       ),
                       border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.1),
+                        color: Colors.white.withValues(alpha: 0.10),
                       ),
                     ),
-                    child: Stack(
-                      children: const [
-                        Positioned(top: 18, left: 18, child: _HeroChip()),
-                        Positioned.fill(child: _DashboardArt()),
-                      ],
+                    child: const Padding(
+                      padding: EdgeInsets.all(18),
+                      child: _ArenaPreview(),
                     ),
                   ),
                 );
 
                 if (stacked) {
                   return Column(
-                    children: [stats, const SizedBox(height: 20), art],
+                    children: [summary, const SizedBox(height: 18), visual],
                   );
                 }
 
                 return Row(
                   children: [
-                    Expanded(child: stats),
-                    const SizedBox(width: 20),
-                    Expanded(child: art),
+                    Expanded(child: summary),
+                    const SizedBox(width: 18),
+                    Expanded(child: visual),
                   ],
                 );
               },
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 18),
           LayoutBuilder(
             builder: (context, constraints) {
               final compact = constraints.maxWidth < 760;
-              final children = const [
+              final tiles = const [
                 PanelListTile(
-                  title: 'Low-blur frosted cards',
-                  subtitle: 'Subtle backdrop filtering with stronger borders.',
-                  leading: _FeatureIcon(icon: Icons.layers_outlined),
+                  title: 'Subtle blur treatment',
+                  subtitle: 'Glass panels use lower sigma and stronger borders.',
+                  leading: Icon(Icons.blur_circular_rounded),
                 ),
                 PanelListTile(
-                  title: 'Responsive control flow',
-                  subtitle: 'Desktop side rail and mobile dock share one layout language.',
-                  leading: _FeatureIcon(icon: Icons.aspect_ratio_rounded),
+                  title: 'Fast launch flow',
+                  subtitle: 'Setup, play, and leaderboard routes stay one tap away.',
+                  leading: Icon(Icons.rocket_launch_rounded),
                 ),
                 PanelListTile(
-                  title: 'Match-first UX',
-                  subtitle: 'Fast actions, quick scanning, and persistent score context.',
-                  leading: _FeatureIcon(icon: Icons.speed_rounded),
+                  title: 'Live-first hierarchy',
+                  subtitle: 'Scores and active-player state dominate the layout.',
+                  leading: Icon(Icons.stacked_line_chart_rounded),
                 ),
               ];
 
               return compact
-                  ? Column(children: children)
+                  ? Column(children: tiles)
                   : Row(
                       children: [
-                        for (var i = 0; i < children.length; i++) ...[
-                          Expanded(child: children[i]),
-                          if (i != children.length - 1)
-                            const SizedBox(width: 12),
-                        ]
+                        for (var i = 0; i < tiles.length; i++) ...[
+                          Expanded(child: tiles[i]),
+                          if (i < tiles.length - 1) const SizedBox(width: 12),
+                        ],
                       ],
                     );
             },
@@ -227,15 +222,15 @@ class _OverviewPanel extends StatelessWidget {
   }
 }
 
-class _ActionRail extends StatelessWidget {
-  const _ActionRail();
+class _HomeActions extends StatelessWidget {
+  const _HomeActions();
 
   @override
   Widget build(BuildContext context) {
     return GlassPanel(
-      radius: 34,
-      blur: 9,
-      opacity: 0.48,
+      radius: 36,
+      blur: 6,
+      opacity: 0.42,
       padding: const EdgeInsets.all(22),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -243,9 +238,9 @@ class _ActionRail extends StatelessWidget {
           const SectionHeading(
             title: 'Quick launch',
             subtitle:
-                'Primary routes are grouped into one clear action stack that stays finger-friendly on mobile and aligned in a desktop rail.',
+                'A vertical action stack mirrors the reference-style control rail with clear primary and secondary routes.',
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 18),
           GlassButton(
             onPressed: () => context.go('/setup'),
             icon: Icons.groups_2_rounded,
@@ -270,11 +265,11 @@ class _ActionRail extends StatelessWidget {
             icon: Icons.emoji_events_rounded,
             label: 'Season Leaderboard',
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 18),
           const PanelListTile(
             title: 'Tonight’s profile',
-            subtitle: 'Glass cards, vivid gradients, and match telemetry stay consistent across every route.',
-            leading: _FeatureIcon(icon: Icons.insights_rounded),
+            subtitle: 'Quiet glass layers, stronger data emphasis, and consistent interaction feedback across all screens.',
+            leading: Icon(Icons.nights_stay_rounded),
             trailing: ScoreBadge(value: 'Live'),
           ),
         ],
@@ -283,169 +278,166 @@ class _ActionRail extends StatelessWidget {
   }
 }
 
-class _HeroChip extends StatelessWidget {
-  const _HeroChip();
+class _ArenaPreview extends StatelessWidget {
+  const _ArenaPreview();
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-      ),
-      child: const Text('Arena layout'),
-    );
-  }
-}
-
-class _FeatureIcon extends StatelessWidget {
-  const _FeatureIcon({required this.icon});
-
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 42,
-      height: 42,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.16),
-      ),
-      child: Icon(icon, color: Theme.of(context).colorScheme.primary),
-    );
-  }
-}
-
-class _DashboardArt extends StatelessWidget {
-  const _DashboardArt();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        children: [
-          Expanded(
-            child: Row(
-              children: [
-                Expanded(
-                  flex: 6,
-                  child: FrostPanel(
-                    radius: 26,
-                    blur: 7,
-                    backgroundOpacity: 0.36,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        ScoreBadge(value: 'Player 01', highlight: true),
-                        SizedBox(height: 12),
-                        Expanded(child: _ChartMock()),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  flex: 4,
+    return Column(
+      children: [
+        Row(
+          children: const [
+            Expanded(
+              child: FrostPanel(
+                radius: 22,
+                child: _PreviewStat(title: 'Current', value: 'Morgan'),
+              ),
+            ),
+            SizedBox(width: 12),
+            Expanded(
+              child: FrostPanel(
+                radius: 22,
+                child: _PreviewStat(title: 'Checkout', value: '137'),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Expanded(
+          child: Row(
+            children: [
+              Expanded(
+                flex: 6,
+                child: FrostPanel(
+                  radius: 26,
                   child: Column(
-                    children: const [
-                      Expanded(
-                        child: FrostPanel(
-                          radius: 24,
-                          blur: 7,
-                          backgroundOpacity: 0.34,
-                          child: Center(child: ScoreBadge(value: '137', highlight: true)),
-                        ),
-                      ),
-                      SizedBox(height: 14),
-                      Expanded(
-                        child: FrostPanel(
-                          radius: 24,
-                          blur: 7,
-                          backgroundOpacity: 0.34,
-                          child: _MiniStats(),
-                        ),
-                      ),
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const ScoreBadge(value: 'Player performance', highlight: true),
+                      const SizedBox(height: 14),
+                      Expanded(child: CustomPaint(painter: _ChartPainter())),
                     ],
                   ),
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                flex: 4,
+                child: Column(
+                  children: const [
+                    Expanded(
+                      child: FrostPanel(
+                        radius: 24,
+                        child: Center(
+                          child: ScoreBadge(value: '61.4 avg', highlight: true),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 12),
+                    Expanded(
+                      child: FrostPanel(
+                        radius: 24,
+                        child: _LegSummary(),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 14),
-          const FrostPanel(
-            radius: 24,
-            blur: 7,
-            backgroundOpacity: 0.34,
-            child: Row(
-              children: [
-                Expanded(child: ScoreBadge(value: 'D20')),
-                SizedBox(width: 10),
-                Expanded(child: ScoreBadge(value: 'T19')),
-                SizedBox(width: 10),
-                Expanded(child: ScoreBadge(value: 'Bull', highlight: true)),
-              ],
-            ),
+        ),
+        const SizedBox(height: 12),
+        const FrostPanel(
+          radius: 24,
+          child: Row(
+            children: [
+              Expanded(child: ScoreBadge(value: 'D20')),
+              SizedBox(width: 10),
+              Expanded(child: ScoreBadge(value: 'T19')),
+              SizedBox(width: 10),
+              Expanded(child: ScoreBadge(value: 'Bull', highlight: true)),
+            ],
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MiniStats extends StatelessWidget {
-  const _MiniStats();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Column(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Avg 61.4'),
-        Text('Checkout 40'),
-        Text('3 darts used'),
+        ),
       ],
     );
   }
 }
 
-class _ChartMock extends StatelessWidget {
-  const _ChartMock();
+class _PreviewStat extends StatelessWidget {
+  const _PreviewStat({required this.title, required this.value});
+
+  final String title;
+  final String value;
 
   @override
   Widget build(BuildContext context) {
-    return CustomPaint(painter: _ChartPainter());
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          value,
+          style: Theme.of(context)
+              .textTheme
+              .titleLarge
+              ?.copyWith(fontWeight: FontWeight.w800),
+        ),
+      ],
+    );
+  }
+}
+
+class _LegSummary extends StatelessWidget {
+  const _LegSummary();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        Text('3 darts used'),
+        Text('Best visit 140'),
+        Text('Next: double 20'),
+      ],
+    );
   }
 }
 
 class _ChartPainter extends CustomPainter {
+  const _ChartPainter();
+
   @override
   void paint(Canvas canvas, Size size) {
     final grid = Paint()
       ..color = Colors.white.withValues(alpha: 0.08)
       ..strokeWidth = 1;
+
     for (var i = 0; i < 4; i++) {
       final y = size.height * (i / 3);
       canvas.drawLine(Offset(0, y), Offset(size.width, y), grid);
     }
 
     final path = Path()
-      ..moveTo(0, size.height * 0.78)
-      ..cubicTo(size.width * 0.18, size.height * 0.6, size.width * 0.32,
-          size.height * 0.82, size.width * 0.48, size.height * 0.48)
-      ..cubicTo(size.width * 0.68, size.height * 0.1, size.width * 0.78,
-          size.height * 0.5, size.width, size.height * 0.18);
+      ..moveTo(0, size.height * 0.76)
+      ..cubicTo(size.width * 0.16, size.height * 0.56, size.width * 0.34,
+          size.height * 0.84, size.width * 0.48, size.height * 0.48)
+      ..cubicTo(size.width * 0.66, size.height * 0.10, size.width * 0.82,
+          size.height * 0.44, size.width, size.height * 0.18);
 
     canvas.drawPath(
       path,
       Paint()
-        ..color = const Color(0xFF8E7BFF)
+        ..color = const Color(0xFF8C80FF)
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 3.2,
+        ..strokeWidth = 3.4,
     );
   }
 
