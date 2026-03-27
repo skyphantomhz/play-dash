@@ -4,8 +4,8 @@ class AppTheme {
   const AppTheme._();
 
   static const _seed = Color(0xFF7C5CFF);
-  static const _darkSurface = Color(0xFF0A1018);
-  static const _darkPanel = Color(0xFF111A26);
+  static const _darkSurface = Color(0xFF09111C);
+  static const _darkPanel = Color(0xFF101A28);
 
   static ThemeData get light {
     final scheme = ColorScheme.fromSeed(
@@ -23,6 +23,13 @@ class AppTheme {
       seedColor: _seed,
       brightness: Brightness.dark,
       surface: _darkSurface,
+    ).copyWith(
+      primary: const Color(0xFF8D7BFF),
+      secondary: const Color(0xFF69E5FF),
+      tertiary: const Color(0xFFFF72C6),
+      surfaceContainerHighest: const Color(0xFF1B2636),
+      surfaceContainerHigh: _darkPanel,
+      outlineVariant: const Color(0xFF3B4B61),
     );
 
     return _buildTheme(scheme).copyWith(
@@ -58,25 +65,44 @@ class AppTheme {
         margin: EdgeInsets.zero,
       ),
       chipTheme: base.chipTheme.copyWith(
-        side: BorderSide.none,
+        backgroundColor: Colors.white.withValues(alpha: 0.10),
+        side: BorderSide(
+          color: Colors.white.withValues(alpha: 0.12),
+        ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(999),
+        ),
+        labelStyle: TextStyle(
+          color: scheme.onSurface,
+          fontWeight: FontWeight.w600,
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: scheme.surfaceContainerHighest.withValues(alpha: 0.78),
+        fillColor: Colors.white.withValues(alpha: 0.10),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 18,
+          vertical: 18,
+        ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: BorderSide(color: scheme.outlineVariant),
+          borderRadius: BorderRadius.circular(20),
+          borderSide: BorderSide(
+            color: Colors.white.withValues(alpha: 0.12),
+          ),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: BorderSide(color: scheme.outlineVariant),
+          borderRadius: BorderRadius.circular(20),
+          borderSide: BorderSide(
+            color: Colors.white.withValues(alpha: 0.12),
+          ),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: BorderSide(color: scheme.primary, width: 1.4),
+          borderRadius: BorderRadius.circular(20),
+          borderSide: BorderSide(color: scheme.primary, width: 1.5),
+        ),
+        labelStyle: TextStyle(color: scheme.onSurfaceVariant),
+        hintStyle: TextStyle(
+          color: scheme.onSurfaceVariant.withValues(alpha: 0.72),
         ),
       ),
       filledButtonTheme: FilledButtonThemeData(
@@ -91,12 +117,17 @@ class AppTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           minimumSize: const Size(0, 52),
+          side: BorderSide(color: Colors.white.withValues(alpha: 0.18)),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
           ),
         ),
       ),
       sliderTheme: base.sliderTheme.copyWith(
+        activeTrackColor: scheme.primary,
+        inactiveTrackColor: Colors.white.withValues(alpha: 0.12),
+        thumbColor: scheme.secondary,
+        overlayColor: scheme.secondary.withValues(alpha: 0.14),
         showValueIndicator: ShowValueIndicator.onDrag,
       ),
       snackBarTheme: SnackBarThemeData(

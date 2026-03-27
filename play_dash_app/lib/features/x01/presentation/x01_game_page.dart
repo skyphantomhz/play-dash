@@ -26,6 +26,25 @@ class X01GamePage extends ConsumerWidget {
       title: 'X01 Match',
       subtitle:
           'A two-zone layout keeps the interactive board and score state visible together, reducing eye travel during live play.',
+      hero: Wrap(
+        spacing: 10,
+        runSpacing: 10,
+        children: [
+          StatusPill(
+            label: winner == null
+                ? 'Throwing: ${activePlayer?.name ?? '—'}'
+                : 'Winner: ${winner.name}',
+            icon: winner == null
+                ? Icons.person_pin_circle_outlined
+                : Icons.emoji_events_outlined,
+            tinted: true,
+          ),
+          StatusPill(
+            label: 'Target ${settings.startingScore}',
+            icon: Icons.flag_outlined,
+          ),
+        ],
+      ),
       actions: [
         IconButton(
           onPressed: canUndo ? controller.undo : null,
@@ -42,7 +61,9 @@ class X01GamePage extends ConsumerWidget {
               children: [
                 Text(
                   'X01 Game',
-                  style: Theme.of(context).textTheme.titleLarge,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -78,22 +99,21 @@ class X01GamePage extends ConsumerWidget {
                 ),
                 const SizedBox(height: 20),
                 if (winner != null) ...[
-                  Card(
-                    color: Theme.of(context).colorScheme.primaryContainer,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.emoji_events_outlined),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              '${winner.name} wins!',
-                              style: Theme.of(context).textTheme.titleLarge,
-                            ),
+                  GlassPanel(
+                    radius: 24,
+                    opacity: 0.52,
+                    blur: 16,
+                    child: Row(
+                      children: [
+                        const Icon(Icons.emoji_events_outlined),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            '${winner.name} wins!',
+                            style: Theme.of(context).textTheme.titleLarge,
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -143,29 +163,69 @@ class X01GamePage extends ConsumerWidget {
 
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 12),
-                    child: Card(
-                      color: isActive
-                          ? Theme.of(context)
-                              .colorScheme
-                              .primaryContainer
-                              .withValues(alpha: 0.76)
-                          : null,
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 18,
-                          vertical: 8,
-                        ),
-                        leading: Icon(
-                          isActive
-                              ? Icons.arrow_right_alt_rounded
-                              : Icons.person_outline,
-                        ),
-                        title: Text(player.name),
-                        subtitle: Text(isActive ? 'Throwing now' : 'Waiting'),
-                        trailing: Text(
-                          '$score',
-                          style: Theme.of(context).textTheme.headlineSmall,
-                        ),
+                    child: GlassPanel(
+                      radius: 24,
+                      blur: 14,
+                      opacity: isActive ? 0.62 : 0.46,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 18,
+                        vertical: 14,
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: isActive
+                                  ? Theme.of(context)
+                                      .colorScheme
+                                      .primary
+                                      .withValues(alpha: 0.18)
+                                  : Colors.white.withValues(alpha: 0.10),
+                            ),
+                            child: Icon(
+                              isActive
+                                  ? Icons.arrow_right_alt_rounded
+                                  : Icons.person_outline,
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  player.name,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleMedium
+                                      ?.copyWith(fontWeight: FontWeight.w700),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  isActive ? 'Throwing now' : 'Waiting',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurfaceVariant,
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Text(
+                            '$score',
+                            style: Theme.of(context)
+                                .textTheme
+                                .headlineSmall
+                                ?.copyWith(fontWeight: FontWeight.w800),
+                          ),
+                        ],
                       ),
                     ),
                   );
@@ -177,17 +237,26 @@ class X01GamePage extends ConsumerWidget {
                 ),
                 const SizedBox(height: 12),
                 if (state.game.currentTurnThrows.isEmpty)
-                  const Card(
+                  const GlassPanel(
+                    radius: 22,
+                    blur: 14,
                     child: ListTile(title: Text('No darts thrown yet')),
                   )
                 else
                   ...state.game.currentTurnThrows.asMap().entries.map(
                         (entry) => Padding(
                           padding: const EdgeInsets.only(bottom: 10),
-                          child: Card(
+                          child: GlassPanel(
+                            radius: 22,
+                            blur: 14,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
                             child: ListTile(
-                              leading:
-                                  CircleAvatar(child: Text('${entry.key + 1}')),
+                              leading: CircleAvatar(
+                                child: Text('${entry.key + 1}'),
+                              ),
                               title: Text(_formatThrow(entry.value)),
                               subtitle: Text(
                                 'Score: ${entry.value.segment * entry.value.multiplier}',

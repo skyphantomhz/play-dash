@@ -18,6 +18,16 @@ class LeaderboardScreen extends StatelessWidget {
       title: 'Leaderboard',
       subtitle:
           'A compact ranking layout that keeps key stats visible without sacrificing readability on smaller screens.',
+      hero: Wrap(
+        spacing: 10,
+        runSpacing: 10,
+        children: const [
+          StatusPill(label: 'Season form', icon: Icons.query_stats_rounded),
+          StatusPill(
+              label: 'Scannable cards',
+              icon: Icons.dashboard_customize_rounded),
+        ],
+      ),
       child: LayoutBuilder(
         builder: (context, constraints) {
           final wide = constraints.maxWidth >= 960;
@@ -99,21 +109,54 @@ class _LeaderboardCard extends StatelessWidget {
 
     return GlassPanel(
       padding: const EdgeInsets.all(18),
-      child: Row(
+      blur: 18,
+      child: Wrap(
+        crossAxisAlignment: WrapCrossAlignment.center,
+        runSpacing: 14,
+        spacing: 16,
         children: [
-          CircleAvatar(
-            radius: 24,
-            backgroundColor: highlight
-                ? theme.colorScheme.primaryContainer
-                : theme.colorScheme.surfaceContainerHighest,
-            child: Text('$rank'),
+          Container(
+            width: 54,
+            height: 54,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                colors: highlight
+                    ? [
+                        theme.colorScheme.primary.withValues(alpha: 0.95),
+                        theme.colorScheme.secondary.withValues(alpha: 0.85),
+                      ]
+                    : [
+                        Colors.white.withValues(alpha: 0.14),
+                        theme.colorScheme.surfaceContainerHighest
+                            .withValues(alpha: 0.64),
+                      ],
+              ),
+            ),
+            child: Center(
+              child: Text(
+                '$rank',
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: highlight
+                      ? theme.colorScheme.onPrimary
+                      : theme.colorScheme.onSurface,
+                ),
+              ),
+            ),
           ),
-          const SizedBox(width: 16),
-          Expanded(
+          ConstrainedBox(
+            constraints: const BoxConstraints(minWidth: 180),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Text(entry.name, style: theme.textTheme.titleLarge),
+                Text(
+                  entry.name,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
                 const SizedBox(height: 4),
                 Text(
                   '${entry.wins} wins • ${entry.legs} legs won',
@@ -124,15 +167,13 @@ class _LeaderboardCard extends StatelessWidget {
               ],
             ),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                entry.average.toStringAsFixed(1),
-                style: theme.textTheme.headlineSmall,
-              ),
-              Text('3-dart avg', style: theme.textTheme.bodySmall),
-            ],
+          const SizedBox(width: 8),
+          MetricCard(
+            label: '3-dart avg',
+            value: entry.average.toStringAsFixed(1),
+            icon: Icons.show_chart_rounded,
+            compact: true,
+            highlight: highlight,
           ),
         ],
       ),
