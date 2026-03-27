@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
-class SetupScreen extends StatefulWidget {
+import '../../../shared/models/player.dart';
+import '../../x01/application/x01_controller.dart';
+
+class SetupScreen extends ConsumerStatefulWidget {
   const SetupScreen({super.key});
 
   @override
-  State<SetupScreen> createState() => _SetupScreenState();
+  ConsumerState<SetupScreen> createState() => _SetupScreenState();
 }
 
-class _SetupScreenState extends State<SetupScreen> {
+class _SetupScreenState extends ConsumerState<SetupScreen> {
   static const int _minPlayers = 1;
   static const int _maxPlayers = 8;
 
@@ -23,6 +28,25 @@ class _SetupScreenState extends State<SetupScreen> {
       controller.dispose();
     }
     super.dispose();
+  }
+
+  void _startMatch() {
+    FocusScope.of(context).unfocus();
+
+    final players = List<Player>.generate(_playerCount, (int index) {
+      final trimmedName = _nameControllers[index].text.trim();
+      final resolvedName = trimmedName.isEmpty
+          ? 'Player ${index + 1}'
+          : trimmedName;
+
+      return Player(
+        id: 'player-${index + 1}',
+        name: resolvedName,
+      );
+    });
+
+    ref.read(x01ControllerProvider.notifier).startMatch(players: players);
+    context.go('/match/x01');
   }
 
   @override
@@ -96,6 +120,11 @@ class _SetupScreenState extends State<SetupScreen> {
                 textInputAction: index == _playerCount - 1
                     ? TextInputAction.done
                     : TextInputAction.next,
+                onSubmitted: (_) {
+                  if (index == _playerCount - 1) {
+                    _startMatch();
+                  }
+                },
                 decoration: InputDecoration(
                   labelText: 'Player ${index + 1}',
                   hintText: 'Enter player name',
@@ -106,7 +135,7 @@ class _SetupScreenState extends State<SetupScreen> {
             ],
             const SizedBox(height: 8),
             FilledButton.icon(
-              onPressed: () {},
+              onPressed: _startMatch,
               icon: const Icon(Icons.play_arrow_rounded),
               label: const Text('Continue'),
             ),
