@@ -45,7 +45,7 @@ class _InteractiveDartboardState extends State<InteractiveDartboard>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 520),
+    duration: const Duration(milliseconds: 720),
   );
 
   _BoardHit? _lastHit;
@@ -66,7 +66,7 @@ class _InteractiveDartboardState extends State<InteractiveDartboard>
         Text('Precision board', style: theme.textTheme.titleLarge),
         const SizedBox(height: 8),
         Text(
-          'Tap any segment to register a dart. The last hit pulses and the exact region stays highlighted for quick confirmation.',
+          'Tap any segment to register a dart. The last hit now flashes with a stronger glow so the exact region is easier to confirm instantly.',
           style: theme.textTheme.bodyMedium?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
@@ -75,24 +75,31 @@ class _InteractiveDartboardState extends State<InteractiveDartboard>
         AnimatedBuilder(
           animation: _controller,
           builder: (context, child) {
-            final t = Curves.easeOutBack.transform(_controller.value);
+            final t = Curves.easeOutCubic.transform(_controller.value);
             final glowOpacity = (1 - _controller.value).clamp(0.0, 1.0);
 
             return Transform.scale(
-              scale: 1 + (0.02 * t),
+              scale: 1 + (0.03 * t),
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
                       color: theme.colorScheme.primary.withValues(
-                        alpha: 0.26 * glowOpacity,
+                        alpha: 0.42 * glowOpacity,
                       ),
-                      blurRadius: 32 + (20 * t),
-                      spreadRadius: 2 + (5 * t),
+                      blurRadius: 42 + (34 * t),
+                      spreadRadius: 5 + (9 * t),
                     ),
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.26),
+                      color: theme.colorScheme.secondary.withValues(
+                        alpha: 0.18 * glowOpacity,
+                      ),
+                      blurRadius: 56 + (24 * t),
+                      spreadRadius: 4 + (7 * t),
+                    ),
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.30),
                       blurRadius: 38,
                       offset: const Offset(0, 20),
                     ),
@@ -302,6 +309,8 @@ class _DartboardPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = math.min(size.width, size.height) / 2;
 
+    final hitPulse = Curves.easeOutQuart.transform(1 - pulseValue);
+
     canvas.drawCircle(
       center,
       radius,
@@ -311,6 +320,18 @@ class _DartboardPainter extends CustomPainter {
           stops: const [0.08, 1],
         ).createShader(Rect.fromCircle(center: center, radius: radius)),
     );
+
+    if (highlight != null) {
+      canvas.drawCircle(
+        center,
+        radius * (1.01 + (0.045 * hitPulse)),
+        Paint()
+          ..color = _highlightColor(highlight!).withValues(
+            alpha: 0.18 + (0.16 * hitPulse),
+          )
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 30),
+      );
+    }
 
     canvas.drawCircle(
       center,
@@ -360,11 +381,13 @@ class _DartboardPainter extends CustomPainter {
     if (highlight?.ring == _BoardRing.miss) {
       canvas.drawCircle(
         center,
-        radius * (1.02 + (0.03 * (1 - pulseValue))),
+        radius * (1.03 + (0.05 * hitPulse)),
         Paint()
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 6
-          ..color = colorScheme.primary.withValues(alpha: 0.32),
+          ..strokeWidth = 8
+          ..color =
+              colorScheme.primary.withValues(alpha: 0.42 + (0.18 * hitPulse))
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
       );
     }
 
@@ -380,20 +403,27 @@ class _DartboardPainter extends CustomPainter {
   void _drawBull(Canvas canvas, Offset center, double radius) {
     final isOuterBull = highlight?.ring == _BoardRing.outerBull;
     final isBull = highlight?.ring == _BoardRing.bull;
+    final pulse = Curves.easeOutQuart.transform(1 - pulseValue);
 
     if (isOuterBull) {
       canvas.drawCircle(
         center,
-        radius * (0.11 + (0.015 * (1 - pulseValue))),
-        Paint()..color = colorScheme.primary.withValues(alpha: 0.18),
+        radius * (0.13 + (0.025 * pulse)),
+        Paint()
+          ..color =
+              const Color(0xFF00C08B).withValues(alpha: 0.26 + (0.24 * pulse))
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 18),
       );
     }
 
     if (isBull) {
       canvas.drawCircle(
         center,
-        radius * (0.065 + (0.018 * (1 - pulseValue))),
-        Paint()..color = colorScheme.primary.withValues(alpha: 0.28),
+        radius * (0.08 + (0.03 * pulse)),
+        Paint()
+          ..color =
+              const Color(0xFFFF6B6B).withValues(alpha: 0.32 + (0.26 * pulse))
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 18),
       );
     }
 
@@ -450,6 +480,10 @@ class _DartboardPainter extends CustomPainter {
       final isHighlighted =
           highlight?.segment == segment && highlight?.ring == ring;
       final baseColor = index.isEven ? evenColor : oddColor;
+      final highlightColor = _highlightColor(
+        _BoardHit(segment: segment, multiplier: 1, ring: ring),
+      );
+      final pulse = Curves.easeOutQuart.transform(1 - pulseValue);
 
       final path = Path()
         ..moveTo(center.dx + (innerRadius * math.cos(start)),
@@ -463,13 +497,14 @@ class _DartboardPainter extends CustomPainter {
         ..close();
 
       if (isHighlighted) {
-        final pulse = 1 - pulseValue;
         canvas.drawPath(
           path,
           Paint()
-            ..color =
-                colorScheme.primary.withValues(alpha: 0.28 + (0.14 * pulse))
-            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
+            ..color = highlightColor.withValues(alpha: 0.46 + (0.22 * pulse))
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 16)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 10 + (6 * pulse)
+            ..strokeJoin = StrokeJoin.round,
         );
       }
 
@@ -493,8 +528,24 @@ class _DartboardPainter extends CustomPainter {
           path,
           Paint()
             ..style = PaintingStyle.fill
-            ..color = Colors.white
-                .withValues(alpha: 0.12 + (0.08 * (1 - pulseValue))),
+            ..shader = LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.white.withValues(alpha: 0.26 + (0.14 * pulse)),
+                highlightColor.withValues(alpha: 0.18 + (0.18 * pulse)),
+              ],
+            ).createShader(
+              Rect.fromCircle(center: center, radius: outerRadius),
+            ),
+        );
+
+        canvas.drawPath(
+          path,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 3.2
+            ..color = Colors.white.withValues(alpha: 0.70 - (0.12 * pulse)),
         );
       }
 
@@ -505,6 +556,22 @@ class _DartboardPainter extends CustomPainter {
           ..strokeWidth = 1.1
           ..color = Colors.white.withValues(alpha: 0.18),
       );
+    }
+  }
+
+  Color _highlightColor(_BoardHit hit) {
+    switch (hit.ring) {
+      case _BoardRing.double:
+      case _BoardRing.bull:
+        return const Color(0xFFFF7A59);
+      case _BoardRing.triple:
+      case _BoardRing.outerBull:
+        return const Color(0xFF00D9A6);
+      case _BoardRing.innerSingle:
+      case _BoardRing.outerSingle:
+        return colorScheme.primary;
+      case _BoardRing.miss:
+        return colorScheme.primary;
     }
   }
 

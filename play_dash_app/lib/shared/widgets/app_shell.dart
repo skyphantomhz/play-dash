@@ -31,34 +31,21 @@ class AppShell extends StatelessWidget {
         actions: actions,
       ),
       body: DecoratedBox(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
             colors: [
-              const Color(0xFF07111E),
-              theme.colorScheme.surface,
-              const Color(0xFF111D31),
+              Color(0xFF170B07),
+              Color(0xFF110E18),
+              Color(0xFF061522),
             ],
+            stops: [0.0, 0.48, 1.0],
           ),
         ),
         child: Stack(
           children: [
-            const Positioned(
-              top: -140,
-              left: -70,
-              child: _GlowOrb(size: 320, color: Color(0xFF6EE7F9)),
-            ),
-            const Positioned(
-              top: 140,
-              right: -90,
-              child: _GlowOrb(size: 280, color: Color(0xFFFF72C6)),
-            ),
-            const Positioned(
-              bottom: -150,
-              left: 10,
-              child: _GlowOrb(size: 360, color: Color(0xFF9D7CFF)),
-            ),
+            const Positioned.fill(child: _FireBackground()),
             Positioned.fill(
               child: IgnorePointer(
                 child: DecoratedBox(
@@ -67,9 +54,25 @@ class AppShell extends StatelessWidget {
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        Colors.white.withValues(alpha: 0.04),
+                        Colors.white.withValues(alpha: 0.05),
                         Colors.transparent,
-                        Colors.black.withValues(alpha: 0.18),
+                        Colors.black.withValues(alpha: 0.24),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Positioned.fill(
+              child: IgnorePointer(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: RadialGradient(
+                      center: const Alignment(0, -0.25),
+                      radius: 1.15,
+                      colors: [
+                        Colors.white.withValues(alpha: 0.06),
+                        Colors.transparent,
                       ],
                     ),
                   ),
@@ -481,26 +484,77 @@ class StatusPill extends StatelessWidget {
   }
 }
 
+class _FireBackground extends StatelessWidget {
+  const _FireBackground();
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: const [
+        Positioned(
+          top: -120,
+          left: -140,
+          child: _GlowOrb(size: 420, color: Color(0xFFFF6A2B), blur: 150),
+        ),
+        Positioned(
+          top: 120,
+          left: -80,
+          child: _GlowOrb(size: 360, color: Color(0xFFFF2E63), blur: 130),
+        ),
+        Positioned(
+          bottom: -120,
+          left: 20,
+          child: _GlowOrb(size: 400, color: Color(0xFFFFB347), blur: 150),
+        ),
+        Positioned(
+          top: -100,
+          right: -140,
+          child: _GlowOrb(size: 430, color: Color(0xFF716BFF), blur: 150),
+        ),
+        Positioned(
+          top: 210,
+          right: -90,
+          child: _GlowOrb(size: 340, color: Color(0xFF00C2FF), blur: 130),
+        ),
+        Positioned(
+          bottom: -150,
+          right: -40,
+          child: _GlowOrb(size: 390, color: Color(0xFF9D7CFF), blur: 145),
+        ),
+      ],
+    );
+  }
+}
+
 class _GlowOrb extends StatelessWidget {
-  const _GlowOrb({required this.size, required this.color});
+  const _GlowOrb({
+    required this.size,
+    required this.color,
+    this.blur = 120,
+  });
 
   final double size;
   final Color color;
+  final double blur;
 
   @override
   Widget build(BuildContext context) {
     return IgnorePointer(
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: RadialGradient(
-            colors: [
-              color.withValues(alpha: 0.34),
-              color.withValues(alpha: 0.10),
-              color.withValues(alpha: 0.0),
-            ],
+      child: ImageFiltered(
+        imageFilter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+        child: Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: RadialGradient(
+              colors: [
+                color.withValues(alpha: 0.66),
+                color.withValues(alpha: 0.26),
+                color.withValues(alpha: 0.0),
+              ],
+              stops: const [0.0, 0.45, 1.0],
+            ),
           ),
         ),
       ),

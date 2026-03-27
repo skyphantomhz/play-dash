@@ -155,81 +155,13 @@ class X01GamePage extends ConsumerWidget {
                   ],
                 ),
                 const SizedBox(height: 20),
-                ...players.map((player) {
-                  final isActive =
-                      winner == null && activePlayer?.id == player.id;
-                  final score =
-                      state.game.scores[player.id] ?? settings.startingScore;
-
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: GlassPanel(
-                      radius: 24,
-                      blur: 14,
-                      opacity: isActive ? 0.62 : 0.46,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 18,
-                        vertical: 14,
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 44,
-                            height: 44,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: isActive
-                                  ? Theme.of(context)
-                                      .colorScheme
-                                      .primary
-                                      .withValues(alpha: 0.18)
-                                  : Colors.white.withValues(alpha: 0.10),
-                            ),
-                            child: Icon(
-                              isActive
-                                  ? Icons.arrow_right_alt_rounded
-                                  : Icons.person_outline,
-                            ),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  player.name,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleMedium
-                                      ?.copyWith(fontWeight: FontWeight.w700),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  isActive ? 'Throwing now' : 'Waiting',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium
-                                      ?.copyWith(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSurfaceVariant,
-                                      ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Text(
-                            '$score',
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineSmall
-                                ?.copyWith(fontWeight: FontWeight.w800),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }),
+                ...players.map((player) => _buildScoreCard(
+                      context,
+                      player: player,
+                      isActive: winner == null && activePlayer?.id == player.id,
+                      score: state.game.scores[player.id] ??
+                          settings.startingScore,
+                    )),
                 const SizedBox(height: 8),
                 const SectionHeading(
                   title: 'Current turn',
@@ -269,23 +201,220 @@ class X01GamePage extends ConsumerWidget {
             ),
           );
 
-          return wide
-              ? Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          final mobileScoreDock = GlassPanel(
+            radius: 26,
+            blur: 20,
+            opacity: 0.58,
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   children: [
-                    Expanded(flex: 6, child: boardPanel),
-                    const SizedBox(width: 20),
-                    Expanded(flex: 5, child: scorePanel),
+                    Expanded(
+                      child: Text(
+                        'Player scores',
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                      ),
+                    ),
+                    FilledButton.icon(
+                      onPressed: canUndo ? controller.undo : null,
+                      icon: const Icon(Icons.undo, size: 18),
+                      label: const Text('Undo'),
+                    ),
                   ],
-                )
-              : Column(
-                  children: [
-                    boardPanel,
-                    const SizedBox(height: 20),
-                    scorePanel,
-                  ],
-                );
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: 122,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: players.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 10),
+                    itemBuilder: (context, index) {
+                      final player = players[index];
+                      return SizedBox(
+                        width: 180,
+                        child: _buildDockScoreCard(
+                          context,
+                          player: player,
+                          isActive:
+                              winner == null && activePlayer?.id == player.id,
+                          score: state.game.scores[player.id] ??
+                              settings.startingScore,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          );
+
+          if (wide) {
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(flex: 6, child: boardPanel),
+                const SizedBox(width: 20),
+                Expanded(flex: 5, child: scorePanel),
+              ],
+            );
+          }
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              mobileScoreDock,
+              const SizedBox(height: 16),
+              boardPanel,
+              const SizedBox(height: 20),
+              scorePanel,
+            ],
+          );
         },
+      ),
+    );
+  }
+
+  static Widget _buildScoreCard(
+    BuildContext context, {
+    required Player player,
+    required bool isActive,
+    required int score,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: GlassPanel(
+        radius: 24,
+        blur: 14,
+        opacity: isActive ? 0.62 : 0.46,
+        padding: const EdgeInsets.symmetric(
+          horizontal: 18,
+          vertical: 14,
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isActive
+                    ? Theme.of(context)
+                        .colorScheme
+                        .primary
+                        .withValues(alpha: 0.18)
+                    : Colors.white.withValues(alpha: 0.10),
+              ),
+              child: Icon(
+                isActive ? Icons.arrow_right_alt_rounded : Icons.person_outline,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    player.name,
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    isActive ? 'Throwing now' : 'Waiting',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+            Text(
+              '$score',
+              style: Theme.of(context)
+                  .textTheme
+                  .headlineSmall
+                  ?.copyWith(fontWeight: FontWeight.w800),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static Widget _buildDockScoreCard(
+    BuildContext context, {
+    required Player player,
+    required bool isActive,
+    required int score,
+  }) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(22),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.white.withValues(alpha: isActive ? 0.22 : 0.12),
+            (isActive
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).colorScheme.surfaceContainerHighest)
+                .withValues(alpha: isActive ? 0.20 : 0.36),
+          ],
+        ),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: isActive ? 0.22 : 0.12),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  isActive ? Icons.track_changes : Icons.person_outline,
+                  color: isActive
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).colorScheme.onSurface,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    player.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
+                ),
+              ],
+            ),
+            const Spacer(),
+            Text(
+              '$score',
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              isActive ? 'Throwing now' : 'Waiting',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+            ),
+          ],
+        ),
       ),
     );
   }
