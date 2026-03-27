@@ -222,7 +222,7 @@ class X01GamePage extends ConsumerWidget {
             ],
           ),
           floatingOverlay: wide ? null : mobileScoreDock,
-          floatingOverlayHeight: wide ? 0 : 154,
+          floatingOverlayHeight: wide ? 0 : 146,
           actions: [
             IconButton(
               onPressed: canUndo ? controller.undo : null,
@@ -262,8 +262,8 @@ class X01GamePage extends ConsumerWidget {
       padding: const EdgeInsets.only(bottom: 12),
       child: GlassPanel(
         radius: 24,
-        blur: 14,
-        opacity: isActive ? 0.62 : 0.46,
+        blur: 10,
+        opacity: isActive ? 0.56 : 0.40,
         padding: const EdgeInsets.symmetric(
           horizontal: 18,
           vertical: 14,
@@ -334,16 +334,29 @@ class X01GamePage extends ConsumerWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Colors.white.withValues(alpha: isActive ? 0.22 : 0.12),
+            Colors.white.withValues(alpha: isActive ? 0.18 : 0.09),
             (isActive
-                    ? Theme.of(context).colorScheme.primary
+                    ? Theme.of(context)
+                        .colorScheme
+                        .primary
+                        .withValues(alpha: 0.28)
                     : Theme.of(context).colorScheme.surfaceContainerHighest)
-                .withValues(alpha: isActive ? 0.20 : 0.36),
+                .withValues(alpha: isActive ? 0.18 : 0.26),
           ],
         ),
         border: Border.all(
-          color: Colors.white.withValues(alpha: isActive ? 0.22 : 0.12),
+          color: Colors.white.withValues(alpha: isActive ? 0.18 : 0.10),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: (isActive
+                    ? Theme.of(context).colorScheme.primary
+                    : Colors.black)
+                .withValues(alpha: isActive ? 0.14 : 0.10),
+            blurRadius: 22,
+            offset: const Offset(0, 10),
+          ),
+        ],
       ),
       child: Padding(
         padding: const EdgeInsets.all(14),
@@ -455,9 +468,10 @@ class _MobileScoreDock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GlassPanel(
-      radius: 26,
-      blur: 20,
-      opacity: 0.60,
+      radius: 24,
+      blur: 10,
+      opacity: 0.52,
+      borderOpacity: 0.12,
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

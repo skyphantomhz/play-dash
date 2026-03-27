@@ -66,7 +66,7 @@ class _InteractiveDartboardState extends State<InteractiveDartboard>
         Text('Precision board', style: theme.textTheme.titleLarge),
         const SizedBox(height: 8),
         Text(
-          'Tap any segment to register a dart. The last hit now flashes with a stronger glow so the exact region is easier to confirm instantly.',
+          'Tap any segment to register a dart. The last hit now gets a brighter, more precise glow so the exact region is easy to confirm at a glance.',
           style: theme.textTheme.bodyMedium?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
@@ -86,22 +86,22 @@ class _InteractiveDartboardState extends State<InteractiveDartboard>
                   boxShadow: [
                     BoxShadow(
                       color: theme.colorScheme.primary.withValues(
-                        alpha: 0.56 * glowOpacity,
+                        alpha: 0.42 * glowOpacity,
                       ),
-                      blurRadius: 54 + (42 * t),
-                      spreadRadius: 8 + (14 * t),
-                    ),
-                    BoxShadow(
-                      color: theme.colorScheme.secondary.withValues(
-                        alpha: 0.26 * glowOpacity,
-                      ),
-                      blurRadius: 70 + (30 * t),
+                      blurRadius: 42 + (34 * t),
                       spreadRadius: 6 + (10 * t),
                     ),
                     BoxShadow(
+                      color: theme.colorScheme.secondary.withValues(
+                        alpha: 0.18 * glowOpacity,
+                      ),
+                      blurRadius: 56 + (24 * t),
+                      spreadRadius: 4 + (8 * t),
+                    ),
+                    BoxShadow(
                       color: Colors.black.withValues(alpha: 0.30),
-                      blurRadius: 38,
-                      offset: const Offset(0, 20),
+                      blurRadius: 30,
+                      offset: const Offset(0, 18),
                     ),
                   ],
                 ),
@@ -329,19 +329,19 @@ class _DartboardPainter extends CustomPainter {
         radius * (1.02 + (0.06 * hitPulse)),
         Paint()
           ..color = focusColor.withValues(
-            alpha: 0.24 + (0.18 * hitPulse),
+            alpha: 0.18 + (0.12 * hitPulse),
           )
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 34),
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 24),
       );
 
       canvas.drawCircle(
         center,
-        radius * (0.90 + (0.05 * hitPulse)),
+        radius * (0.91 + (0.04 * hitPulse)),
         Paint()
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 7 + (5 * hitPulse)
-          ..color = focusColor.withValues(alpha: 0.14 + (0.12 * hitPulse))
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10),
+          ..strokeWidth = 6 + (4 * hitPulse)
+          ..color = focusColor.withValues(alpha: 0.12 + (0.10 * hitPulse))
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
       );
     }
 
@@ -512,10 +512,10 @@ class _DartboardPainter extends CustomPainter {
         canvas.drawPath(
           path,
           Paint()
-            ..color = highlightColor.withValues(alpha: 0.62 + (0.24 * pulse))
-            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 20)
+            ..color = highlightColor.withValues(alpha: 0.70 + (0.22 * pulse))
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 16)
             ..style = PaintingStyle.stroke
-            ..strokeWidth = 14 + (9 * pulse)
+            ..strokeWidth = 16 + (8 * pulse)
             ..strokeJoin = StrokeJoin.round,
         );
       }
@@ -544,8 +544,8 @@ class _DartboardPainter extends CustomPainter {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                Colors.white.withValues(alpha: 0.34 + (0.16 * pulse)),
-                highlightColor.withValues(alpha: 0.28 + (0.24 * pulse)),
+                Colors.white.withValues(alpha: 0.28 + (0.14 * pulse)),
+                highlightColor.withValues(alpha: 0.34 + (0.28 * pulse)),
               ],
             ).createShader(
               Rect.fromCircle(center: center, radius: outerRadius),
@@ -556,8 +556,8 @@ class _DartboardPainter extends CustomPainter {
           path,
           Paint()
             ..style = PaintingStyle.stroke
-            ..strokeWidth = 4.4
-            ..color = Colors.white.withValues(alpha: 0.84 - (0.10 * pulse)),
+            ..strokeWidth = 4.8
+            ..color = Colors.white.withValues(alpha: 0.82 - (0.08 * pulse)),
         );
       }
 
@@ -575,10 +575,10 @@ class _DartboardPainter extends CustomPainter {
     switch (hit.ring) {
       case _BoardRing.double:
       case _BoardRing.bull:
-        return const Color(0xFFFF7A59);
+        return const Color(0xFFFF8E73);
       case _BoardRing.triple:
       case _BoardRing.outerBull:
-        return const Color(0xFF00D9A6);
+        return const Color(0xFF5AE7C7);
       case _BoardRing.innerSingle:
       case _BoardRing.outerSingle:
         return colorScheme.primary;

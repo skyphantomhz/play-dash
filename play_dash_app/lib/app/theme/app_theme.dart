@@ -4,8 +4,8 @@ class AppTheme {
   const AppTheme._();
 
   static const _seed = Color(0xFF7C5CFF);
-  static const _darkSurface = Color(0xFF09111C);
-  static const _darkPanel = Color(0xFF101A28);
+  static const _darkSurface = Color(0xFF0A101A);
+  static const _darkPanel = Color(0xFF151C29);
 
   static ThemeData get light {
     final scheme = ColorScheme.fromSeed(
@@ -24,12 +24,12 @@ class AppTheme {
       brightness: Brightness.dark,
       surface: _darkSurface,
     ).copyWith(
-      primary: const Color(0xFF8D7BFF),
-      secondary: const Color(0xFF69E5FF),
-      tertiary: const Color(0xFFFF72C6),
-      surfaceContainerHighest: const Color(0xFF1B2636),
+      primary: const Color(0xFFA893FF),
+      secondary: const Color(0xFF83EAF6),
+      tertiary: const Color(0xFFFFA3D5),
+      surfaceContainerHighest: const Color(0xFF202838),
       surfaceContainerHigh: _darkPanel,
-      outlineVariant: const Color(0xFF3B4B61),
+      outlineVariant: const Color(0xFF364459),
     );
 
     return _buildTheme(scheme).copyWith(
@@ -58,16 +58,16 @@ class AppTheme {
       ),
       cardTheme: CardThemeData(
         elevation: 0,
-        color: scheme.surfaceContainerHigh.withValues(alpha: 0.88),
+        color: scheme.surfaceContainerHigh.withValues(alpha: 0.78),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24),
         ),
         margin: EdgeInsets.zero,
       ),
       chipTheme: base.chipTheme.copyWith(
-        backgroundColor: Colors.white.withValues(alpha: 0.10),
+        backgroundColor: Colors.white.withValues(alpha: 0.08),
         side: BorderSide(
-          color: Colors.white.withValues(alpha: 0.12),
+          color: Colors.white.withValues(alpha: 0.10),
         ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(999),
@@ -79,7 +79,7 @@ class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: Colors.white.withValues(alpha: 0.10),
+        fillColor: Colors.white.withValues(alpha: 0.08),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 18,
           vertical: 18,
@@ -87,13 +87,13 @@ class AppTheme {
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(20),
           borderSide: BorderSide(
-            color: Colors.white.withValues(alpha: 0.12),
+            color: Colors.white.withValues(alpha: 0.10),
           ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(20),
           borderSide: BorderSide(
-            color: Colors.white.withValues(alpha: 0.12),
+            color: Colors.white.withValues(alpha: 0.10),
           ),
         ),
         focusedBorder: OutlineInputBorder(

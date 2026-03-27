@@ -41,11 +41,11 @@ class AppShell extends StatelessWidget {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color(0xFF071225),
-              Color(0xFF221135),
-              Color(0xFF03050B),
+              Color(0xFF08111F),
+              Color(0xFF151A2F),
+              Color(0xFF05070E),
             ],
-            stops: [0.0, 0.52, 1.0],
+            stops: [0.0, 0.48, 1.0],
           ),
         ),
         child: Stack(
@@ -59,9 +59,9 @@ class AppShell extends StatelessWidget {
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        Colors.white.withValues(alpha: 0.06),
+                        Colors.white.withValues(alpha: 0.035),
                         Colors.transparent,
-                        Colors.black.withValues(alpha: 0.20),
+                        Colors.black.withValues(alpha: 0.16),
                       ],
                     ),
                   ),
@@ -76,7 +76,7 @@ class AppShell extends StatelessWidget {
                       center: const Alignment(0, -0.15),
                       radius: 1.2,
                       colors: [
-                        Colors.white.withValues(alpha: 0.05),
+                        Colors.white.withValues(alpha: 0.028),
                         Colors.transparent,
                       ],
                     ),
@@ -179,9 +179,9 @@ class GlassPanel extends StatelessWidget {
     required this.child,
     this.padding = const EdgeInsets.all(20),
     this.radius = 30,
-    this.opacity = 0.72,
-    this.borderOpacity = 0.24,
-    this.blur = 20,
+    this.opacity = 0.58,
+    this.borderOpacity = 0.14,
+    this.blur = 12,
     this.gradient,
     super.key,
   });
@@ -211,11 +211,11 @@ class GlassPanel extends StatelessWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    Colors.white.withValues(alpha: 0.16),
+                    Colors.white.withValues(alpha: 0.12),
                     theme.colorScheme.surfaceContainerHigh
                         .withValues(alpha: opacity),
                     theme.colorScheme.surfaceContainer
-                        .withValues(alpha: opacity - 0.08),
+                        .withValues(alpha: opacity - 0.12),
                   ],
                 ),
             border: Border.all(
@@ -223,14 +223,14 @@ class GlassPanel extends StatelessWidget {
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.20),
-                blurRadius: 34,
-                offset: const Offset(0, 18),
+                color: Colors.black.withValues(alpha: 0.18),
+                blurRadius: 28,
+                offset: const Offset(0, 16),
               ),
               BoxShadow(
-                color: Colors.white.withValues(alpha: 0.04),
-                blurRadius: 12,
-                offset: const Offset(0, -4),
+                color: Colors.white.withValues(alpha: 0.025),
+                blurRadius: 10,
+                offset: const Offset(0, -3),
               ),
             ],
           ),
@@ -537,7 +537,7 @@ class _GlassmorphismBackground extends StatelessWidget {
                         painter: const _LightStreakPainter(progress: 0.38),
                       )
                     : _AnimatedPainterLayer(
-                        duration: const Duration(seconds: 18),
+                        duration: const Duration(seconds: 32),
                         builder: (progress) =>
                             _LightStreakPainter(progress: progress),
                       ),
@@ -551,7 +551,7 @@ class _GlassmorphismBackground extends StatelessWidget {
                         ),
                       )
                     : _AnimatedPainterLayer(
-                        duration: const Duration(seconds: 24),
+                        duration: const Duration(seconds: 32),
                         builder: (progress) => _ParticlePainter(
                           particles: particles,
                           progress: progress,
@@ -568,22 +568,22 @@ class _GlassmorphismBackground extends StatelessWidget {
   List<_GlowBlob> _generateGlowBlobs(Size size) {
     final random = math.Random(_seed);
     final palette = <Color>[
-      const Color(0xFF61E9FF),
-      const Color(0xFFFF71D1),
-      const Color(0xFF8D7BFF),
+      const Color(0xFF7AE7F7),
+      const Color(0xFFB69BFF),
+      const Color(0xFFFF9FD2),
     ];
 
-    return List<_GlowBlob>.generate(7, (index) {
+    return List<_GlowBlob>.generate(5, (index) {
       final widthFactor = 0.12 + random.nextDouble() * 0.76;
       final heightFactor = 0.08 + random.nextDouble() * 0.84;
-      final radius = size.shortestSide * (0.20 + random.nextDouble() * 0.26);
+      final radius = size.shortestSide * (0.16 + random.nextDouble() * 0.18);
       final color = palette[random.nextInt(palette.length)];
 
       return _GlowBlob(
         center: Offset(size.width * widthFactor, size.height * heightFactor),
         radius: radius,
         color: color,
-        alpha: 0.13 + random.nextDouble() * 0.08,
+        alpha: 0.07 + random.nextDouble() * 0.04,
       );
     });
   }
@@ -591,16 +591,16 @@ class _GlassmorphismBackground extends StatelessWidget {
   List<_Particle> _generateParticles(Size size) {
     final random = math.Random(_seed * 3);
 
-    return List<_Particle>.generate(24, (index) {
+    return List<_Particle>.generate(18, (index) {
       return _Particle(
         base: Offset(
           random.nextDouble() * size.width,
           random.nextDouble() * size.height,
         ),
-        radius: 0.8 + random.nextDouble() * 2.2,
-        dx: -16 + random.nextDouble() * 32,
-        dy: -22 + random.nextDouble() * 26,
-        opacity: 0.06 + random.nextDouble() * 0.08,
+        radius: 0.7 + random.nextDouble() * 1.6,
+        dx: -10 + random.nextDouble() * 20,
+        dy: -14 + random.nextDouble() * 18,
+        opacity: 0.035 + random.nextDouble() * 0.035,
       );
     });
   }
@@ -739,7 +739,7 @@ class _LightStreakPainter extends CustomPainter {
     for (var index = 0; index < paths.length; index++) {
       final spec = paths[index];
       final phase = (progress + (index * 0.18)) % 1.0;
-      final opacity = 0.05 + (0.05 * math.sin(phase * math.pi));
+      final opacity = 0.018 + (0.018 * math.sin(phase * math.pi));
       final path = Path()
         ..moveTo(spec.start.dx, spec.start.dy)
         ..cubicTo(
@@ -761,9 +761,9 @@ class _LightStreakPainter extends CustomPainter {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              const Color(0xFF61E9FF).withValues(alpha: opacity * 0.55),
-              const Color(0xFFFF71D1).withValues(alpha: opacity),
-              const Color(0xFF8D7BFF).withValues(alpha: opacity * 0.65),
+              const Color(0xFF7AE7F7).withValues(alpha: opacity * 0.45),
+              const Color(0xFFB69BFF).withValues(alpha: opacity),
+              const Color(0xFFFF9FD2).withValues(alpha: opacity * 0.5),
             ],
           ).createShader(Rect.fromLTWH(0, 0, size.width, size.height)),
       );
