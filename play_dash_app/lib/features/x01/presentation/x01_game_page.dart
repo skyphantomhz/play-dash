@@ -21,86 +21,63 @@ class X01GamePage extends ConsumerWidget {
     final winner = _findPlayerById(state.players, state.game.winnerPlayerId);
 
     return AppShell(
-      title: 'X01 match',
-      subtitle:
-          'Rebuilt as a dual-panel arena with the dartboard and the live scoring rail always visible. Contrast is stronger, blur is softer, and actions stay close to the score state.',
-      hero: Wrap(
-        spacing: 10,
-        runSpacing: 10,
-        children: [
-          StatusPill(
-            label: winner == null
-                ? 'Throwing: ${activePlayer?.name ?? '—'}'
-                : 'Winner: ${winner.name}',
-            icon: Icons.person_pin_circle_outlined,
-            tinted: true,
-          ),
-          StatusPill(
-            label: 'Target ${settings.startingScore}',
-            icon: Icons.flag_outlined,
-          ),
-          StatusPill(
-            label: '${state.game.currentTurnThrows.length}/3 darts',
-            icon: Icons.ads_click_outlined,
-          ),
-        ],
-      ),
-      actions: [
-        IconButton(
-          onPressed: canUndo ? controller.undo : null,
-          icon: const Icon(Icons.undo_rounded),
-          tooltip: 'Undo',
-        ),
+      expandChild: true,
+      mobileTopTabs: const [
+        ShellTab(label: 'Score', route: '/match/x01'),
+        ShellTab(label: 'Header', route: '/setup'),
+        ShellTab(label: 'Single', route: '/match/x01'),
       ],
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final wide = constraints.maxWidth >= 1180;
-          return wide
+          final desktop = constraints.maxWidth >= 1180;
+          return desktop
               ? Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
-                      flex: 6,
-                      child: _BoardColumn(
-                        winner: winner,
-                        activePlayer: activePlayer,
-                        settings: settings,
-                        state: state,
-                        controller: controller,
+                      flex: 22,
+                      child: _PlayerStatusCard(
+                        name: activePlayer?.name ?? 'Latest Johnson',
+                        score: state.game.scores[activePlayer?.id] ?? settings.startingScore,
+                        accent: const Color(0xFF2DB6FF),
+                        meta: 'S.01  |  Score ${state.game.currentTurnThrows.length + 2}',
                       ),
                     ),
-                    const SizedBox(width: 20),
+                    const SizedBox(width: 14),
                     Expanded(
-                      flex: 5,
-                      child: _ScoreColumn(
-                        winner: winner,
-                        activePlayer: activePlayer,
-                        state: state,
-                        settings: settings,
-                        canUndo: canUndo,
+                      flex: 44,
+                      child: _BoardPanel(
                         controller: controller,
+                        winner: winner,
+                        canUndo: canUndo,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      flex: 24,
+                      child: _ScoreRail(
+                        players: state.players,
+                        activePlayer: activePlayer,
+                        scores: state.game.scores,
+                        settings: settings,
+                        throws: state.game.currentTurnThrows,
+                        winner: winner,
                       ),
                     ),
                   ],
                 )
               : Column(
                   children: [
-                    _BoardColumn(
-                      winner: winner,
-                      activePlayer: activePlayer,
-                      settings: settings,
-                      state: state,
-                      controller: controller,
+                    _PlayerStatusCard(
+                      name: activePlayer?.name ?? 'Latest Johnson',
+                      score: state.game.scores[activePlayer?.id] ?? settings.startingScore,
+                      accent: const Color(0xFF2DB6FF),
+                      meta: 'S.01  |  Score ${state.game.currentTurnThrows.length + 2}',
                     ),
-                    const SizedBox(height: 20),
-                    _ScoreColumn(
-                      winner: winner,
-                      activePlayer: activePlayer,
-                      state: state,
-                      settings: settings,
-                      canUndo: canUndo,
-                      controller: controller,
-                    ),
+                    const SizedBox(height: 12),
+                    _BoardPanel(controller: controller, winner: winner, canUndo: canUndo),
+                    const SizedBox(height: 12),
+                    _BottomActions(controller: controller, canUndo: canUndo),
                   ],
                 );
         },
@@ -108,8 +85,7 @@ class X01GamePage extends ConsumerWidget {
     );
   }
 
-  static Player? _activePlayer(List<Player> players, int index) =>
-      players.isEmpty ? null : players[index.clamp(0, players.length - 1)];
+  static Player? _activePlayer(List<Player> players, int index) => players.isEmpty ? null : players[index.clamp(0, players.length - 1)];
 
   static Player? _findPlayerById(List<Player> players, String? id) {
     if (id == null) return null;
@@ -120,9 +96,7 @@ class X01GamePage extends ConsumerWidget {
   }
 
   static String formatThrow(DartThrow dartThrow) {
-    if (dartThrow.segment == 25) {
-      return dartThrow.multiplier == 2 ? 'Bull' : 'Outer Bull';
-    }
+    if (dartThrow.segment == 25) return dartThrow.multiplier == 2 ? 'Bull' : 'Outer Bull';
     if (dartThrow.segment == 0 || dartThrow.multiplier == 0) return 'Miss';
     return switch (dartThrow.multiplier) {
       1 => 'Single ${dartThrow.segment}',
@@ -133,192 +107,171 @@ class X01GamePage extends ConsumerWidget {
   }
 }
 
-class _BoardColumn extends StatelessWidget {
-  const _BoardColumn({
-    required this.winner,
-    required this.activePlayer,
-    required this.settings,
-    required this.state,
-    required this.controller,
-  });
+class _PlayerStatusCard extends StatelessWidget {
+  const _PlayerStatusCard({required this.name, required this.score, required this.accent, required this.meta});
 
-  final Player? winner;
-  final Player? activePlayer;
-  final X01MatchSettings settings;
-  final dynamic state;
-  final dynamic controller;
+  final String name;
+  final int score;
+  final Color accent;
+  final String meta;
 
   @override
   Widget build(BuildContext context) {
-    return GlassPanel(
-      radius: 34,
-      blur: 9,
-      opacity: 0.48,
-      padding: const EdgeInsets.all(22),
+    return NeonCard(
+      accent: accent,
+      secondaryAccent: const Color(0xFF6E49FF),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SectionHeading(
-            title: 'Throw board',
-            subtitle:
-                'The interactive board remains the centerpiece, now framed by cleaner badges and more restrained highlight treatment.',
-          ),
-          const SizedBox(height: 20),
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
+          Row(
             children: [
-              MetricCard(
-                label: winner == null ? 'Current player' : 'Winner',
-                value: winner?.name ?? activePlayer?.name ?? '—',
-                icon: winner == null
-                    ? Icons.person_outline_rounded
-                    : Icons.emoji_events_rounded,
-                highlight: true,
-              ),
-              MetricCard(
-                label: 'Starting score',
-                value: '${settings.startingScore}',
-                icon: Icons.flag_outlined,
-              ),
-              MetricCard(
-                label: 'Current turn',
-                value: '${state.game.currentTurnThrows.length}/3',
-                icon: Icons.timeline_rounded,
+              PlayerAvatar(name: name, colors: [accent, const Color(0xFF6E49FF)]),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 16)),
+                    const SizedBox(height: 4),
+                    Text(meta, style: const TextStyle(color: Color(0xB3E8EDFF), fontSize: 11.5)),
+                  ],
+                ),
               ),
             ],
-          ),
-          const SizedBox(height: 20),
-          InteractiveDartboard(
-            enabled: winner == null,
-            onThrow: controller.addThrow,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ScoreColumn extends StatelessWidget {
-  const _ScoreColumn({
-    required this.winner,
-    required this.activePlayer,
-    required this.state,
-    required this.settings,
-    required this.canUndo,
-    required this.controller,
-  });
-
-  final Player? winner;
-  final Player? activePlayer;
-  final dynamic state;
-  final X01MatchSettings settings;
-  final bool canUndo;
-  final dynamic controller;
-
-  @override
-  Widget build(BuildContext context) {
-    return GlassPanel(
-      radius: 34,
-      blur: 9,
-      opacity: 0.48,
-      padding: const EdgeInsets.all(22),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SectionHeading(
-            title: 'Live scoring rail',
-            subtitle:
-                'Scores, turn history, and quick actions are grouped into one side column for immediate confirmation while throwing.',
-            trailing: Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: [
-                FilledButton.icon(
-                  onPressed: canUndo ? controller.undo : null,
-                  icon: const Icon(Icons.undo_rounded),
-                  label: const Text('Undo'),
-                ),
-                OutlinedButton.icon(
-                  onPressed: winner == null && state.game.currentTurnThrows.isNotEmpty
-                      ? controller.resetCurrentTurn
-                      : null,
-                  icon: const Icon(Icons.refresh_rounded),
-                  label: const Text('Clear turn'),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-          for (final player in state.players) ...[
-            _PlayerScoreTile(
-              player: player,
-              isActive: winner == null && player.id == activePlayer?.id,
-              score: state.game.scores[player.id] ?? settings.startingScore,
-            ),
-            const SizedBox(height: 12),
-          ],
-          const SizedBox(height: 8),
-          const SectionHeading(
-            title: 'Current turn',
-            subtitle: 'Latest throws are shown as compact confirmation cards.',
           ),
           const SizedBox(height: 14),
-          if (state.game.currentTurnThrows.isEmpty)
-            const PanelListTile(
-              title: 'No throws yet',
-              subtitle: 'Tap the board to record the first dart.',
-              leading: Icon(Icons.sports_martial_arts_outlined),
-            )
-          else
-            for (final entry in state.game.currentTurnThrows.asMap().entries) ...[
-              PanelListTile(
-                title: X01GamePage.formatThrow(entry.value),
-                subtitle:
-                    'Throw ${entry.key + 1} · ${entry.value.segment * entry.value.multiplier} points',
-                leading: CircleAvatar(child: Text('${entry.key + 1}')),
-                trailing: ScoreBadge(
-                  value: '${entry.value.segment * entry.value.multiplier}',
-                  highlight: entry.key == state.game.currentTurnThrows.length - 1,
-                ),
-              ),
-              const SizedBox(height: 10),
-            ],
+          Center(child: Text('$score', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 54, letterSpacing: -2))),
         ],
       ),
     );
   }
 }
 
-class _PlayerScoreTile extends StatelessWidget {
-  const _PlayerScoreTile({
-    required this.player,
-    required this.isActive,
-    required this.score,
-  });
+class _BoardPanel extends StatelessWidget {
+  const _BoardPanel({required this.controller, required this.winner, required this.canUndo});
 
-  final Player player;
-  final bool isActive;
-  final int score;
+  final dynamic controller;
+  final Player? winner;
+  final bool canUndo;
 
   @override
   Widget build(BuildContext context) {
-    return PanelListTile(
-      title: player.name,
-      subtitle: isActive ? 'Current player' : 'Waiting',
-      highlight: isActive,
-      leading: CircleAvatar(
-        radius: 24,
-        backgroundColor: (isActive
-                ? Theme.of(context).colorScheme.primary
-                : Colors.white)
-            .withValues(alpha: isActive ? 0.18 : 0.1),
-        child: Icon(
-          isActive ? Icons.arrow_right_alt_rounded : Icons.person_outline_rounded,
-          color: Theme.of(context).colorScheme.onSurface,
-        ),
+    return NeonCard(
+      accent: const Color(0xFF2DB6FF),
+      secondaryAccent: const Color(0xFFFF4BDD),
+      child: Column(
+        children: [
+          const SectionHeading(title: 'Tap scoring to score', subtitle: 'Reduced blur and tighter edge lighting match the design.'),
+          const SizedBox(height: 12),
+          InteractiveDartboard(enabled: winner == null, onThrow: controller.addThrow),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(child: ScoreBadge(value: canUndo ? 'Undo Ready' : 'No Undo', highlight: canUndo)),
+              const SizedBox(width: 10),
+              const Expanded(child: ScoreBadge(value: '60', large: true)),
+              const SizedBox(width: 10),
+              Expanded(child: ScoreBadge(value: winner == null ? 'Live Turn' : 'Winner', highlight: winner != null)),
+            ],
+          ),
+        ],
       ),
-      trailing: ScoreBadge(value: '$score', highlight: isActive),
+    );
+  }
+}
+
+class _ScoreRail extends StatelessWidget {
+  const _ScoreRail({required this.players, required this.activePlayer, required this.scores, required this.settings, required this.throws, required this.winner});
+
+  final List<Player> players;
+  final Player? activePlayer;
+  final Map<String, int> scores;
+  final X01MatchSettings settings;
+  final List<DartThrow> throws;
+  final Player? winner;
+
+  @override
+  Widget build(BuildContext context) {
+    return NeonCard(
+      accent: const Color(0xFFFF4BDD),
+      secondaryAccent: const Color(0xFF6E49FF),
+      child: Column(
+        children: [
+          for (final player in players.take(4)) ...[
+            PanelListTile(
+              title: player.name,
+              subtitle: player.id == activePlayer?.id ? 'Current Player' : 'Waiting',
+              leading: PlayerAvatar(
+                name: player.name,
+                colors: [player.id == activePlayer?.id ? const Color(0xFF2DB6FF) : const Color(0xFFFF5A87), const Color(0xFF6E49FF)],
+                radius: 18,
+              ),
+              trailing: ScoreBadge(
+                value: '${scores[player.id] ?? settings.startingScore}',
+                highlight: player.id == activePlayer?.id,
+                large: player.id == activePlayer?.id,
+              ),
+              highlight: player.id == activePlayer?.id,
+            ),
+            const SizedBox(height: 10),
+          ],
+          const SizedBox(height: 6),
+          const SectionHeading(title: 'Throw History', compact: true),
+          const SizedBox(height: 10),
+          if (throws.isEmpty)
+            const PanelListTile(title: 'No throws yet', subtitle: 'Tap the board to open the round.', leading: Icon(Icons.touch_app_rounded, color: Colors.white))
+          else
+            for (final entry in throws.asMap().entries) ...[
+              PanelListTile(
+                title: X01GamePage.formatThrow(entry.value),
+                subtitle: 'Throw ${entry.key + 1} · ${entry.value.segment * entry.value.multiplier} points',
+                leading: CircleAvatar(radius: 16, backgroundColor: Colors.white12, child: Text('${entry.key + 1}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800))),
+                trailing: ScoreBadge(value: '${entry.value.segment * entry.value.multiplier}', highlight: entry.key == throws.length - 1),
+              ),
+              const SizedBox(height: 8),
+            ],
+          if (winner != null) ...[
+            const SizedBox(height: 12),
+            PanelListTile(
+              title: '${winner!.name} wins',
+              subtitle: 'Checkout completed',
+              leading: const Icon(Icons.emoji_events_rounded, color: Color(0xFFFFD95B)),
+              highlight: true,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _BottomActions extends StatelessWidget {
+  const _BottomActions({required this.controller, required this.canUndo});
+
+  final dynamic controller;
+  final bool canUndo;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: GlassButton(
+            label: 'Undo',
+            icon: Icons.undo_rounded,
+            onPressed: canUndo ? controller.undo : null,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: GlassButton(
+            label: 'End Turn',
+            icon: Icons.bolt_rounded,
+            onPressed: controller.resetCurrentTurn,
+            highlight: true,
+          ),
+        ),
+      ],
     );
   }
 }

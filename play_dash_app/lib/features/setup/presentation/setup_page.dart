@@ -18,11 +18,13 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   static const int _minPlayers = 1;
   static const int _maxPlayers = 8;
 
-  int _playerCount = 2;
+  int _playerCount = 4;
   bool _showMatchScreen = false;
   late final List<TextEditingController> _nameControllers = List.generate(
     _maxPlayers,
-    (index) => TextEditingController(text: 'Player ${index + 1}'),
+    (index) => TextEditingController(
+      text: ['Mike Johnson', 'Dipti Williams', 'Camme Davis', 'Sarah Williams', 'Leo', 'Noah', 'Ava', 'Luca'][index],
+    ),
   );
 
   @override
@@ -36,27 +38,18 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   void _startMatch() {
     final players = List<Player>.generate(_playerCount, (index) {
       final value = _nameControllers[index].text.trim();
-      return Player(
-        id: 'player-${index + 1}',
-        name: value.isEmpty ? 'Player ${index + 1}' : value,
-      );
+      return Player(id: 'player-${index + 1}', name: value.isEmpty ? 'Player ${index + 1}' : value);
     });
-
     ref.read(x01ControllerProvider.notifier).startMatch(players: players);
     setState(() => _showMatchScreen = true);
-
     try {
       context.go('/match/x01');
-    } catch (_) {
-      // Fallback for embedded usage.
-    }
+    } catch (_) {}
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_showMatchScreen) {
-      return const X01GamePage();
-    }
+    if (_showMatchScreen) return const X01GamePage();
 
     final preview = List<String>.generate(_playerCount, (index) {
       final value = _nameControllers[index].text.trim();
@@ -64,68 +57,54 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     });
 
     return AppShell(
-      title: 'Player setup',
-      subtitle:
-          'The roster screen was rebuilt into a two-stage launch sheet: player controls on one side, session preview and readiness feedback on the other.',
-      hero: Wrap(
-        spacing: 10,
-        runSpacing: 10,
-        children: const [
-          StatusPill(
-            label: 'Roster editing',
-            icon: Icons.badge_outlined,
-            tinted: true,
-          ),
-          StatusPill(
-            label: 'Live launch preview',
-            icon: Icons.rocket_launch_rounded,
-          ),
-        ],
-      ),
+      expandChild: true,
+      mobileTopTabs: const [
+        ShellTab(label: 'Home', route: '/'),
+        ShellTab(label: 'Setup', route: '/setup'),
+        ShellTab(label: 'Game', route: '/match/x01'),
+        ShellTab(label: 'Stats', route: '/leaderboard'),
+      ],
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final wide = constraints.maxWidth >= 1120;
-          return wide
+          final desktop = constraints.maxWidth >= 1180;
+          return desktop
               ? Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
-                      flex: 6,
-                      child: _SetupForm(
+                      flex: 38,
+                      child: _SetupConfiguration(
                         playerCount: _playerCount,
                         minPlayers: _minPlayers,
                         maxPlayers: _maxPlayers,
                         nameControllers: _nameControllers,
-                        onPlayerCountChanged: (value) =>
-                            setState(() => _playerCount = value.round()),
+                        onPlayerCountChanged: (value) => setState(() => _playerCount = value.round()),
                         onChanged: () => setState(() {}),
-                        onStart: _startMatch,
                       ),
                     ),
                     const SizedBox(width: 18),
+                    Expanded(flex: 26, child: _SetupRoster(preview: preview)),
+                    const SizedBox(width: 18),
                     Expanded(
-                      flex: 4,
-                      child: _PreviewRail(
-                        playerCount: _playerCount,
-                        preview: preview,
-                      ),
+                      flex: 24,
+                      child: _SetupActions(playerCount: _playerCount, onStart: _startMatch),
                     ),
                   ],
                 )
               : Column(
                   children: [
-                    _SetupForm(
+                    _MobileSetupScore(preview: preview),
+                    const SizedBox(height: 12),
+                    _SetupConfiguration(
                       playerCount: _playerCount,
                       minPlayers: _minPlayers,
                       maxPlayers: _maxPlayers,
                       nameControllers: _nameControllers,
-                      onPlayerCountChanged: (value) =>
-                          setState(() => _playerCount = value.round()),
+                      onPlayerCountChanged: (value) => setState(() => _playerCount = value.round()),
                       onChanged: () => setState(() {}),
-                      onStart: _startMatch,
+                      compact: true,
                     ),
-                    const SizedBox(height: 18),
-                    _PreviewRail(playerCount: _playerCount, preview: preview),
+                    const SizedBox(height: 12),
+                    _SetupActions(playerCount: _playerCount, onStart: _startMatch, compact: true),
                   ],
                 );
         },
@@ -134,15 +113,15 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   }
 }
 
-class _SetupForm extends StatelessWidget {
-  const _SetupForm({
+class _SetupConfiguration extends StatelessWidget {
+  const _SetupConfiguration({
     required this.playerCount,
     required this.minPlayers,
     required this.maxPlayers,
     required this.nameControllers,
     required this.onPlayerCountChanged,
     required this.onChanged,
-    required this.onStart,
+    this.compact = false,
   });
 
   final int playerCount;
@@ -151,110 +130,144 @@ class _SetupForm extends StatelessWidget {
   final List<TextEditingController> nameControllers;
   final ValueChanged<double> onPlayerCountChanged;
   final VoidCallback onChanged;
-  final VoidCallback onStart;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
-    return GlassPanel(
-      radius: 36,
-      blur: 6,
-      opacity: 0.42,
-      padding: const EdgeInsets.all(22),
+    return NeonCard(
+      accent: const Color(0xFF2DB6FF),
+      secondaryAccent: const Color(0xFF6E49FF),
+      radius: compact ? 20 : 24,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SectionHeading(
-            title: 'Roster builder',
-            subtitle:
-                'The launch form is torn down and rebuilt as a clear sequence: choose player count, name the roster, then start the match.',
+          SectionHeading(
+            title: 'Setup Game',
+            subtitle: compact ? 'Stay / Header / Single re-entry' : 'Select mode, roster, and scoring before launch.',
+            trailing: ScoreBadge(value: '$playerCount Players', highlight: true),
           ),
-          const SizedBox(height: 18),
-          FrostPanel(
-            radius: 28,
-            blur: 5,
-            backgroundOpacity: 0.34,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'Player count',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                    ),
-                    ScoreBadge(value: '$playerCount', highlight: true),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Slider(
-                  value: playerCount.toDouble(),
-                  min: minPlayers.toDouble(),
-                  max: maxPlayers.toDouble(),
-                  divisions: maxPlayers - minPlayers,
-                  label: '$playerCount players',
-                  onChanged: onPlayerCountChanged,
-                ),
-                Text(
-                  playerCount == 1
-                      ? 'Solo practice profile selected.'
-                      : '$playerCount-player local session is ready.',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 18),
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: [
-              const MetricCard(
-                label: 'Ruleset',
-                value: '501 · Double out',
-                icon: Icons.rule_folder_rounded,
-                highlight: true,
-              ),
-              MetricCard(
-                label: 'Ready slots',
-                value: '$playerCount active',
-                icon: Icons.groups_outlined,
-              ),
+          const SizedBox(height: 14),
+          Row(
+            children: const [
+              Expanded(child: _SegmentToggle(label: 'Global', active: true)),
+              SizedBox(width: 8),
+              Expanded(child: _SegmentToggle(label: 'Friends')),
+              SizedBox(width: 8),
+              Expanded(child: _SegmentToggle(label: 'This Month')),
             ],
           ),
-          const SizedBox(height: 18),
-          for (var index = 0; index < playerCount; index++) ...[
+          const SizedBox(height: 14),
+          Slider(
+            value: playerCount.toDouble(),
+            min: minPlayers.toDouble(),
+            max: maxPlayers.toDouble(),
+            divisions: maxPlayers - minPlayers,
+            onChanged: onPlayerCountChanged,
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: const [
+              MetricCard(label: 'Mode', value: 'X01', icon: Icons.sports_score_rounded, highlight: true),
+              MetricCard(label: 'Target', value: '301 / 501', icon: Icons.flag_rounded),
+              MetricCard(label: 'Checkout', value: 'Single Out', icon: Icons.adjust_rounded),
+            ],
+          ),
+          const SizedBox(height: 16),
+          for (int index = 0; index < playerCount; index++) ...[
             FrostPanel(
-              radius: 24,
-              blur: 5,
-              backgroundOpacity: 0.30,
-              padding: const EdgeInsets.all(6),
+              radius: 18,
+              backgroundOpacity: 0.12,
+              borderOpacity: 0.16,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               child: TextField(
                 controller: nameControllers[index],
-                textInputAction: index == playerCount - 1
-                    ? TextInputAction.done
-                    : TextInputAction.next,
+                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
                 onChanged: (_) => onChanged(),
-                onSubmitted: (_) {
-                  if (index == playerCount - 1) onStart();
-                },
                 decoration: InputDecoration(
+                  border: InputBorder.none,
                   labelText: 'Player ${index + 1}',
-                  hintText: 'Enter player name',
-                  prefixIcon: const Icon(Icons.person_outline_rounded),
+                  labelStyle: const TextStyle(color: Color(0xB3E8EDFF)),
+                  prefixIcon: const Icon(Icons.person_outline_rounded, color: Colors.white70),
                 ),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
           ],
-          GlassButton(
-            onPressed: onStart,
-            icon: Icons.play_arrow_rounded,
-            label: 'Start match',
-            highlight: true,
+        ],
+      ),
+    );
+  }
+}
+
+class _SetupRoster extends StatelessWidget {
+  const _SetupRoster({required this.preview});
+
+  final List<String> preview;
+
+  @override
+  Widget build(BuildContext context) {
+    return NeonCard(
+      accent: const Color(0xFFFF4BDD),
+      secondaryAccent: const Color(0xFF6E49FF),
+      child: Column(
+        children: [
+          const SectionHeading(title: 'Best Order', subtitle: 'Drag-free stacked roster with bright score chips.'),
+          const SizedBox(height: 14),
+          for (int index = 0; index < preview.length; index++) ...[
+            PanelListTile(
+              title: preview[index],
+              subtitle: index == 0 ? '00' : index == 1 ? '40' : '00',
+              leading: PlayerAvatar(
+                name: preview[index],
+                colors: [index.isEven ? const Color(0xFF2DB6FF) : const Color(0xFFFF5A87), const Color(0xFF6E49FF)],
+              ),
+              trailing: ScoreBadge(value: index == 0 ? '80' : index == 1 ? '40' : '00', highlight: index == 1),
+            ),
+            const SizedBox(height: 10),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _SetupActions extends StatelessWidget {
+  const _SetupActions({required this.playerCount, required this.onStart, this.compact = false});
+
+  final int playerCount;
+  final VoidCallback onStart;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    return NeonCard(
+      accent: const Color(0xFFFF4BDD),
+      secondaryAccent: const Color(0xFF2DB6FF),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SectionHeading(title: 'Game Settings', subtitle: 'Mirror the mobile setup panel shown in the reference.'),
+          const SizedBox(height: 14),
+          const _DropdownLine(title: 'Stay Game', value: 'X01'),
+          const SizedBox(height: 10),
+          const _DropdownLine(title: 'Start Order', value: 'Mike Johnson'),
+          const SizedBox(height: 10),
+          const _DropdownLine(title: 'Scoring', value: 'Single Out'),
+          const SizedBox(height: 10),
+          const _DropdownLine(title: 'Round Count', value: 'Best of 5'),
+          const SizedBox(height: 10),
+          _DropdownLine(title: 'Roster', value: '$playerCount Players'),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            child: GlassButton(
+              label: 'Start Game',
+              icon: Icons.play_arrow_rounded,
+              onPressed: onStart,
+              highlight: true,
+            ),
           ),
         ],
       ),
@@ -262,82 +275,83 @@ class _SetupForm extends StatelessWidget {
   }
 }
 
-class _PreviewRail extends StatelessWidget {
-  const _PreviewRail({required this.playerCount, required this.preview});
+class _MobileSetupScore extends StatelessWidget {
+  const _MobileSetupScore({required this.preview});
 
-  final int playerCount;
   final List<String> preview;
 
   @override
   Widget build(BuildContext context) {
-    return GlassPanel(
-      radius: 36,
-      blur: 6,
-      opacity: 0.42,
-      padding: const EdgeInsets.all(22),
+    return const NeonCard(
+      accent: Color(0xFFFF4BDD),
+      secondaryAccent: Color(0xFF6E49FF),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SectionHeading(
-            title: 'Launch preview',
-            subtitle:
-                'The companion rail mirrors the main dashboard language with concise readiness cards and a compact player list.',
-          ),
-          const SizedBox(height: 18),
-          const MetricCard(
-            label: 'Mode',
-            value: 'X01 launch',
-            icon: Icons.sports_score_rounded,
-            highlight: true,
-          ),
-          const SizedBox(height: 12),
-          MetricCard(
-            label: 'Players ready',
-            value: '$playerCount',
-            icon: Icons.check_circle_outline_rounded,
-          ),
-          const SizedBox(height: 18),
-          FrostPanel(
-            radius: 28,
-            blur: 5,
-            backgroundOpacity: 0.34,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Entered roster',
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleMedium
-                      ?.copyWith(fontWeight: FontWeight.w800),
+          Row(
+            children: [
+              PlayerAvatar(name: 'Sarah', colors: [Color(0xFFFF5A87), Color(0xFF6E49FF)]),
+              SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Setup Game', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 18)),
+                    Text('Warm Corness  ·  24/10  ·  Deym', style: TextStyle(color: Color(0xB3E8EDFF), fontSize: 11.5)),
+                  ],
                 ),
-                const SizedBox(height: 14),
-                for (final name in preview) ...[
-                  PanelListTile(
-                    title: name,
-                    subtitle: 'Ready for opening leg',
-                    leading: CircleAvatar(
-                      radius: 18,
-                      backgroundColor: Theme.of(context)
-                          .colorScheme
-                          .primary
-                          .withValues(alpha: 0.16),
-                      child: Text(name.characters.first.toUpperCase()),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                ],
-              ],
-            ),
-          ),
-          const SizedBox(height: 18),
-          const PanelListTile(
-            title: 'Touch-first controls',
-            subtitle: 'Inputs are larger, cleaner, and easier to scan on phones, tablets, and desktop web.',
-            leading: Icon(Icons.touch_app_rounded),
+              ),
+              ScoreBadge(value: '301', highlight: true, large: true),
+            ],
           ),
         ],
       ),
+    );
+  }
+}
+
+class _DropdownLine extends StatelessWidget {
+  const _DropdownLine({required this.title, required this.value});
+
+  final String title;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return FrostPanel(
+      radius: 16,
+      backgroundOpacity: 0.12,
+      borderOpacity: 0.16,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      child: Row(
+        children: [
+          Expanded(child: Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700))),
+          Text(value, style: const TextStyle(color: Color(0xFF7FE5FF), fontWeight: FontWeight.w700)),
+          const SizedBox(width: 8),
+          const Icon(Icons.expand_more_rounded, color: Colors.white70, size: 18),
+        ],
+      ),
+    );
+  }
+}
+
+class _SegmentToggle extends StatelessWidget {
+  const _SegmentToggle({required this.label, this.active = false});
+
+  final String label;
+  final bool active;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 9),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(999),
+        gradient: active ? const LinearGradient(colors: [Color(0xFF2DB6FF), Color(0xFF6E49FF)]) : null,
+        color: active ? null : Colors.white.withValues(alpha: 0.05),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+      ),
+      alignment: Alignment.center,
+      child: Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 12)),
     );
   }
 }

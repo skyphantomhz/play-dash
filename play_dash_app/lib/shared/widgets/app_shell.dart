@@ -5,342 +5,275 @@ import 'package:go_router/go_router.dart';
 
 class AppShell extends StatelessWidget {
   const AppShell({
-    required this.title,
-    required this.subtitle,
     required this.child,
-    this.hero,
-    this.actions,
-    this.floatingOverlay,
-    this.floatingOverlayHeight = 0,
+    this.desktopTopTabs = const <ShellTab>[
+      ShellTab(label: 'Home', route: '/'),
+      ShellTab(label: 'Leaderboard', route: '/leaderboard'),
+      ShellTab(label: 'Stats', route: '/leaderboard'),
+      ShellTab(label: 'History', route: '/leaderboard'),
+    ],
+    this.mobileTopTabs,
+    this.showDesktopSidebar = true,
+    this.showBottomNav = true,
+    this.expandChild = false,
     super.key,
   });
 
-  final String title;
-  final String subtitle;
   final Widget child;
-  final Widget? hero;
-  final List<Widget>? actions;
-  final Widget? floatingOverlay;
-  final double floatingOverlayHeight;
+  final List<ShellTab> desktopTopTabs;
+  final List<ShellTab>? mobileTopTabs;
+  final bool showDesktopSidebar;
+  final bool showBottomNav;
+  final bool expandChild;
 
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
+    final isDesktop = width >= 1180;
+
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: DecoratedBox(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF040810), Color(0xFF091120), Color(0xFF111C32)],
-          ),
-        ),
-        child: Stack(
-          children: [
-            const Positioned.fill(child: _AmbientBackdrop()),
-            SafeArea(
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1500),
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      width >= 1280 ? 26 : 14,
-                      14,
-                      width >= 1280 ? 26 : 14,
-                      width < 1180 ? 96 : 18,
-                    ),
-                    child: width >= 1180
+      backgroundColor: const Color(0xFFF5F2F0),
+      body: Stack(
+        children: [
+          const Positioned.fill(child: _PageBackdrop()),
+          SafeArea(
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1540),
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    isDesktop ? 34 : 12,
+                    isDesktop ? 26 : 10,
+                    isDesktop ? 34 : 12,
+                    isDesktop ? 26 : 12,
+                  ),
+                  child: FrostPanel(
+                    radius: isDesktop ? 28 : 26,
+                    blur: 10,
+                    backgroundOpacity: 0.16,
+                    borderOpacity: 0.18,
+                    padding: EdgeInsets.all(isDesktop ? 16 : 10),
+                    child: isDesktop
                         ? Row(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              const SizedBox(width: 284, child: _SideRail()),
-                              const SizedBox(width: 18),
+                              if (showDesktopSidebar) ...[
+                                const SizedBox(width: 210, child: _DesktopSidebar()),
+                                const SizedBox(width: 16),
+                              ],
                               Expanded(
-                                child: _ShellBody(
-                                  title: title,
-                                  subtitle: subtitle,
+                                child: _ShellSurface(
+                                  desktopTopTabs: desktopTopTabs,
+                                  mobileTopTabs: mobileTopTabs,
+                                  showBottomNav: false,
+                                  expandChild: expandChild,
                                   child: child,
-                                  hero: hero,
-                                  actions: actions,
-                                  floatingOverlay: floatingOverlay,
-                                  floatingOverlayHeight:
-                                      floatingOverlayHeight,
                                 ),
                               ),
                             ],
                           )
-                        : _ShellBody(
-                            title: title,
-                            subtitle: subtitle,
-                            child: child,
-                            hero: hero,
-                            actions: actions,
-                            floatingOverlay: floatingOverlay,
-                            floatingOverlayHeight: floatingOverlayHeight,
+                        : _PhoneFrame(
+                            child: _ShellSurface(
+                              desktopTopTabs: desktopTopTabs,
+                              mobileTopTabs: mobileTopTabs,
+                              showBottomNav: showBottomNav,
+                              expandChild: expandChild,
+                              child: child,
+                            ),
                           ),
                   ),
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
-      bottomNavigationBar:
-          width < 1180 ? const Padding(
-            padding: EdgeInsets.fromLTRB(14, 0, 14, 14),
-            child: _BottomDock(),
-          ) : null,
     );
   }
 }
 
-class _ShellBody extends StatelessWidget {
-  const _ShellBody({
-    required this.title,
-    required this.subtitle,
+class _ShellSurface extends StatelessWidget {
+  const _ShellSurface({
     required this.child,
-    this.hero,
-    this.actions,
-    this.floatingOverlay,
-    this.floatingOverlayHeight = 0,
+    required this.desktopTopTabs,
+    required this.mobileTopTabs,
+    required this.showBottomNav,
+    required this.expandChild,
   });
 
-  final String title;
-  final String subtitle;
   final Widget child;
-  final Widget? hero;
-  final List<Widget>? actions;
-  final Widget? floatingOverlay;
-  final double floatingOverlayHeight;
+  final List<ShellTab> desktopTopTabs;
+  final List<ShellTab>? mobileTopTabs;
+  final bool showBottomNav;
+  final bool expandChild;
 
   @override
   Widget build(BuildContext context) {
-    final topInset = floatingOverlay == null ? 0.0 : floatingOverlayHeight + 16;
-    return Stack(
-      children: [
-        ListView(
-          padding: EdgeInsets.only(top: topInset, bottom: 24),
+    final width = MediaQuery.sizeOf(context).width;
+    final isDesktop = width >= 1180;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(isDesktop ? 24 : 22),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xCC0A1432), Color(0xCC0F1037), Color(0xCC200B33)],
+        ),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x33000000),
+            blurRadius: 36,
+            offset: Offset(0, 22),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(isDesktop ? 24 : 22),
+        child: Stack(
           children: [
-            GlassPanel(
-              radius: 38,
-              blur: 6,
-              opacity: 0.44,
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Wrap(
-                    spacing: 16,
-                    runSpacing: 16,
-                    alignment: WrapAlignment.spaceBetween,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: [
-                      ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 820),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              title,
-                              style: Theme.of(context).textTheme.displaySmall
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: -1.4,
-                                  ),
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              subtitle,
-                              style: Theme.of(context).textTheme.bodyLarge
-                                  ?.copyWith(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurfaceVariant,
-                                  ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      _TopCommandBar(actions: actions),
-                    ],
+            const Positioned.fill(child: _CosmicBackdrop()),
+            Column(
+              children: [
+                Padding(
+                  padding: EdgeInsets.fromLTRB(isDesktop ? 18 : 12, 12, isDesktop ? 18 : 12, 8),
+                  child: isDesktop
+                      ? _DesktopTopBar(tabs: desktopTopTabs)
+                      : _MobileTopBar(tabs: mobileTopTabs ?? desktopTopTabs),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(isDesktop ? 18 : 10, 4, isDesktop ? 18 : 10, showBottomNav ? 10 : 16),
+                    child: expandChild
+                        ? child
+                        : SingleChildScrollView(
+                            child: child,
+                          ),
                   ),
-                  if (hero != null) ...[
-                    const SizedBox(height: 20),
-                    hero!,
-                  ],
-                ],
-              ),
+                ),
+                if (showBottomNav)
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(10, 0, 10, 10),
+                    child: _MobileBottomBar(),
+                  ),
+              ],
             ),
-            const SizedBox(height: 18),
-            child,
           ],
         ),
-        if (floatingOverlay != null)
-          Positioned(top: 0, left: 0, right: 0, child: floatingOverlay!),
+      ),
+    );
+  }
+}
+
+class _DesktopTopBar extends StatelessWidget {
+  const _DesktopTopBar({required this.tabs});
+
+  final List<ShellTab> tabs;
+
+  @override
+  Widget build(BuildContext context) {
+    final location = GoRouterState.of(context).uri.toString();
+    return Row(
+      children: [
+        const _BrandBadge(compact: false),
+        const SizedBox(width: 18),
+        for (final tab in tabs) ...[
+          _TopTabChip(tab: tab, selected: location == tab.route),
+          const SizedBox(width: 10),
+        ],
+        const Spacer(),
+        const Icon(Icons.notifications_none_rounded, size: 18, color: Colors.white70),
+        const SizedBox(width: 12),
+        const Icon(Icons.search_rounded, size: 18, color: Colors.white70),
+        const SizedBox(width: 12),
+        _GhostChip(
+          label: 'Settings',
+          icon: Icons.settings_outlined,
+          onTap: () => context.go('/settings'),
+        ),
+        const SizedBox(width: 8),
+        Container(
+          width: 24,
+          height: 24,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            color: Colors.white.withValues(alpha: 0.06),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+          ),
+          child: const Icon(Icons.crop_square_rounded, size: 12, color: Colors.white70),
+        ),
       ],
     );
   }
 }
 
-class _TopCommandBar extends StatelessWidget {
-  const _TopCommandBar({this.actions});
+class _MobileTopBar extends StatelessWidget {
+  const _MobileTopBar({required this.tabs});
 
-  final List<Widget>? actions;
-
-  @override
-  Widget build(BuildContext context) {
-    return FrostPanel(
-      radius: 24,
-      blur: 5,
-      backgroundOpacity: 0.34,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const _StatusDot(color: Color(0xFF79E3C1)),
-          const SizedBox(width: 10),
-          Text(
-            'Live arena',
-            style: Theme.of(context)
-                .textTheme
-                .labelLarge
-                ?.copyWith(fontWeight: FontWeight.w700),
-          ),
-          if (actions != null && actions!.isNotEmpty) ...[
-            const SizedBox(width: 12),
-            ...actions!,
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _SideRail extends StatelessWidget {
-  const _SideRail();
+  final List<ShellTab> tabs;
 
   @override
   Widget build(BuildContext context) {
     final location = GoRouterState.of(context).uri.toString();
+    return Column(
+      children: [
+        Row(
+          children: [
+            const CircleAvatar(radius: 12, backgroundColor: Color(0x3364D4FF), child: Icon(Icons.person, size: 14, color: Colors.white)),
+            const Spacer(),
+            for (final tab in tabs.take(4)) ...[
+              _TopTabChip(tab: tab, selected: location == tab.route, mobile: true),
+              const SizedBox(width: 6),
+            ],
+          ],
+        ),
+      ],
+    );
+  }
+}
 
-    return GlassPanel(
-      radius: 36,
-      blur: 6,
-      opacity: 0.42,
-      padding: const EdgeInsets.all(20),
+class _DesktopSidebar extends StatelessWidget {
+  const _DesktopSidebar();
+
+  @override
+  Widget build(BuildContext context) {
+    final location = GoRouterState.of(context).uri.toString();
+    return FrostPanel(
+      radius: 22,
+      blur: 8,
+      backgroundOpacity: 0.12,
+      borderOpacity: 0.16,
+      padding: const EdgeInsets.all(14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          FrostPanel(
-            radius: 30,
-            blur: 5,
-            backgroundOpacity: 0.32,
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Container(
-                  width: 54,
-                  height: 54,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(18),
-                    gradient: const LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [Color(0xFF8F84FF), Color(0xFF58D5FF)],
-                    ),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x443EA7FF),
-                        blurRadius: 22,
-                        offset: Offset(0, 10),
-                      ),
-                    ],
-                  ),
-                  child: const Icon(Icons.sports_score_rounded,
-                      color: Colors.white),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Play Dash',
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleLarge
-                            ?.copyWith(fontWeight: FontWeight.w800),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        'Match control center',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color:
-                              Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 18),
-          Text(
-            'Navigation',
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 10),
+          const _BrandBadge(compact: true),
+          const SizedBox(height: 22),
           for (final item in _navItems) ...[
-            _RailButton(item: item, selected: location == item.route),
-            const SizedBox(height: 10),
+            _SidebarNavTile(item: item, selected: location == item.route),
+            const SizedBox(height: 8),
           ],
           const Spacer(),
           FrostPanel(
-            radius: 30,
-            blur: 5,
-            backgroundOpacity: 0.32,
-            child: Column(
+            radius: 18,
+            blur: 6,
+            backgroundOpacity: 0.10,
+            borderOpacity: 0.14,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+            child: const Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                StatusPill(
-                  label: 'Low-blur glass',
-                  icon: Icons.blur_on_rounded,
-                  tinted: true,
-                ),
-                SizedBox(height: 12),
+              children: [
+                Text('Settings', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+                SizedBox(height: 6),
                 Text(
-                  'Sharper cards, lower blur, stronger borders, and cleaner score emphasis across every route.',
+                  'Subtle blur, luminous borders, and tighter spacing rebuilt to match the reference.',
+                  style: TextStyle(color: Color(0xB3E9ECFF), fontSize: 12.5, height: 1.4),
                 ),
               ],
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _BottomDock extends StatelessWidget {
-  const _BottomDock();
-
-  @override
-  Widget build(BuildContext context) {
-    final location = GoRouterState.of(context).uri.toString();
-    return FrostPanel(
-      radius: 30,
-      blur: 6,
-      backgroundOpacity: 0.36,
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-      child: Row(
-        children: _navItems.take(4).map((item) {
-          return Expanded(
-            child: _DockButton(item: item, selected: location == item.route),
-          );
-        }).toList(),
       ),
     );
   }
@@ -349,12 +282,13 @@ class _BottomDock extends StatelessWidget {
 class FrostPanel extends StatelessWidget {
   const FrostPanel({
     required this.child,
-    this.padding = const EdgeInsets.all(20),
-    this.radius = 28,
-    this.blur = 5,
-    this.backgroundOpacity = 0.36,
-    this.borderOpacity = 0.12,
-    this.highlight = false,
+    this.padding = const EdgeInsets.all(16),
+    this.radius = 22,
+    this.blur = 8,
+    this.backgroundOpacity = 0.14,
+    this.borderOpacity = 0.18,
+    this.gradient,
+    this.shadowColor,
     super.key,
   });
 
@@ -364,43 +298,34 @@ class FrostPanel extends StatelessWidget {
   final double blur;
   final double backgroundOpacity;
   final double borderOpacity;
-  final bool highlight;
+  final Gradient? gradient;
+  final Color? shadowColor;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final borderRadius = BorderRadius.circular(radius);
-
     return ClipRRect(
-      borderRadius: borderRadius,
+      borderRadius: BorderRadius.circular(radius),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
         child: DecoratedBox(
           decoration: BoxDecoration(
-            borderRadius: borderRadius,
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Colors.white.withValues(alpha: highlight ? 0.14 : 0.08),
-                const Color(0xFF13213B).withValues(alpha: backgroundOpacity),
-                scheme.surfaceContainer.withValues(alpha: backgroundOpacity - 0.08),
-              ],
-            ),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: borderOpacity),
-            ),
+            borderRadius: BorderRadius.circular(radius),
+            gradient: gradient ??
+                LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.white.withValues(alpha: 0.08),
+                    const Color(0x66131E42).withValues(alpha: backgroundOpacity + 0.10),
+                    const Color(0x66210F34).withValues(alpha: backgroundOpacity + 0.06),
+                  ],
+                ),
+            border: Border.all(color: Colors.white.withValues(alpha: borderOpacity)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.26),
+                color: (shadowColor ?? Colors.black).withValues(alpha: 0.20),
                 blurRadius: 24,
                 offset: const Offset(0, 16),
-              ),
-              BoxShadow(
-                color: (highlight ? scheme.primary : Colors.white)
-                    .withValues(alpha: highlight ? 0.12 : 0.02),
-                blurRadius: 14,
-                offset: const Offset(0, -3),
               ),
             ],
           ),
@@ -411,38 +336,73 @@ class FrostPanel extends StatelessWidget {
   }
 }
 
-class GlassPanel extends FrostPanel {
-  const GlassPanel({
-    required super.child,
-    super.padding,
-    super.radius,
-    double opacity = 0.4,
-    super.borderOpacity = 0.12,
-    super.blur = 5,
+class NeonCard extends StatelessWidget {
+  const NeonCard({
+    required this.child,
+    required this.accent,
+    this.secondaryAccent,
+    this.padding = const EdgeInsets.all(18),
+    this.radius = 24,
     super.key,
-  }) : super(backgroundOpacity: opacity);
+  });
+
+  final Widget child;
+  final Color accent;
+  final Color? secondaryAccent;
+  final EdgeInsetsGeometry padding;
+  final double radius;
+
+  @override
+  Widget build(BuildContext context) {
+    return FrostPanel(
+      radius: radius,
+      blur: 9,
+      backgroundOpacity: 0.14,
+      borderOpacity: 0.28,
+      shadowColor: accent,
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          accent.withValues(alpha: 0.26),
+          (secondaryAccent ?? accent).withValues(alpha: 0.10),
+          const Color(0x5510172F),
+        ],
+      ),
+      padding: padding,
+      child: child,
+    );
+  }
 }
 
 class GlassButton extends StatelessWidget {
   const GlassButton({
     required this.label,
-    required this.icon,
     required this.onPressed,
+    this.icon,
     this.highlight = false,
     this.compact = false,
+    this.trailingIcon = Icons.chevron_right_rounded,
     super.key,
   });
 
   final String label;
-  final IconData icon;
   final VoidCallback? onPressed;
+  final IconData? icon;
   final bool highlight;
   final bool compact;
+  final IconData trailingIcon;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final radius = BorderRadius.circular(compact ? 18 : 24);
+    final gradient = highlight
+        ? const LinearGradient(
+            colors: [Color(0xFF2CB6FF), Color(0xFF2A84FF), Color(0xFF6B4CFF)],
+          )
+        : const LinearGradient(
+            colors: [Color(0x66FFFFFF), Color(0x33214874), Color(0x332B154B)],
+          );
 
     return Material(
       color: Colors.transparent,
@@ -452,54 +412,78 @@ class GlassButton extends StatelessWidget {
         child: Ink(
           decoration: BoxDecoration(
             borderRadius: radius,
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: highlight
-                  ? [
-                      scheme.primary.withValues(alpha: 0.98),
-                      scheme.secondary.withValues(alpha: 0.82),
-                    ]
-                  : [
-                      Colors.white.withValues(alpha: 0.08),
-                      const Color(0xFF1B2A44).withValues(alpha: 0.72),
-                    ],
-            ),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+            gradient: gradient,
+            border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
             boxShadow: [
               BoxShadow(
-                color: (highlight ? scheme.primary : Colors.black)
-                    .withValues(alpha: 0.22),
-                blurRadius: 22,
-                offset: const Offset(0, 14),
+                color: (highlight ? const Color(0xFF4DB4FF) : Colors.black).withValues(alpha: 0.26),
+                blurRadius: 18,
+                offset: const Offset(0, 12),
               ),
             ],
           ),
           child: Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: compact ? 14 : 18,
-              vertical: compact ? 13 : 16,
-            ),
+            padding: EdgeInsets.symmetric(horizontal: compact ? 14 : 18, vertical: compact ? 12 : 14),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(icon,
-                    size: compact ? 18 : 20,
-                    color: highlight ? scheme.onPrimary : scheme.onSurface),
-                const SizedBox(width: 10),
+                if (icon != null) ...[
+                  Icon(icon, size: compact ? 18 : 20, color: Colors.white),
+                  const SizedBox(width: 8),
+                ],
                 Flexible(
                   child: Text(
                     label,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    style: TextStyle(
+                      color: Colors.white,
                       fontWeight: FontWeight.w700,
-                      color: highlight ? scheme.onPrimary : scheme.onSurface,
+                      fontSize: compact ? 14 : 16,
                     ),
                   ),
                 ),
+                const SizedBox(width: 8),
+                Icon(trailingIcon, size: compact ? 18 : 20, color: Colors.white),
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class ScoreBadge extends StatelessWidget {
+  const ScoreBadge({
+    required this.value,
+    this.highlight = false,
+    this.large = false,
+    super.key,
+  });
+
+  final String value;
+  final bool highlight;
+  final bool large;
+
+  @override
+  Widget build(BuildContext context) {
+    final gradient = highlight
+        ? const LinearGradient(colors: [Color(0xFF2AB4FF), Color(0xFF14D9FF)])
+        : const LinearGradient(colors: [Color(0x33FFFFFF), Color(0x222A4E7A)]);
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: large ? 18 : 12, vertical: large ? 12 : 8),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        gradient: gradient,
+        border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
+      ),
+      child: Text(
+        value,
+        style: TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.w800,
+          fontSize: large ? 18 : 13,
         ),
       ),
     );
@@ -509,128 +493,54 @@ class GlassButton extends StatelessWidget {
 class SectionHeading extends StatelessWidget {
   const SectionHeading({
     required this.title,
-    required this.subtitle,
+    this.subtitle,
     this.trailing,
+    this.compact = false,
     super.key,
   });
 
   final String title;
-  final String subtitle;
+  final String? subtitle;
   final Widget? trailing;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 14,
-      runSpacing: 10,
-      alignment: WrapAlignment.spaceBetween,
-      crossAxisAlignment: WrapCrossAlignment.center,
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 720),
+        Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 title,
-                style: Theme.of(context)
-                    .textTheme
-                    .headlineSmall
-                    ?.copyWith(fontWeight: FontWeight.w800),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                subtitle,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                  fontSize: compact ? 16 : 20,
+                  letterSpacing: -0.4,
                 ),
               ),
+              if (subtitle != null) ...[
+                const SizedBox(height: 4),
+                Text(
+                  subtitle!,
+                  style: const TextStyle(
+                    color: Color(0xB3E8EDFF),
+                    fontSize: 12.5,
+                    height: 1.4,
+                  ),
+                ),
+              ],
             ],
           ),
         ),
-        if (trailing != null) trailing!,
-      ],
-    );
-  }
-}
-
-class MetricCard extends StatelessWidget {
-  const MetricCard({
-    required this.label,
-    required this.value,
-    this.icon,
-    this.highlight = false,
-    this.compact = false,
-    super.key,
-  });
-
-  final String label;
-  final String value;
-  final IconData? icon;
-  final bool highlight;
-  final bool compact;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      constraints: BoxConstraints(minWidth: compact ? 140 : 170),
-      padding: EdgeInsets.all(compact ? 14 : 16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.white.withValues(alpha: highlight ? 0.14 : 0.06),
-            (highlight ? scheme.primary : const Color(0xFF1B2A44))
-                .withValues(alpha: highlight ? 0.20 : 0.62),
-          ],
-        ),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: highlight ? 0.16 : 0.08),
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (icon != null) ...[
-            Container(
-              width: compact ? 38 : 44,
-              height: compact ? 38 : 44,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: scheme.primary.withValues(alpha: 0.14),
-              ),
-              child: Icon(icon, color: scheme.primary, size: compact ? 20 : 22),
-            ),
-            const SizedBox(width: 12),
-          ],
-          Flexible(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  label,
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  value,
-                  overflow: TextOverflow.ellipsis,
-                  style: (compact
-                          ? Theme.of(context).textTheme.titleMedium
-                          : Theme.of(context).textTheme.titleLarge)
-                      ?.copyWith(fontWeight: FontWeight.w800),
-                ),
-              ],
-            ),
-          ),
+        if (trailing != null) ...[
+          const SizedBox(width: 12),
+          trailing!,
         ],
-      ),
+      ],
     );
   }
 }
@@ -649,26 +559,67 @@ class StatusPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(999),
-        color: tinted
-            ? scheme.primary.withValues(alpha: 0.18)
-            : Colors.white.withValues(alpha: 0.05),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+        color: (tinted ? const Color(0xFF2BB8FF) : Colors.white).withValues(alpha: tinted ? 0.14 : 0.06),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (icon != null) ...[
-            Icon(icon,
-                size: 16,
-                color: tinted ? scheme.primary : scheme.onSurfaceVariant),
-            const SizedBox(width: 8),
+            Icon(icon, size: 14, color: tinted ? const Color(0xFF78E2FF) : Colors.white70),
+            const SizedBox(width: 6),
           ],
-          Text(label, style: Theme.of(context).textTheme.labelLarge),
+          Text(
+            label,
+            style: const TextStyle(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w700),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class MetricCard extends StatelessWidget {
+  const MetricCard({
+    required this.label,
+    required this.value,
+    this.icon,
+    this.highlight = false,
+    super.key,
+  });
+
+  final String label;
+  final String value;
+  final IconData? icon;
+  final bool highlight;
+
+  @override
+  Widget build(BuildContext context) {
+    return FrostPanel(
+      radius: 18,
+      blur: 6,
+      backgroundOpacity: highlight ? 0.18 : 0.10,
+      borderOpacity: highlight ? 0.22 : 0.14,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 18, color: highlight ? const Color(0xFF7DE6FF) : Colors.white70),
+            const SizedBox(width: 10),
+          ],
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: const TextStyle(color: Color(0xB3E8EDFF), fontSize: 11.5)),
+              const SizedBox(height: 4),
+              Text(value, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 14.5)),
+            ],
+          ),
         ],
       ),
     );
@@ -694,128 +645,131 @@ class PanelListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FrostPanel(
-      radius: 24,
-      blur: 5,
-      backgroundOpacity: highlight ? 0.38 : 0.30,
-      highlight: highlight,
-      padding: const EdgeInsets.all(14),
+      radius: 18,
+      blur: 6,
+      backgroundOpacity: highlight ? 0.18 : 0.10,
+      borderOpacity: highlight ? 0.22 : 0.14,
+      padding: const EdgeInsets.all(12),
       child: Row(
         children: [
-          if (leading != null) ...[leading!, const SizedBox(width: 12)],
+          if (leading != null) ...[leading!, const SizedBox(width: 10)],
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleMedium
-                      ?.copyWith(fontWeight: FontWeight.w700),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
+                Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14)),
+                const SizedBox(height: 3),
+                Text(subtitle, style: const TextStyle(color: Color(0xB3E8EDFF), fontSize: 11.5, height: 1.35)),
               ],
             ),
           ),
-          if (trailing != null) ...[const SizedBox(width: 12), trailing!],
+          if (trailing != null) ...[const SizedBox(width: 10), trailing!],
         ],
       ),
     );
   }
 }
 
-class ScoreBadge extends StatelessWidget {
-  const ScoreBadge({required this.value, this.highlight = false, super.key});
+class PlayerAvatar extends StatelessWidget {
+  const PlayerAvatar({
+    required this.name,
+    required this.colors,
+    this.radius = 22,
+    super.key,
+  });
 
-  final String value;
-  final bool highlight;
+  final String name;
+  final List<Color> colors;
+  final double radius;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+      width: radius * 2,
+      height: radius * 2,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: highlight
-              ? [
-                  scheme.primary.withValues(alpha: 0.96),
-                  scheme.secondary.withValues(alpha: 0.78),
-                ]
-              : [
-                  Colors.white.withValues(alpha: 0.08),
-                  const Color(0xFF17253C).withValues(alpha: 0.78),
-                ],
-        ),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+        shape: BoxShape.circle,
+        gradient: LinearGradient(colors: colors),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.55), width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: colors.first.withValues(alpha: 0.38),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
+      alignment: Alignment.center,
       child: Text(
-        value,
-        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-          fontWeight: FontWeight.w800,
-          color: highlight ? scheme.onPrimary : scheme.onSurface,
+        name.trim().isEmpty ? '?' : name.trim().characters.first.toUpperCase(),
+        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: radius * 0.9),
+      ),
+    );
+  }
+}
+
+class ShellTab {
+  const ShellTab({required this.label, required this.route});
+
+  final String label;
+  final String route;
+}
+
+class _TopTabChip extends StatelessWidget {
+  const _TopTabChip({required this.tab, required this.selected, this.mobile = false});
+
+  final ShellTab tab;
+  final bool selected;
+  final bool mobile;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () => context.go(tab.route),
+      borderRadius: BorderRadius.circular(999),
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: mobile ? 10 : 12, vertical: mobile ? 7 : 8),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(999),
+          color: selected ? Colors.white.withValues(alpha: 0.10) : Colors.transparent,
+        ),
+        child: Text(
+          tab.label,
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+            fontSize: mobile ? 11 : 12.5,
+          ),
         ),
       ),
     );
   }
 }
 
-class _RailButton extends StatelessWidget {
-  const _RailButton({required this.item, required this.selected});
+class _GhostChip extends StatelessWidget {
+  const _GhostChip({required this.label, required this.icon, required this.onTap});
 
-  final _NavItem item;
-  final bool selected;
+  final String label;
+  final IconData icon;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return InkWell(
-      borderRadius: BorderRadius.circular(24),
-      onTap: () => context.go(item.route),
-      child: Ink(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(999),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
-          gradient: selected
-              ? LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    scheme.primary.withValues(alpha: 0.92),
-                    scheme.secondary.withValues(alpha: 0.76),
-                  ],
-                )
-              : null,
-          color: selected ? null : Colors.white.withValues(alpha: 0.04),
-          border: Border.all(
-            color: Colors.white.withValues(alpha: selected ? 0.12 : 0.08),
-          ),
+          borderRadius: BorderRadius.circular(999),
+          color: Colors.white.withValues(alpha: 0.05),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
         ),
         child: Row(
           children: [
-            Icon(item.icon, color: selected ? scheme.onPrimary : scheme.primary),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                item.label,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: selected ? scheme.onPrimary : scheme.onSurface,
-                ),
-              ),
-            ),
-            if (selected)
-              Icon(Icons.arrow_outward_rounded,
-                  size: 18, color: scheme.onPrimary),
+            Icon(icon, size: 14, color: Colors.white70),
+            const SizedBox(width: 6),
+            Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 12)),
           ],
         ),
       ),
@@ -823,73 +777,188 @@ class _RailButton extends StatelessWidget {
   }
 }
 
-class _DockButton extends StatelessWidget {
-  const _DockButton({required this.item, required this.selected});
+class _BrandBadge extends StatelessWidget {
+  const _BrandBadge({required this.compact});
 
-  final _NavItem item;
-  final bool selected;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return InkWell(
-      onTap: () => context.go(item.route),
-      borderRadius: BorderRadius.circular(22),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(22),
-          gradient: selected
-              ? LinearGradient(
-                  colors: [
-                    scheme.primary.withValues(alpha: 0.94),
-                    scheme.secondary.withValues(alpha: 0.76),
-                  ],
-                )
-              : null,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(item.icon,
-                color: selected ? scheme.onPrimary : scheme.onSurfaceVariant),
-            const SizedBox(height: 4),
-            Text(
-              item.shortLabel,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: selected ? scheme.onPrimary : scheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _AmbientBackdrop extends StatelessWidget {
-  const _AmbientBackdrop();
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: const [
-        Positioned(top: -120, left: -90, child: _GlowOrb(size: 320, color: Color(0xFF7C6FFF))),
-        Positioned(top: 140, right: -70, child: _GlowOrb(size: 280, color: Color(0xFF4FCBFF))),
-        Positioned(bottom: -120, left: 120, child: _GlowOrb(size: 280, color: Color(0xFFFF6EAF))),
-        Positioned(bottom: 110, right: 70, child: _GridHalo()),
+    return Row(
+      children: [
+        Container(
+          width: compact ? 34 : 30,
+          height: compact ? 34 : 30,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            gradient: const LinearGradient(colors: [Color(0xFF0D4077), Color(0xFF071D3C)]),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+          ),
+          alignment: Alignment.center,
+          child: Text('Wb', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: compact ? 12 : 11.5)),
+        ),
+        const SizedBox(width: 10),
+        if (compact)
+          const Text('ORAITIES', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 13))
+        else
+          const Text('ORAITIES', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 12)),
       ],
     );
   }
 }
 
-class _GlowOrb extends StatelessWidget {
-  const _GlowOrb({required this.size, required this.color});
+class _SidebarNavTile extends StatelessWidget {
+  const _SidebarNavTile({required this.item, required this.selected});
 
-  final double size;
+  final _NavItem item;
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () => context.go(item.route),
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          gradient: selected
+              ? const LinearGradient(colors: [Color(0x332DB6FF), Color(0x22145AFF)])
+              : null,
+          border: Border.all(color: Colors.white.withValues(alpha: selected ? 0.22 : 0.06)),
+          boxShadow: selected
+              ? const [BoxShadow(color: Color(0x222DB6FF), blurRadius: 16, offset: Offset(0, 8))]
+              : null,
+        ),
+        child: Row(
+          children: [
+            Icon(item.icon, size: 18, color: Colors.white),
+            const SizedBox(width: 10),
+            Text(item.label, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w700)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MobileBottomBar extends StatelessWidget {
+  const _MobileBottomBar();
+
+  @override
+  Widget build(BuildContext context) {
+    final location = GoRouterState.of(context).uri.toString();
+    return FrostPanel(
+      radius: 18,
+      blur: 8,
+      backgroundOpacity: 0.14,
+      borderOpacity: 0.16,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      child: Row(
+        children: _navItems.take(4).map((item) {
+          final selected = location == item.route;
+          return Expanded(
+            child: InkWell(
+              onTap: () => context.go(item.route),
+              borderRadius: BorderRadius.circular(14),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  gradient: selected ? const LinearGradient(colors: [Color(0xFF2CAFFF), Color(0xFF6E49FF)]) : null,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(item.icon, size: 18, color: Colors.white),
+                    const SizedBox(height: 4),
+                    Text(item.shortLabel, style: const TextStyle(color: Colors.white, fontSize: 10.5, fontWeight: FontWeight.w700)),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+}
+
+class _PhoneFrame extends StatelessWidget {
+  const _PhoneFrame({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    final narrow = width < 430;
+    if (!narrow) return child;
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 390),
+        child: child,
+      ),
+    );
+  }
+}
+
+class _PageBackdrop extends StatelessWidget {
+  const _PageBackdrop();
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: const [
+        DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFFF4F0EF), Color(0xFFF7F4F4)],
+            ),
+          ),
+        ),
+        Positioned(top: 70, left: -40, child: _OuterGlow(color: Color(0x557541FF), size: 220)),
+        Positioned(top: 160, right: -50, child: _OuterGlow(color: Color(0x5529D0FF), size: 240)),
+        Positioned(bottom: -70, left: 120, child: _OuterGlow(color: Color(0x55FF4FBC), size: 260)),
+      ],
+    );
+  }
+}
+
+class _CosmicBackdrop extends StatelessWidget {
+  const _CosmicBackdrop();
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: const [
+        Positioned.fill(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: RadialGradient(
+                center: Alignment(-0.1, -0.2),
+                radius: 1.2,
+                colors: [Color(0xFF132A63), Color(0xFF0A1537), Color(0xFF130A33)],
+              ),
+            ),
+          ),
+        ),
+        Positioned(left: -40, top: 40, child: _OuterGlow(color: Color(0xAA17BFFF), size: 200)),
+        Positioned(right: -50, top: 80, child: _OuterGlow(color: Color(0xAAFF4ADF), size: 220)),
+        Positioned(left: 160, bottom: -30, child: _OuterGlow(color: Color(0xAA693CFF), size: 260)),
+        Positioned.fill(child: _StarLayer()),
+      ],
+    );
+  }
+}
+
+class _OuterGlow extends StatelessWidget {
+  const _OuterGlow({required this.color, required this.size});
+
   final Color color;
+  final double size;
 
   @override
   Widget build(BuildContext context) {
@@ -900,11 +969,7 @@ class _GlowOrb extends StatelessWidget {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           gradient: RadialGradient(
-            colors: [
-              color.withValues(alpha: 0.24),
-              color.withValues(alpha: 0.05),
-              Colors.transparent,
-            ],
+            colors: [color, color.withValues(alpha: 0.18), Colors.transparent],
           ),
         ),
       ),
@@ -912,42 +977,24 @@ class _GlowOrb extends StatelessWidget {
   }
 }
 
-class _GridHalo extends StatelessWidget {
-  const _GridHalo();
+class _StarLayer extends StatelessWidget {
+  const _StarLayer();
 
   @override
   Widget build(BuildContext context) {
-    return IgnorePointer(
-      child: CustomPaint(
-        size: const Size(280, 280),
-        painter: _GridHaloPainter(),
-      ),
-    );
+    return CustomPaint(painter: _StarsPainter());
   }
 }
 
-class _GridHaloPainter extends CustomPainter {
+class _StarsPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final rect = Offset.zero & size;
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(rect, const Radius.circular(40)),
-      Paint()
-        ..shader = const RadialGradient(
-          colors: [Color(0x227C6FFF), Colors.transparent],
-        ).createShader(rect),
-    );
-
-    final linePaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.05)
-      ..strokeWidth = 1;
-
-    const step = 28.0;
-    for (double x = 0; x <= size.width; x += step) {
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), linePaint);
-    }
-    for (double y = 0; y <= size.height; y += step) {
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), linePaint);
+    final points = <Offset>[
+      for (int i = 0; i < 70; i++) Offset((i * 73 % 1000) / 1000 * size.width, (i * 37 % 1000) / 1000 * size.height),
+    ];
+    final paint = Paint()..color = Colors.white.withValues(alpha: 0.40);
+    for (final point in points) {
+      canvas.drawCircle(point, 1.2, paint);
     }
   }
 
@@ -955,74 +1002,19 @@ class _GridHaloPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-class _StatusDot extends StatelessWidget {
-  const _StatusDot({required this.color});
-
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 10,
-      height: 10,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: color,
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.5),
-            blurRadius: 10,
-            spreadRadius: 1,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _NavItem {
-  const _NavItem({
-    required this.label,
-    required this.shortLabel,
-    required this.icon,
-    required this.route,
-  });
+  const _NavItem({required this.label, required this.shortLabel, required this.route, required this.icon});
 
   final String label;
   final String shortLabel;
-  final IconData icon;
   final String route;
+  final IconData icon;
 }
 
-const List<_NavItem> _navItems = [
-  _NavItem(
-    label: 'Dashboard',
-    shortLabel: 'Home',
-    icon: Icons.space_dashboard_rounded,
-    route: '/',
-  ),
-  _NavItem(
-    label: 'Player Setup',
-    shortLabel: 'Setup',
-    icon: Icons.groups_2_rounded,
-    route: '/setup',
-  ),
-  _NavItem(
-    label: 'X01 Match',
-    shortLabel: 'X01',
-    icon: Icons.sports_score_rounded,
-    route: '/match/x01',
-  ),
-  _NavItem(
-    label: 'Cricket Match',
-    shortLabel: 'Cricket',
-    icon: Icons.track_changes_rounded,
-    route: '/match/cricket',
-  ),
-  _NavItem(
-    label: 'Leaderboard',
-    shortLabel: 'Leads',
-    icon: Icons.emoji_events_rounded,
-    route: '/leaderboard',
-  ),
+const _navItems = <_NavItem>[
+  _NavItem(label: 'Home', shortLabel: 'Home', route: '/', icon: Icons.home_filled),
+  _NavItem(label: 'Leaderboard', shortLabel: 'Leads', route: '/leaderboard', icon: Icons.emoji_events_outlined),
+  _NavItem(label: 'Stats', shortLabel: 'Stats', route: '/leaderboard', icon: Icons.bar_chart_rounded),
+  _NavItem(label: 'History', shortLabel: 'History', route: '/leaderboard', icon: Icons.history_rounded),
+  _NavItem(label: 'Settings', shortLabel: 'Setup', route: '/settings', icon: Icons.settings_outlined),
 ];

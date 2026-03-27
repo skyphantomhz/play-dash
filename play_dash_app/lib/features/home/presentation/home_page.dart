@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -8,439 +10,612 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    final desktop = width >= 1180;
+
     return AppShell(
-      title: 'Play Dash',
-      subtitle:
-          'A rebuilt darts dashboard with crisp hierarchy, restrained glass panels, and a responsive split layout designed for live scoring.',
-      hero: Wrap(
-        spacing: 10,
-        runSpacing: 10,
-        children: const [
-          StatusPill(
-            label: 'Low-blur glassmorphism',
-            icon: Icons.blur_on_rounded,
-            tinted: true,
-          ),
-          StatusPill(
-            label: 'Touch-first match flow',
-            icon: Icons.touch_app_rounded,
-          ),
-          StatusPill(
-            label: 'Desktop + mobile responsive',
-            icon: Icons.devices_rounded,
-          ),
-        ],
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final wide = constraints.maxWidth >= 1120;
-          return wide
-              ? const Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(flex: 7, child: _HomeOverview()),
-                    SizedBox(width: 18),
-                    Expanded(flex: 4, child: _HomeActions()),
-                  ],
-                )
-              : const Column(
-                  children: [
-                    _HomeOverview(),
-                    SizedBox(height: 18),
-                    _HomeActions(),
-                  ],
-                );
-        },
-      ),
+      expandChild: true,
+      mobileTopTabs: const [
+        ShellTab(label: 'Home', route: '/'),
+        ShellTab(label: 'Account', route: '/leaderboard'),
+        ShellTab(label: 'Stats', route: '/leaderboard'),
+        ShellTab(label: 'Voice', route: '/settings'),
+      ],
+      child: desktop ? const _DesktopHomeLayout() : const _MobileHomeLayout(),
     );
   }
 }
 
-class _HomeOverview extends StatelessWidget {
-  const _HomeOverview();
+class _DesktopHomeLayout extends StatelessWidget {
+  const _DesktopHomeLayout();
 
   @override
   Widget build(BuildContext context) {
-    return GlassPanel(
-      radius: 36,
-      blur: 6,
-      opacity: 0.42,
-      padding: const EdgeInsets.all(22),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SectionHeading(
-            title: 'Arena overview',
-            subtitle:
-                'The landing screen is rebuilt into one primary dashboard: headline metrics, a hero composition, and concise secondary cards for quick scanning.',
-          ),
-          const SizedBox(height: 18),
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: const [
-              MetricCard(
-                label: 'Modes',
-                value: 'X01 + Cricket',
-                icon: Icons.sports_score_rounded,
-                highlight: true,
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          flex: 34,
+          child: Column(
+            children: [
+              const _ModeCard(
+                title: 'CRICKET',
+                subtitle: 'Classic Cricket',
+                metaLeft: '2 - 6 Players',
+                metaRight: '10 - 0 / 20 hits',
+                buttonLabel: 'Start Game',
+                accent: Color(0xFF28C6FF),
+                secondaryAccent: Color(0xFF4F7BFF),
+                icon: Icons.sports_martial_arts_rounded,
+                playerName: 'Mike Johnson',
+                playerMeta: '2nd · 0 Cricket',
               ),
-              MetricCard(
-                label: 'Sessions',
-                value: '1 to 8 players',
-                icon: Icons.groups_2_rounded,
+              const SizedBox(height: 16),
+              const _ModeCard(
+                title: 'X01',
+                subtitle: '301 - 501 - 701',
+                metaLeft: '1 - 8 Players',
+                metaRight: '1 / 10 / 20 Legs',
+                buttonLabel: 'Start Game',
+                accent: Color(0xFFFF53E1),
+                secondaryAccent: Color(0xFF7A49FF),
+                icon: Icons.close_rounded,
               ),
-              MetricCard(
-                label: 'Input',
-                value: 'Interactive board',
-                icon: Icons.ads_click_rounded,
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: _UtilityCard(
+                      title: 'Leaderboard',
+                      subtitle: 'View Top Players',
+                      icon: Icons.emoji_events_rounded,
+                      accent: const Color(0xFF2CB5FF),
+                      onTap: () => context.go('/leaderboard'),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: _UtilityCard(
+                      title: 'Quick Setup',
+                      subtitle: 'Create a Game',
+                      icon: Icons.settings_suggest_rounded,
+                      accent: const Color(0xFFB84FFF),
+                      onTap: () => context.go('/setup'),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-          const SizedBox(height: 18),
-          FrostPanel(
-            radius: 30,
-            blur: 5,
-            backgroundOpacity: 0.34,
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final stacked = constraints.maxWidth < 760;
-                final summary = Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const StatusPill(
-                      label: 'Premium match console',
-                      icon: Icons.auto_awesome_rounded,
-                      tinted: true,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Focused scoring, minimal visual noise',
-                      style: Theme.of(context)
-                          .textTheme
-                          .headlineMedium
-                          ?.copyWith(fontWeight: FontWeight.w800),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      'Cards are denser, blur is softer, and borders are more deliberate so the glass look stays elegant without sacrificing legibility during play.',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-                    Wrap(
-                      spacing: 10,
-                      runSpacing: 10,
-                      children: const [
-                        ScoreBadge(value: '501 ready', highlight: true),
-                        ScoreBadge(value: 'Tap board to throw'),
-                        ScoreBadge(value: 'Live standings'),
-                      ],
-                    ),
-                  ],
-                );
-
-                final visual = AspectRatio(
-                  aspectRatio: stacked ? 1.6 : 1.05,
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(28),
-                      gradient: const LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          Color(0x338A7BFF),
-                          Color(0x224FCBFF),
-                          Color(0x0DFFFFFF),
-                        ],
-                      ),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.10),
-                      ),
-                    ),
-                    child: const Padding(
-                      padding: EdgeInsets.all(18),
-                      child: _ArenaPreview(),
-                    ),
-                  ),
-                );
-
-                if (stacked) {
-                  return Column(
-                    children: [summary, const SizedBox(height: 18), visual],
-                  );
-                }
-
-                return Row(
-                  children: [
-                    Expanded(child: summary),
-                    const SizedBox(width: 18),
-                    Expanded(child: visual),
-                  ],
-                );
-              },
-            ),
+        ),
+        const SizedBox(width: 18),
+        const Expanded(flex: 44, child: _BoardShowcase()),
+        const SizedBox(width: 18),
+        Expanded(
+          flex: 22,
+          child: Column(
+            children: [
+              const _ScoreHeroCard(),
+              const SizedBox(height: 16),
+              _LiveFeedCard(onSetup: () => context.go('/setup')),
+            ],
           ),
-          const SizedBox(height: 18),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final compact = constraints.maxWidth < 760;
-              final tiles = const [
-                PanelListTile(
-                  title: 'Subtle blur treatment',
-                  subtitle: 'Glass panels use lower sigma and stronger borders.',
-                  leading: Icon(Icons.blur_circular_rounded),
-                ),
-                PanelListTile(
-                  title: 'Fast launch flow',
-                  subtitle: 'Setup, play, and leaderboard routes stay one tap away.',
-                  leading: Icon(Icons.rocket_launch_rounded),
-                ),
-                PanelListTile(
-                  title: 'Live-first hierarchy',
-                  subtitle: 'Scores and active-player state dominate the layout.',
-                  leading: Icon(Icons.stacked_line_chart_rounded),
-                ),
-              ];
-
-              return compact
-                  ? Column(children: tiles)
-                  : Row(
-                      children: [
-                        for (var i = 0; i < tiles.length; i++) ...[
-                          Expanded(child: tiles[i]),
-                          if (i < tiles.length - 1) const SizedBox(width: 12),
-                        ],
-                      ],
-                    );
-            },
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
 
-class _HomeActions extends StatelessWidget {
-  const _HomeActions();
-
-  @override
-  Widget build(BuildContext context) {
-    return GlassPanel(
-      radius: 36,
-      blur: 6,
-      opacity: 0.42,
-      padding: const EdgeInsets.all(22),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const SectionHeading(
-            title: 'Quick launch',
-            subtitle:
-                'A vertical action stack mirrors the reference-style control rail with clear primary and secondary routes.',
-          ),
-          const SizedBox(height: 18),
-          GlassButton(
-            onPressed: () => context.go('/setup'),
-            icon: Icons.groups_2_rounded,
-            label: 'Player Setup',
-            highlight: true,
-          ),
-          const SizedBox(height: 12),
-          GlassButton(
-            onPressed: () => context.go('/match/x01'),
-            icon: Icons.sports_score_rounded,
-            label: 'Launch X01',
-          ),
-          const SizedBox(height: 12),
-          GlassButton(
-            onPressed: () => context.go('/match/cricket'),
-            icon: Icons.track_changes_rounded,
-            label: 'Launch Cricket',
-          ),
-          const SizedBox(height: 12),
-          GlassButton(
-            onPressed: () => context.go('/leaderboard'),
-            icon: Icons.emoji_events_rounded,
-            label: 'Season Leaderboard',
-          ),
-          const SizedBox(height: 18),
-          const PanelListTile(
-            title: 'Tonight’s profile',
-            subtitle: 'Quiet glass layers, stronger data emphasis, and consistent interaction feedback across all screens.',
-            leading: Icon(Icons.nights_stay_rounded),
-            trailing: ScoreBadge(value: 'Live'),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ArenaPreview extends StatelessWidget {
-  const _ArenaPreview();
+class _MobileHomeLayout extends StatelessWidget {
+  const _MobileHomeLayout();
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Row(
-          children: const [
+        const Row(
+          children: [
             Expanded(
-              child: FrostPanel(
-                radius: 22,
-                child: _PreviewStat(title: 'Current', value: 'Morgan'),
+              child: _ModeCard(
+                title: 'CRICKET',
+                subtitle: 'Classic Cricket',
+                metaLeft: '2 - 6 Players',
+                metaRight: '10 / 20 hits',
+                buttonLabel: 'Start Game',
+                accent: Color(0xFF28C6FF),
+                secondaryAccent: Color(0xFF4F7BFF),
+                icon: Icons.sports_martial_arts_rounded,
+                compact: true,
               ),
             ),
-            SizedBox(width: 12),
+            SizedBox(width: 10),
             Expanded(
-              child: FrostPanel(
-                radius: 22,
-                child: _PreviewStat(title: 'Checkout', value: '137'),
+              child: _ModeCard(
+                title: 'X01',
+                subtitle: '301 - 501 - 701',
+                metaLeft: '1 to 8 Players',
+                metaRight: '10 / 20 Legs',
+                buttonLabel: 'Start Game',
+                accent: Color(0xFFFF53E1),
+                secondaryAccent: Color(0xFF7A49FF),
+                icon: Icons.close_rounded,
+                compact: true,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 12),
-        Expanded(
-          child: Row(
-            children: [
-              Expanded(
-                flex: 6,
-                child: FrostPanel(
-                  radius: 26,
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: _UtilityCard(
+                title: 'Leaderboard',
+                subtitle: 'View Top Players',
+                icon: Icons.emoji_events_rounded,
+                accent: const Color(0xFF2CB5FF),
+                compact: true,
+                onTap: () => context.go('/leaderboard'),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _UtilityCard(
+                title: 'Quick Setup',
+                subtitle: 'Create a Game',
+                icon: Icons.settings_suggest_rounded,
+                accent: const Color(0xFFB84FFF),
+                compact: true,
+                onTap: () => context.go('/setup'),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _ModeCard extends StatelessWidget {
+  const _ModeCard({
+    required this.title,
+    required this.subtitle,
+    required this.metaLeft,
+    required this.metaRight,
+    required this.buttonLabel,
+    required this.accent,
+    required this.secondaryAccent,
+    required this.icon,
+    this.playerName,
+    this.playerMeta,
+    this.compact = false,
+  });
+
+  final String title;
+  final String subtitle;
+  final String metaLeft;
+  final String metaRight;
+  final String buttonLabel;
+  final Color accent;
+  final Color secondaryAccent;
+  final IconData icon;
+  final String? playerName;
+  final String? playerMeta;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    return NeonCard(
+      accent: accent,
+      secondaryAccent: secondaryAccent,
+      radius: compact ? 18 : 24,
+      padding: EdgeInsets.all(compact ? 14 : 18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (playerName != null) ...[
+            Row(
+              children: [
+                const PlayerAvatar(
+                  name: 'Mike Johnson',
+                  colors: [Color(0xFF0E9EEB), Color(0xFF6C6CFF)],
+                  radius: 18,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const ScoreBadge(value: 'Player performance', highlight: true),
-                      const SizedBox(height: 14),
-                      Expanded(child: CustomPaint(painter: _ChartPainter())),
+                      Text(playerName!, style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: compact ? 12 : 14)),
+                      Text(playerMeta ?? '', style: const TextStyle(color: Color(0xB3E8EDFF), fontSize: 11)),
                     ],
                   ),
                 ),
+              ],
+            ),
+            SizedBox(height: compact ? 12 : 16),
+          ],
+          Icon(icon, size: compact ? 28 : 34, color: accent.withValues(alpha: 0.95)),
+          SizedBox(height: compact ? 8 : 10),
+          Text(title, style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: compact ? 20 : 26, letterSpacing: -0.8)),
+          const SizedBox(height: 4),
+          Text(subtitle, style: const TextStyle(color: Colors.white, fontSize: 14)),
+          SizedBox(height: compact ? 10 : 16),
+          Row(
+            children: [
+              Expanded(child: Text(metaLeft, style: const TextStyle(color: Color(0xB3E8EDFF), fontSize: 11.5))),
+              Text(metaRight, style: const TextStyle(color: Color(0xB3E8EDFF), fontSize: 11.5)),
+            ],
+          ),
+          SizedBox(height: compact ? 12 : 16),
+          SizedBox(
+            width: double.infinity,
+            child: GlassButton(
+              label: buttonLabel,
+              icon: Icons.play_arrow_rounded,
+              highlight: true,
+              compact: compact,
+              onPressed: () => context.go(title == 'CRICKET' ? '/match/cricket' : '/setup'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _UtilityCard extends StatelessWidget {
+  const _UtilityCard({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.accent,
+    required this.onTap,
+    this.compact = false,
+  });
+
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color accent;
+  final VoidCallback onTap;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    return NeonCard(
+      accent: accent,
+      radius: compact ? 18 : 22,
+      padding: EdgeInsets.symmetric(horizontal: compact ? 14 : 16, vertical: compact ? 14 : 16),
+      child: InkWell(
+        onTap: onTap,
+        child: Row(
+          children: [
+            Icon(icon, color: accent, size: compact ? 22 : 24),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: compact ? 14 : 16)),
+                  const SizedBox(height: 3),
+                  Text(subtitle, style: const TextStyle(color: Color(0xB3E8EDFF), fontSize: 11.5)),
+                ],
               ),
-              const SizedBox(width: 12),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _BoardShowcase extends StatelessWidget {
+  const _BoardShowcase();
+
+  @override
+  Widget build(BuildContext context) {
+    return const NeonCard(
+      accent: Color(0xFF2DB6FF),
+      secondaryAccent: Color(0xFFFF4BDD),
+      padding: EdgeInsets.all(18),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              StatusPill(label: 'GAME SCREEN', tinted: true),
+            ],
+          ),
+          SizedBox(height: 10),
+          _BoardHeader(),
+          SizedBox(height: 18),
+          Expanded(child: _HeroBoard()),
+          SizedBox(height: 12),
+          Text('Tap a section to score', style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600)),
+          SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(child: _FooterButton(title: 'Undo', subtitle: 'Score/Dart 20', accent: Color(0xFF2CB6FF), icon: Icons.undo_rounded)),
+              SizedBox(width: 12),
+              Expanded(child: _CenterScoreFooter()),
+              SizedBox(width: 12),
+              Expanded(child: _FooterButton(title: 'End Turn', subtitle: '', accent: Color(0xFFFF4BDD), icon: Icons.bolt_rounded)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BoardHeader extends StatelessWidget {
+  const _BoardHeader();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: const [
+        Text('XG1  •  80 Player  •  Rom of 3 legs', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 12)),
+      ],
+    );
+  }
+}
+
+class _HeroBoard extends StatelessWidget {
+  const _HeroBoard();
+
+  @override
+  Widget build(BuildContext context) {
+    return AspectRatio(
+      aspectRatio: 1,
+      child: CustomPaint(
+        painter: _StaticBoardPainter(),
+      ),
+    );
+  }
+}
+
+class _FooterButton extends StatelessWidget {
+  const _FooterButton({required this.title, required this.subtitle, required this.accent, required this.icon});
+
+  final String title;
+  final String subtitle;
+  final Color accent;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return NeonCard(
+      accent: accent,
+      radius: 18,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.white, size: 18),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 14)),
+                if (subtitle.isNotEmpty)
+                  Text(subtitle, style: const TextStyle(color: Color(0xB3E8EDFF), fontSize: 11)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CenterScoreFooter extends StatelessWidget {
+  const _CenterScoreFooter();
+
+  @override
+  Widget build(BuildContext context) {
+    return FrostPanel(
+      radius: 18,
+      backgroundOpacity: 0.16,
+      borderOpacity: 0.20,
+      child: const Column(
+        children: [
+          Text('60', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 40, letterSpacing: -1.2)),
+          Text('Latest Scored', style: TextStyle(color: Color(0xB3E8EDFF), fontSize: 11.5)),
+        ],
+      ),
+    );
+  }
+}
+
+class _ScoreHeroCard extends StatelessWidget {
+  const _ScoreHeroCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return const NeonCard(
+      accent: Color(0xFFFF4BDD),
+      secondaryAccent: Color(0xFF6F4AFF),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              PlayerAvatar(name: 'Sarah Williams', colors: [Color(0xFFFF5A87), Color(0xFF7A49FF)]),
+              SizedBox(width: 10),
               Expanded(
-                flex: 4,
                 child: Column(
-                  children: const [
-                    Expanded(
-                      child: FrostPanel(
-                        radius: 24,
-                        child: Center(
-                          child: ScoreBadge(value: '61.4 avg', highlight: true),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 12),
-                    Expanded(
-                      child: FrostPanel(
-                        radius: 24,
-                        child: _LegSummary(),
-                      ),
-                    ),
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    StatusPill(label: 'WAITING', tinted: true),
+                    SizedBox(height: 8),
+                    Text('Sarah Williams', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 15)),
                   ],
                 ),
               ),
             ],
           ),
-        ),
-        const SizedBox(height: 12),
-        const FrostPanel(
-          radius: 24,
-          child: Row(
-            children: [
-              Expanded(child: ScoreBadge(value: 'D20')),
-              SizedBox(width: 10),
-              Expanded(child: ScoreBadge(value: 'T19')),
-              SizedBox(width: 10),
-              Expanded(child: ScoreBadge(value: 'Bull', highlight: true)),
-            ],
+          SizedBox(height: 12),
+          Center(
+            child: Text('301', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 56, letterSpacing: -2.0)),
           ),
-        ),
-      ],
+          Center(
+            child: Text('S.01  |  Roun 5', style: TextStyle(color: Color(0xB3E8EDFF), fontWeight: FontWeight.w600)),
+          ),
+          SizedBox(height: 12),
+          Center(
+            child: Text('✕  ★  ↻  ♡  ▽', style: TextStyle(color: Colors.white70, letterSpacing: 2)),
+          ),
+        ],
+      ),
     );
   }
 }
 
-class _PreviewStat extends StatelessWidget {
-  const _PreviewStat({required this.title, required this.value});
+class _LiveFeedCard extends StatelessWidget {
+  const _LiveFeedCard({required this.onSetup});
 
-  final String title;
-  final String value;
+  final VoidCallback onSetup;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: Theme.of(context).textTheme.labelLarge?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
+    return NeonCard(
+      accent: const Color(0xFFFF4BDD),
+      secondaryAccent: const Color(0xFF2DB6FF),
+      child: Column(
+        children: [
+          const PanelListTile(
+            title: 'Mike Obhooy',
+            subtitle: 'Trents      310',
+            leading: Icon(Icons.person, color: Colors.white),
           ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          value,
-          style: Theme.of(context)
-              .textTheme
-              .titleLarge
-              ?.copyWith(fontWeight: FontWeight.w800),
-        ),
-      ],
+          const SizedBox(height: 10),
+          const PanelListTile(
+            title: 'T. Nations',
+            subtitle: 'Sed Of Vioy  0',
+            leading: Icon(Icons.person, color: Colors.white),
+          ),
+          const SizedBox(height: 10),
+          const PanelListTile(
+            title: 'Rehcroring',
+            subtitle: 'Setting       30',
+            leading: Icon(Icons.settings, color: Colors.white),
+          ),
+          const SizedBox(height: 14),
+          const SectionHeading(title: 'Throw History', compact: true),
+          const SizedBox(height: 10),
+          const _HistoryLine(left: '60  - 3.20 low', right: '+0:35'),
+          const _HistoryLine(left: '90  - 5.23 visit', right: '+0:50'),
+          const _HistoryLine(left: '1.90 loss', right: '+0:12'),
+          const _HistoryLine(left: '98 loss', right: '+0:18'),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            child: GlassButton(
+              label: 'Quick Setup',
+              icon: Icons.settings_suggest_rounded,
+              onPressed: onSetup,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
 
-class _LegSummary extends StatelessWidget {
-  const _LegSummary();
+class _HistoryLine extends StatelessWidget {
+  const _HistoryLine({required this.left, required this.right});
+
+  final String left;
+  final String right;
 
   @override
   Widget build(BuildContext context) {
-    return const Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+    return Row(
       children: [
-        Text('3 darts used'),
-        Text('Best visit 140'),
-        Text('Next: double 20'),
+        Expanded(child: Text(left, style: const TextStyle(color: Colors.white70, fontSize: 11.5))),
+        Text(right, style: const TextStyle(color: Color(0x99FFFFFF), fontSize: 11)),
       ],
     );
   }
 }
 
-class _ChartPainter extends CustomPainter {
-  const _ChartPainter();
+class _StaticBoardPainter extends CustomPainter {
+  const _StaticBoardPainter();
+
+  static const order = [20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5];
 
   @override
   void paint(Canvas canvas, Size size) {
-    final grid = Paint()
-      ..color = Colors.white.withValues(alpha: 0.08)
-      ..strokeWidth = 1;
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2;
 
-    for (var i = 0; i < 4; i++) {
-      final y = size.height * (i / 3);
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), grid);
+    canvas.drawCircle(
+      center,
+      radius,
+      Paint()
+        ..shader = const RadialGradient(
+          colors: [Color(0x552DB6FF), Colors.transparent],
+        ).createShader(Rect.fromCircle(center: center, radius: radius * 1.1)),
+    );
+
+    const sweep = 3.141592653589793 / 10;
+    void ring(double inner, double outer, Color a, Color b) {
+      for (int i = 0; i < 20; i++) {
+        final start = -3.141592653589793 / 2 + i * sweep;
+        final path = Path()
+          ..moveTo(center.dx + radius * inner * math.cos(start), center.dy + radius * inner * math.sin(start))
+          ..arcTo(Rect.fromCircle(center: center, radius: radius * outer), start, sweep, false)
+          ..lineTo(center.dx + radius * inner * math.cos(start + sweep), center.dy + radius * inner * math.sin(start + sweep))
+          ..arcTo(Rect.fromCircle(center: center, radius: radius * inner), start + sweep, -sweep, false)
+          ..close();
+        canvas.drawPath(path, Paint()..color = i.isEven ? a : b);
+        canvas.drawPath(path, Paint()..style = PaintingStyle.stroke..strokeWidth = 1..color = const Color(0xDD101010));
+      }
     }
 
-    final path = Path()
-      ..moveTo(0, size.height * 0.76)
-      ..cubicTo(size.width * 0.16, size.height * 0.56, size.width * 0.34,
-          size.height * 0.84, size.width * 0.48, size.height * 0.48)
-      ..cubicTo(size.width * 0.66, size.height * 0.10, size.width * 0.82,
-          size.height * 0.44, size.width, size.height * 0.18);
+    ring(0.62, 0.90, const Color(0xFFE8DAB3), const Color(0xFF121616));
+    ring(0.54, 0.62, const Color(0xFF2AA18B), const Color(0xFFAF1233));
+    ring(0.10, 0.54, const Color(0xFF121616), const Color(0xFFE8DAB3));
+    ring(0.90, 1.00, const Color(0xFFAF1233), const Color(0xFF2AA18B));
 
-    canvas.drawPath(
-      path,
-      Paint()
-        ..color = const Color(0xFF8C80FF)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 3.4,
-    );
+    canvas.drawCircle(center, radius * 0.10, Paint()..color = const Color(0xFF2AA18B));
+    canvas.drawCircle(center, radius * 0.05, Paint()..color = const Color(0xFFAF1233));
+
+    final wire = Paint()..color = const Color(0xCC0B0B0B)..strokeWidth = 1;
+    for (int i = 0; i < 20; i++) {
+      final angle = -3.141592653589793 / 2 + i * sweep;
+      canvas.drawLine(
+        Offset(center.dx + radius * 0.10 * math.cos(angle), center.dy + radius * 0.10 * math.sin(angle)),
+        Offset(center.dx + radius * math.cos(angle), center.dy + radius * math.sin(angle)),
+        wire,
+      );
+    }
+
+    final textPainter = TextPainter(textDirection: TextDirection.ltr);
+    for (int i = 0; i < 20; i++) {
+      final angle = -3.141592653589793 / 2 + (i + 0.5) * sweep;
+      final point = Offset(center.dx + radius * 0.80 * math.cos(angle), center.dy + radius * 0.80 * math.sin(angle));
+      textPainter.text = TextSpan(
+        text: '${order[i]}',
+        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: radius * 0.09),
+      );
+      textPainter.layout();
+      textPainter.paint(canvas, point - Offset(textPainter.width / 2, textPainter.height / 2));
+    }
+
+    final beam = Paint()
+      ..shader = const LinearGradient(colors: [Color(0x00FFFFFF), Color(0xAA7FE1FF), Color(0x00FFFFFF)]).createShader(
+        Rect.fromLTWH(center.dx - 40, center.dy - radius * 0.8, 80, radius * 1.2),
+      );
+    canvas.save();
+    canvas.translate(center.dx, center.dy);
+    canvas.rotate(0.72);
+    canvas.drawRect(Rect.fromCenter(center: Offset.zero, width: 24, height: radius * 1.1), beam);
+    canvas.restore();
   }
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
+
