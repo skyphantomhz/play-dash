@@ -11,36 +11,19 @@ class AppBackdrop extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Stack(
+      fit: StackFit.expand,
       children: [
-        const Positioned.fill(child: _AppBackground()),
-        Positioned.fill(child: child),
+        const _AppBackground(),
+        child,
       ],
     );
   }
 }
 
-class AppShell extends StatelessWidget {
-  const AppShell({
-    required this.child,
-    this.desktopTopTabs = const <ShellTab>[
-      ShellTab(label: 'Home', route: '/'),
-      ShellTab(label: 'Leaderboard', route: '/leaderboard'),
-      ShellTab(label: 'Tents', route: '/leaderboard'),
-      ShellTab(label: 'History', route: '/leaderboard'),
-    ],
-    this.mobileTopTabs,
-    this.showDesktopSidebar = true,
-    this.showBottomNav = true,
-    this.expandChild = false,
-    super.key,
-  });
+class RootAppShell extends StatelessWidget {
+  const RootAppShell({required this.navigationShell, super.key});
 
-  final Widget child;
-  final List<ShellTab> desktopTopTabs;
-  final List<ShellTab>? mobileTopTabs;
-  final bool showDesktopSidebar;
-  final bool showBottomNav;
-  final bool expandChild;
+  final StatefulNavigationShell navigationShell;
 
   @override
   Widget build(BuildContext context) {
@@ -64,27 +47,26 @@ class AppShell extends StatelessWidget {
                 child: isDesktop
                     ? Row(
                         children: [
-                          if (showDesktopSidebar) ...[
-                            const SizedBox(width: 220, child: _DesktopSidebar()),
-                            const SizedBox(width: 16),
-                          ],
+                          SizedBox(
+                            width: 220,
+                            child: _DesktopSidebar(
+                              currentIndex: navigationShell.currentIndex,
+                              onSelectBranch: (index) => _goToBranch(index),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
                           Expanded(
                             child: _ShellSurface(
-                              desktopTopTabs: desktopTopTabs,
-                              mobileTopTabs: mobileTopTabs,
+                              navigationShell: navigationShell,
                               showBottomNav: false,
-                              expandChild: expandChild,
-                              child: child,
                             ),
                           ),
                         ],
                       )
                     : _ShellSurface(
-                        desktopTopTabs: desktopTopTabs,
-                        mobileTopTabs: mobileTopTabs,
-                        showBottomNav: showBottomNav,
-                        expandChild: expandChild,
-                        child: child,
+                        navigationShell: navigationShell,
+                        showBottomNav: true,
+                        onSelectBranch: (index) => _goToBranch(index),
                       ),
               ),
             ),
@@ -93,22 +75,25 @@ class AppShell extends StatelessWidget {
       ),
     );
   }
+
+  void _goToBranch(int index) {
+    navigationShell.goBranch(
+      index,
+      initialLocation: index == navigationShell.currentIndex,
+    );
+  }
 }
 
 class _ShellSurface extends StatelessWidget {
   const _ShellSurface({
-    required this.child,
-    required this.desktopTopTabs,
-    required this.mobileTopTabs,
+    required this.navigationShell,
     required this.showBottomNav,
-    required this.expandChild,
+    this.onSelectBranch,
   });
 
-  final Widget child;
-  final List<ShellTab> desktopTopTabs;
-  final List<ShellTab>? mobileTopTabs;
+  final StatefulNavigationShell navigationShell;
   final bool showBottomNav;
-  final bool expandChild;
+  final ValueChanged<int>? onSelectBranch;
 
   @override
   Widget build(BuildContext context) {
@@ -136,25 +121,25 @@ class _ShellSurface extends StatelessWidget {
             const Positioned.fill(child: _InnerCosmos()),
             Column(
               children: [
-                Padding(
-                  padding: EdgeInsets.fromLTRB(
-                      isDesktop ? 16 : 12, 12, isDesktop ? 16 : 12, 8),
-                  child: isDesktop
-                      ? _DesktopTopBar(tabs: desktopTopTabs)
-                      : _MobileTopBar(tabs: mobileTopTabs ?? desktopTopTabs),
-                ),
                 Expanded(
                   child: Padding(
-                    padding: EdgeInsets.fromLTRB(isDesktop ? 16 : 10, 8,
-                        isDesktop ? 16 : 10, showBottomNav ? 10 : 16),
-                    child: expandChild
-                        ? child
-                        : SingleChildScrollView(child: child),
+                    padding: EdgeInsets.fromLTRB(
+                      isDesktop ? 16 : 10,
+                      isDesktop ? 16 : 10,
+                      isDesktop ? 16 : 10,
+                      showBottomNav ? 10 : 16,
+                    ),
+                    child: navigationShell,
                   ),
                 ),
                 if (showBottomNav)
-                  const Padding(
-                      padding: EdgeInsets.all(10), child: _MobileBottomBar()),
+                  Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: _MobileBottomBar(
+                      currentIndex: navigationShell.currentIndex,
+                      onSelectBranch: onSelectBranch ?? (_) {},
+                    ),
+                  ),
               ],
             ),
           ],
@@ -641,84 +626,17 @@ class PlayerAvatar extends StatelessWidget {
   }
 }
 
-class ShellTab {
-  const ShellTab({required this.label, required this.route});
-
-  final String label;
-  final String route;
-}
-
-class _DesktopTopBar extends StatelessWidget {
-  const _DesktopTopBar({required this.tabs});
-
-  final List<ShellTab> tabs;
-
-  @override
-  Widget build(BuildContext context) {
-    final location = GoRouterState.of(context).uri.toString();
-    return Row(
-      children: [
-        const _BrandBadge(compact: false),
-        const SizedBox(width: 18),
-        for (final tab in tabs) ...[
-          _TopTabChip(tab: tab, selected: location == tab.route),
-          const SizedBox(width: 8),
-        ],
-        const Spacer(),
-        const Icon(Icons.notifications_none_rounded,
-            size: 18, color: Colors.white70),
-        const SizedBox(width: 12),
-        const Icon(Icons.search_rounded, size: 18, color: Colors.white70),
-        const SizedBox(width: 12),
-        _TopTabChip(
-            tab: const ShellTab(label: 'Settings', route: '/settings'),
-            selected: location == '/settings',
-            icon: Icons.settings_outlined),
-      ],
-    );
-  }
-}
-
-class _MobileTopBar extends StatelessWidget {
-  const _MobileTopBar({required this.tabs});
-
-  final List<ShellTab> tabs;
-
-  @override
-  Widget build(BuildContext context) {
-    final location = GoRouterState.of(context).uri.toString();
-    return Row(
-      children: [
-        const CircleAvatar(
-            radius: 12,
-            backgroundColor: Color(0x2237D8FF),
-            child: Icon(Icons.person, color: Colors.white, size: 14)),
-        const SizedBox(width: 8),
-        Expanded(
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                for (final tab in tabs.take(4)) ...[
-                  _TopTabChip(
-                      tab: tab, selected: location == tab.route, mobile: true),
-                  const SizedBox(width: 6),
-                ],
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 class _DesktopSidebar extends StatelessWidget {
-  const _DesktopSidebar();
+  const _DesktopSidebar({
+    required this.currentIndex,
+    required this.onSelectBranch,
+  });
+
+  final int currentIndex;
+  final ValueChanged<int> onSelectBranch;
 
   @override
   Widget build(BuildContext context) {
-    final location = GoRouterState.of(context).uri.toString();
     return GlassPanel(
       radius: 24,
       blur: 24,
@@ -730,8 +648,12 @@ class _DesktopSidebar extends StatelessWidget {
         children: [
           const _BrandBadge(compact: true),
           const SizedBox(height: 22),
-          for (final item in _navItems) ...[
-            _SidebarNavTile(item: item, selected: location == item.route),
+          for (final item in _primaryNavItems) ...[
+            _SidebarNavTile(
+              item: item,
+              selected: currentIndex == item.branchIndex,
+              onTap: () => onSelectBranch(item.branchIndex),
+            ),
             const SizedBox(height: 8),
           ],
           const Spacer(),
@@ -751,65 +673,21 @@ class _DesktopSidebar extends StatelessWidget {
   }
 }
 
-class _TopTabChip extends StatelessWidget {
-  const _TopTabChip(
-      {required this.tab,
-      required this.selected,
-      this.mobile = false,
-      this.icon});
-
-  final ShellTab tab;
-  final bool selected;
-  final bool mobile;
-  final IconData? icon;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () => context.go(tab.route),
-      borderRadius: BorderRadius.circular(999),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        curve: Curves.easeInOut,
-        padding: EdgeInsets.symmetric(
-            horizontal: mobile ? 10 : 12, vertical: mobile ? 7 : 8),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(999),
-          color: selected
-              ? Colors.white.withValues(alpha: 0.08)
-              : Colors.transparent,
-          border: Border.all(
-              color: Colors.white.withValues(alpha: selected ? 0.14 : 0.0)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (icon != null) ...[
-              Icon(icon, size: mobile ? 12 : 14, color: Colors.white70),
-              const SizedBox(width: 6),
-            ],
-            Text(tab.label,
-                style: TextStyle(
-                    color: Colors.white,
-                    fontSize: mobile ? 11 : 12.5,
-                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500)),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _SidebarNavTile extends StatelessWidget {
-  const _SidebarNavTile({required this.item, required this.selected});
+  const _SidebarNavTile({
+    required this.item,
+    required this.selected,
+    required this.onTap,
+  });
 
-  final _NavItem item;
+  final _PrimaryNavItem item;
   final bool selected;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () => context.go(item.route),
+      onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
@@ -880,11 +758,16 @@ class _BrandBadge extends StatelessWidget {
 }
 
 class _MobileBottomBar extends StatelessWidget {
-  const _MobileBottomBar();
+  const _MobileBottomBar({
+    required this.currentIndex,
+    required this.onSelectBranch,
+  });
+
+  final int currentIndex;
+  final ValueChanged<int> onSelectBranch;
 
   @override
   Widget build(BuildContext context) {
-    final location = GoRouterState.of(context).uri.toString();
     return GlassPanel(
       radius: 18,
       blur: 20,
@@ -892,11 +775,11 @@ class _MobileBottomBar extends StatelessWidget {
       borderColor: Colors.white.withValues(alpha: 0.12),
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
       child: Row(
-        children: _navItems.take(4).map((item) {
-          final selected = location == item.route;
+        children: _primaryNavItems.map((item) {
+          final selected = currentIndex == item.branchIndex;
           return Expanded(
             child: InkWell(
-              onTap: () => context.go(item.route),
+              onTap: () => onSelectBranch(item.branchIndex),
               borderRadius: BorderRadius.circular(14),
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 8),
@@ -1233,40 +1116,37 @@ class _AnimatedStreak {
   final double phase;
 }
 
-class _NavItem {
-  const _NavItem(
-      {required this.label,
-      required this.shortLabel,
-      required this.route,
-      required this.icon});
+class _PrimaryNavItem {
+  const _PrimaryNavItem({
+    required this.label,
+    required this.shortLabel,
+    required this.branchIndex,
+    required this.icon,
+  });
 
   final String label;
   final String shortLabel;
-  final String route;
+  final int branchIndex;
   final IconData icon;
 }
 
-const _navItems = <_NavItem>[
-  _NavItem(
-      label: 'Home', shortLabel: 'Home', route: '/', icon: Icons.home_filled),
-  _NavItem(
-      label: 'Leaderboard',
-      shortLabel: 'Leads',
-      route: '/leaderboard',
-      icon: Icons.emoji_events_outlined),
-  _NavItem(
-      label: 'Stats',
-      shortLabel: 'Stats',
-      route: '/leaderboard',
-      icon: Icons.bar_chart_rounded),
-  _NavItem(
-      label: 'History',
-      shortLabel: 'History',
-      route: '/leaderboard',
-      icon: Icons.history_rounded),
-  _NavItem(
-      label: 'Settings',
-      shortLabel: 'Setup',
-      route: '/settings',
-      icon: Icons.settings_outlined),
+const _primaryNavItems = <_PrimaryNavItem>[
+  _PrimaryNavItem(
+    label: 'Home',
+    shortLabel: 'Home',
+    branchIndex: 0,
+    icon: Icons.home_filled,
+  ),
+  _PrimaryNavItem(
+    label: 'Leaderboard',
+    shortLabel: 'Scores',
+    branchIndex: 1,
+    icon: Icons.emoji_events_outlined,
+  ),
+  _PrimaryNavItem(
+    label: 'Setup',
+    shortLabel: 'Setup',
+    branchIndex: 2,
+    icon: Icons.settings_outlined,
+  ),
 ];
