@@ -21,170 +21,88 @@ class X01GamePage extends ConsumerWidget {
     final winner = _findPlayerById(state.players, state.game.winnerPlayerId);
 
     return AppShell(
-      title: 'X01 Match',
+      title: 'X01 match',
       subtitle:
-          'The match screen now uses a split glass dashboard: dart input on one side, live scores and turn state on the other, with tighter glow and cleaner contrast.',
+          'Rebuilt as a dual-panel arena with the dartboard and the live scoring rail always visible. Contrast is stronger, blur is softer, and actions stay close to the score state.',
       hero: Wrap(
         spacing: 10,
         runSpacing: 10,
         children: [
           StatusPill(
-              label: winner == null
-                  ? 'Throwing: ${activePlayer?.name ?? '—'}'
-                  : 'Winner: ${winner.name}',
-              icon: Icons.person_pin_circle_outlined,
-              tinted: true),
+            label: winner == null
+                ? 'Throwing: ${activePlayer?.name ?? '—'}'
+                : 'Winner: ${winner.name}',
+            icon: Icons.person_pin_circle_outlined,
+            tinted: true,
+          ),
           StatusPill(
-              label: 'Target ${settings.startingScore}',
-              icon: Icons.flag_outlined),
+            label: 'Target ${settings.startingScore}',
+            icon: Icons.flag_outlined,
+          ),
           StatusPill(
-              label: '${state.game.currentTurnThrows.length}/3 darts',
-              icon: Icons.sports_martial_arts_outlined),
+            label: '${state.game.currentTurnThrows.length}/3 darts',
+            icon: Icons.ads_click_outlined,
+          ),
         ],
       ),
       actions: [
         IconButton(
-            onPressed: canUndo ? controller.undo : null,
-            icon: const Icon(Icons.undo),
-            tooltip: 'Undo'),
+          onPressed: canUndo ? controller.undo : null,
+          icon: const Icon(Icons.undo_rounded),
+          tooltip: 'Undo',
+        ),
       ],
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final wide = constraints.maxWidth >= 1100;
-          final boardPanel = GlassPanel(
-            padding: EdgeInsets.all(constraints.maxWidth >= 720 ? 28 : 22),
-            radius: 32,
-            blur: 8,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('X01 Game',
-                    style: Theme.of(context)
-                        .textTheme
-                        .headlineSmall
-                        ?.copyWith(fontWeight: FontWeight.w800)),
-                const SizedBox(height: 8),
-                Text(
-                  winner == null
-                      ? 'Current player: ${activePlayer?.name ?? '—'}'
-                      : 'Game finished',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                const SizedBox(height: 18),
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 12,
-                  children: [
-                    MetricCard(
-                        label: winner == null ? 'Current player' : 'Winner',
-                        value: winner?.name ?? activePlayer?.name ?? '—',
-                        icon: winner == null
-                            ? Icons.person_outline
-                            : Icons.emoji_events_outlined,
-                        highlight: true),
-                    MetricCard(
-                        label: 'Target score',
-                        value: '${settings.startingScore}',
-                        icon: Icons.flag_outlined),
-                    MetricCard(
-                        label: 'Darts this turn',
-                        value: '${state.game.currentTurnThrows.length}/3',
-                        icon: Icons.ads_click_outlined),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                InteractiveDartboard(
-                    enabled: winner == null, onThrow: controller.addThrow),
-              ],
-            ),
-          );
-
-          final scorePanel = GlassPanel(
-            padding: EdgeInsets.all(constraints.maxWidth >= 720 ? 28 : 22),
-            radius: 32,
-            blur: 8,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SectionHeading(
-                  title: 'Live scoring',
-                  subtitle:
-                      'Player cards, current-turn history, and quick actions remain visible together so the match state can be read in one glance.',
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      FilledButton.icon(
-                          onPressed: canUndo ? controller.undo : null,
-                          icon: const Icon(Icons.undo),
-                          label: const Text('Undo')),
-                      if (state.game.currentTurnThrows.isNotEmpty) ...[
-                        const SizedBox(width: 10),
-                        OutlinedButton.icon(
-                            onPressed: winner == null
-                                ? controller.resetCurrentTurn
-                                : null,
-                            icon: const Icon(Icons.refresh),
-                            label: const Text('Clear turn')),
-                      ],
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 20),
-                ...state.players.map((player) => Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: _ScoreCard(
-                        player: player,
-                        isActive:
-                            winner == null && player.id == activePlayer?.id,
-                        score: state.game.scores[player.id] ??
-                            settings.startingScore,
-                      ),
-                    )),
-                const SizedBox(height: 8),
-                const SectionHeading(
-                    title: 'Current turn',
-                    subtitle:
-                        'Recent darts are grouped into a compact list for quick confirmation.'),
-                const SizedBox(height: 14),
-                if (state.game.currentTurnThrows.isEmpty)
-                  const FrostPanel(
-                      radius: 24,
-                      child: ListTile(title: Text('No darts thrown yet')))
-                else
-                  ...state.game.currentTurnThrows.asMap().entries.map(
-                        (entry) => Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: FrostPanel(
-                            radius: 22,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 4),
-                            child: ListTile(
-                              leading:
-                                  CircleAvatar(child: Text('${entry.key + 1}')),
-                              title: Text(_formatThrow(entry.value)),
-                              subtitle: Text(
-                                  'Score: ${entry.value.segment * entry.value.multiplier}'),
-                            ),
-                          ),
-                        ),
-                      ),
-              ],
-            ),
-          );
-
+          final wide = constraints.maxWidth >= 1180;
           return wide
-              ? Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Expanded(flex: 6, child: boardPanel),
-                  const SizedBox(width: 20),
-                  Expanded(flex: 5, child: scorePanel)
-                ])
-              : Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+              ? Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                      boardPanel,
-                      const SizedBox(height: 20),
-                      scorePanel
-                    ]);
+                    Expanded(
+                      flex: 6,
+                      child: _BoardColumn(
+                        winner: winner,
+                        activePlayer: activePlayer,
+                        settings: settings,
+                        state: state,
+                        controller: controller,
+                      ),
+                    ),
+                    const SizedBox(width: 20),
+                    Expanded(
+                      flex: 5,
+                      child: _ScoreColumn(
+                        winner: winner,
+                        activePlayer: activePlayer,
+                        state: state,
+                        settings: settings,
+                        canUndo: canUndo,
+                        controller: controller,
+                      ),
+                    ),
+                  ],
+                )
+              : Column(
+                  children: [
+                    _BoardColumn(
+                      winner: winner,
+                      activePlayer: activePlayer,
+                      settings: settings,
+                      state: state,
+                      controller: controller,
+                    ),
+                    const SizedBox(height: 20),
+                    _ScoreColumn(
+                      winner: winner,
+                      activePlayer: activePlayer,
+                      state: state,
+                      settings: settings,
+                      canUndo: canUndo,
+                      controller: controller,
+                    ),
+                  ],
+                );
         },
       ),
     );
@@ -201,7 +119,7 @@ class X01GamePage extends ConsumerWidget {
     return null;
   }
 
-  static String _formatThrow(DartThrow dartThrow) {
+  static String formatThrow(DartThrow dartThrow) {
     if (dartThrow.segment == 25) {
       return dartThrow.multiplier == 2 ? 'Bull' : 'Outer Bull';
     }
@@ -215,9 +133,169 @@ class X01GamePage extends ConsumerWidget {
   }
 }
 
-class _ScoreCard extends StatelessWidget {
-  const _ScoreCard(
-      {required this.player, required this.isActive, required this.score});
+class _BoardColumn extends StatelessWidget {
+  const _BoardColumn({
+    required this.winner,
+    required this.activePlayer,
+    required this.settings,
+    required this.state,
+    required this.controller,
+  });
+
+  final Player? winner;
+  final Player? activePlayer;
+  final X01MatchSettings settings;
+  final dynamic state;
+  final dynamic controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return GlassPanel(
+      radius: 34,
+      blur: 9,
+      opacity: 0.48,
+      padding: const EdgeInsets.all(22),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SectionHeading(
+            title: 'Throw board',
+            subtitle:
+                'The interactive board remains the centerpiece, now framed by cleaner badges and more restrained highlight treatment.',
+          ),
+          const SizedBox(height: 20),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              MetricCard(
+                label: winner == null ? 'Current player' : 'Winner',
+                value: winner?.name ?? activePlayer?.name ?? '—',
+                icon: winner == null
+                    ? Icons.person_outline_rounded
+                    : Icons.emoji_events_rounded,
+                highlight: true,
+              ),
+              MetricCard(
+                label: 'Starting score',
+                value: '${settings.startingScore}',
+                icon: Icons.flag_outlined,
+              ),
+              MetricCard(
+                label: 'Current turn',
+                value: '${state.game.currentTurnThrows.length}/3',
+                icon: Icons.timeline_rounded,
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          InteractiveDartboard(
+            enabled: winner == null,
+            onThrow: controller.addThrow,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ScoreColumn extends StatelessWidget {
+  const _ScoreColumn({
+    required this.winner,
+    required this.activePlayer,
+    required this.state,
+    required this.settings,
+    required this.canUndo,
+    required this.controller,
+  });
+
+  final Player? winner;
+  final Player? activePlayer;
+  final dynamic state;
+  final X01MatchSettings settings;
+  final bool canUndo;
+  final dynamic controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return GlassPanel(
+      radius: 34,
+      blur: 9,
+      opacity: 0.48,
+      padding: const EdgeInsets.all(22),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SectionHeading(
+            title: 'Live scoring rail',
+            subtitle:
+                'Scores, turn history, and quick actions are grouped into one side column for immediate confirmation while throwing.',
+            trailing: Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                FilledButton.icon(
+                  onPressed: canUndo ? controller.undo : null,
+                  icon: const Icon(Icons.undo_rounded),
+                  label: const Text('Undo'),
+                ),
+                OutlinedButton.icon(
+                  onPressed: winner == null && state.game.currentTurnThrows.isNotEmpty
+                      ? controller.resetCurrentTurn
+                      : null,
+                  icon: const Icon(Icons.refresh_rounded),
+                  label: const Text('Clear turn'),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          for (final player in state.players) ...[
+            _PlayerScoreTile(
+              player: player,
+              isActive: winner == null && player.id == activePlayer?.id,
+              score: state.game.scores[player.id] ?? settings.startingScore,
+            ),
+            const SizedBox(height: 12),
+          ],
+          const SizedBox(height: 8),
+          const SectionHeading(
+            title: 'Current turn',
+            subtitle: 'Latest throws are shown as compact confirmation cards.',
+          ),
+          const SizedBox(height: 14),
+          if (state.game.currentTurnThrows.isEmpty)
+            const PanelListTile(
+              title: 'No throws yet',
+              subtitle: 'Tap the board to record the first dart.',
+              leading: Icon(Icons.sports_martial_arts_outlined),
+            )
+          else
+            for (final entry in state.game.currentTurnThrows.asMap().entries) ...[
+              PanelListTile(
+                title: X01GamePage.formatThrow(entry.value),
+                subtitle:
+                    'Throw ${entry.key + 1} · ${entry.value.segment * entry.value.multiplier} points',
+                leading: CircleAvatar(child: Text('${entry.key + 1}')),
+                trailing: ScoreBadge(
+                  value: '${entry.value.segment * entry.value.multiplier}',
+                  highlight: entry.key == state.game.currentTurnThrows.length - 1,
+                ),
+              ),
+              const SizedBox(height: 10),
+            ],
+        ],
+      ),
+    );
+  }
+}
+
+class _PlayerScoreTile extends StatelessWidget {
+  const _PlayerScoreTile({
+    required this.player,
+    required this.isActive,
+    required this.score,
+  });
 
   final Player player;
   final bool isActive;
@@ -225,51 +303,22 @@ class _ScoreCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FrostPanel(
-      radius: 26,
-      blur: 6,
-      backgroundOpacity: isActive ? 0.54 : 0.44,
+    return PanelListTile(
+      title: player.name,
+      subtitle: isActive ? 'Current player' : 'Waiting',
       highlight: isActive,
-      child: Row(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: (isActive
-                      ? Theme.of(context).colorScheme.primary
-                      : Colors.white)
-                  .withValues(alpha: isActive ? 0.18 : 0.10),
-            ),
-            child: Icon(
-                isActive ? Icons.arrow_right_alt_rounded : Icons.person_outline,
-                color: Theme.of(context).colorScheme.onSurface),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(player.name,
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleLarge
-                        ?.copyWith(fontWeight: FontWeight.w700)),
-                const SizedBox(height: 4),
-                Text(isActive ? 'Current player' : 'Waiting',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant)),
-              ],
-            ),
-          ),
-          Text('$score',
-              style: Theme.of(context)
-                  .textTheme
-                  .displaySmall
-                  ?.copyWith(fontWeight: FontWeight.w800)),
-        ],
+      leading: CircleAvatar(
+        radius: 24,
+        backgroundColor: (isActive
+                ? Theme.of(context).colorScheme.primary
+                : Colors.white)
+            .withValues(alpha: isActive ? 0.18 : 0.1),
+        child: Icon(
+          isActive ? Icons.arrow_right_alt_rounded : Icons.person_outline_rounded,
+          color: Theme.of(context).colorScheme.onSurface,
+        ),
       ),
+      trailing: ScoreBadge(value: '$score', highlight: isActive),
     );
   }
 }

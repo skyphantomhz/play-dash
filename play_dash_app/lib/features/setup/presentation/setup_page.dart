@@ -37,8 +37,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     final players = List<Player>.generate(_playerCount, (index) {
       final value = _nameControllers[index].text.trim();
       return Player(
-          id: 'player-${index + 1}',
-          name: value.isEmpty ? 'Player ${index + 1}' : value);
+        id: 'player-${index + 1}',
+        name: value.isEmpty ? 'Player ${index + 1}' : value,
+      );
     });
 
     ref.read(x01ControllerProvider.notifier).startMatch(players: players);
@@ -47,7 +48,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     try {
       context.go('/match/x01');
     } catch (_) {
-      // Local fallback already activated above.
+      // Fallback for embedded usage.
     }
   }
 
@@ -65,268 +66,277 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     return AppShell(
       title: 'Player setup',
       subtitle:
-          'The roster screen was rebuilt into a two-panel control sheet with clearer hierarchy, larger form rhythm, and faster confirmation before jumping into a match.',
+          'Rebuilt as a glass command sheet with a clearer left-to-right flow: roster controls, live preview, and a compact launch summary.',
       hero: Wrap(
         spacing: 10,
         runSpacing: 10,
         children: const [
           StatusPill(
-              label: 'Large tap targets',
-              icon: Icons.touch_app_rounded,
-              tinted: true),
+            label: 'Quick roster editing',
+            icon: Icons.badge_outlined,
+            tinted: true,
+          ),
           StatusPill(
-              label: 'Responsive roster',
-              icon: Icons.view_compact_alt_outlined),
+            label: 'Launch-ready summary',
+            icon: Icons.rocket_launch_outlined,
+          ),
         ],
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final wide = constraints.maxWidth >= 980;
-          final form = GlassPanel(
-            padding: EdgeInsets.all(constraints.maxWidth >= 720 ? 28 : 22),
-            radius: 32,
-            blur: 8,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SectionHeading(
-                  title: 'Match roster',
-                  subtitle:
-                      'One primary panel handles player count, names, and action confirmation so setup feels direct and predictable.',
-                ),
-                const SizedBox(height: 22),
-                FrostPanel(
-                  radius: 26,
-                  blur: 6,
-                  backgroundOpacity: 0.46,
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('Player count',
-                              style: Theme.of(context).textTheme.titleMedium),
-                          Text('$_playerCount',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .headlineMedium
-                                  ?.copyWith(fontWeight: FontWeight.w800)),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      Slider(
-                        value: _playerCount.toDouble(),
-                        min: _minPlayers.toDouble(),
-                        max: _maxPlayers.toDouble(),
-                        divisions: _maxPlayers - _minPlayers,
-                        label: '$_playerCount players',
-                        onChanged: (value) =>
-                            setState(() => _playerCount = value.round()),
-                      ),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          _playerCount == 1
-                              ? 'Solo practice mode'
-                              : 'Ready for $_playerCount players',
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyMedium
-                              ?.copyWith(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onSurfaceVariant),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 18),
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 12,
+          final wide = constraints.maxWidth >= 1120;
+          return wide
+              ? Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    MetricCard(
-                        label: 'Active names',
-                        value: '$_playerCount players',
-                        compact: true,
-                        icon: Icons.badge_outlined),
-                    const MetricCard(
-                        label: 'Mode',
-                        value: 'X01 ready',
-                        compact: true,
-                        icon: Icons.sports_score_outlined,
-                        highlight: true),
+                    Expanded(
+                      flex: 6,
+                      child: _SetupForm(
+                        playerCount: _playerCount,
+                        minPlayers: _minPlayers,
+                        maxPlayers: _maxPlayers,
+                        nameControllers: _nameControllers,
+                        onPlayerCountChanged: (value) =>
+                            setState(() => _playerCount = value.round()),
+                        onChanged: () => setState(() {}),
+                        onStart: _startMatch,
+                      ),
+                    ),
+                    const SizedBox(width: 20),
+                    Expanded(
+                      flex: 4,
+                      child: _PreviewRail(
+                        playerCount: _playerCount,
+                        preview: preview,
+                      ),
+                    ),
+                  ],
+                )
+              : Column(
+                  children: [
+                    _SetupForm(
+                      playerCount: _playerCount,
+                      minPlayers: _minPlayers,
+                      maxPlayers: _maxPlayers,
+                      nameControllers: _nameControllers,
+                      onPlayerCountChanged: (value) =>
+                          setState(() => _playerCount = value.round()),
+                      onChanged: () => setState(() {}),
+                      onStart: _startMatch,
+                    ),
+                    const SizedBox(height: 20),
+                    _PreviewRail(playerCount: _playerCount, preview: preview),
+                  ],
+                );
+        },
+      ),
+    );
+  }
+}
+
+class _SetupForm extends StatelessWidget {
+  const _SetupForm({
+    required this.playerCount,
+    required this.minPlayers,
+    required this.maxPlayers,
+    required this.nameControllers,
+    required this.onPlayerCountChanged,
+    required this.onChanged,
+    required this.onStart,
+  });
+
+  final int playerCount;
+  final int minPlayers;
+  final int maxPlayers;
+  final List<TextEditingController> nameControllers;
+  final ValueChanged<double> onPlayerCountChanged;
+  final VoidCallback onChanged;
+  final VoidCallback onStart;
+
+  @override
+  Widget build(BuildContext context) {
+    return GlassPanel(
+      radius: 34,
+      blur: 9,
+      opacity: 0.48,
+      padding: const EdgeInsets.all(22),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SectionHeading(
+            title: 'Roster builder',
+            subtitle:
+                'The setup form was rebuilt into one primary composition with more generous input rhythm and a stronger pre-match checkpoint.',
+          ),
+          const SizedBox(height: 20),
+          FrostPanel(
+            radius: 28,
+            blur: 8,
+            backgroundOpacity: 0.42,
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    const Expanded(
+                      child: Text('Player count'),
+                    ),
+                    ScoreBadge(value: '$playerCount', highlight: true),
                   ],
                 ),
-                const SizedBox(height: 20),
-                ...List<Widget>.generate(_playerCount, (index) {
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 14),
-                    child: TextField(
-                      controller: _nameControllers[index],
-                      textInputAction: index == _playerCount - 1
-                          ? TextInputAction.done
-                          : TextInputAction.next,
-                      onChanged: (_) => setState(() {}),
-                      onSubmitted: (_) {
-                        if (index == _playerCount - 1) _startMatch();
-                      },
-                      decoration: InputDecoration(
-                        labelText: 'Player ${index + 1}',
-                        hintText: 'Enter player name',
-                        prefixIcon: const Icon(Icons.person_outline),
-                      ),
-                    ),
-                  );
-                }),
-                const SizedBox(height: 8),
-                GestureDetector(
-                  onTap: _startMatch,
-                  behavior: HitTestBehavior.opaque,
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 18,
-                      vertical: 18,
-                    ),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(22),
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          Theme.of(context)
-                              .colorScheme
-                              .primary
-                              .withValues(alpha: 0.92),
-                          Theme.of(context)
-                              .colorScheme
-                              .secondary
-                              .withValues(alpha: 0.84),
-                        ],
-                      ),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.14),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
+                const SizedBox(height: 12),
+                Slider(
+                  value: playerCount.toDouble(),
+                  min: minPlayers.toDouble(),
+                  max: maxPlayers.toDouble(),
+                  divisions: maxPlayers - minPlayers,
+                  label: '$playerCount players',
+                  onChanged: onPlayerCountChanged,
+                ),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    playerCount == 1
+                        ? 'Solo practice profile selected.'
+                        : '$playerCount-player local session is ready.',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Theme.of(context)
                               .colorScheme
-                              .primary
-                              .withValues(alpha: 0.22),
-                          blurRadius: 24,
-                          offset: const Offset(0, 12),
+                              .onSurfaceVariant,
                         ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.play_arrow_rounded,
-                          color: Theme.of(context).colorScheme.onPrimary,
-                        ),
-                        const SizedBox(width: 10),
-                        Text(
-                          'Continue',
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium
-                              ?.copyWith(
-                                fontWeight: FontWeight.w700,
-                                color: Theme.of(context).colorScheme.onPrimary,
-                              ),
-                        ),
-                      ],
-                    ),
                   ),
                 ),
               ],
             ),
-          );
+          ),
+          const SizedBox(height: 18),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              MetricCard(
+                label: 'Mode',
+                value: 'X01 launch',
+                icon: Icons.sports_score_outlined,
+                highlight: true,
+              ),
+              MetricCard(
+                label: 'Players',
+                value: '$playerCount active',
+                icon: Icons.groups_outlined,
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          for (var index = 0; index < playerCount; index++) ...[
+            FrostPanel(
+              radius: 24,
+              blur: 7,
+              backgroundOpacity: 0.34,
+              padding: const EdgeInsets.all(6),
+              child: TextField(
+                controller: nameControllers[index],
+                textInputAction:
+                    index == playerCount - 1 ? TextInputAction.done : TextInputAction.next,
+                onChanged: (_) => onChanged(),
+                onSubmitted: (_) {
+                  if (index == playerCount - 1) onStart();
+                },
+                decoration: InputDecoration(
+                  labelText: 'Player ${index + 1}',
+                  hintText: 'Enter player name',
+                  prefixIcon: const Icon(Icons.person_outline_rounded),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+          GlassButton(
+            onPressed: onStart,
+            icon: Icons.play_arrow_rounded,
+            label: 'Start match',
+            highlight: true,
+          ),
+        ],
+      ),
+    );
+  }
+}
 
-          final previewPanel = GlassPanel(
-            padding: EdgeInsets.all(constraints.maxWidth >= 720 ? 28 : 22),
-            radius: 32,
+class _PreviewRail extends StatelessWidget {
+  const _PreviewRail({required this.playerCount, required this.preview});
+
+  final int playerCount;
+  final List<String> preview;
+
+  @override
+  Widget build(BuildContext context) {
+    return GlassPanel(
+      radius: 34,
+      blur: 9,
+      opacity: 0.48,
+      padding: const EdgeInsets.all(22),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SectionHeading(
+            title: 'Launch preview',
+            subtitle:
+                'A compact side rail mirrors the dashboard language with match badges, player initials, and a quick readiness summary.',
+          ),
+          const SizedBox(height: 20),
+          const MetricCard(
+            label: 'Ruleset',
+            value: '501 · Double out',
+            icon: Icons.rule_folder_outlined,
+            highlight: true,
+          ),
+          const SizedBox(height: 12),
+          MetricCard(
+            label: 'Players ready',
+            value: '$playerCount',
+            icon: Icons.check_circle_outline_rounded,
+          ),
+          const SizedBox(height: 18),
+          FrostPanel(
+            radius: 28,
             blur: 8,
+            backgroundOpacity: 0.4,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SectionHeading(
-                  title: 'Quick checklist',
-                  subtitle:
-                      'A secondary summary panel mirrors the reference style with stacked glass cards and concise pre-match confirmations.',
+                Text(
+                  'Entered roster',
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleMedium
+                      ?.copyWith(fontWeight: FontWeight.w800),
                 ),
-                const SizedBox(height: 22),
-                const MetricCard(
-                    label: 'Board state',
-                    value: 'Ready to score',
-                    icon: Icons.track_changes_outlined,
-                    highlight: true),
-                const SizedBox(height: 12),
-                const MetricCard(
-                    label: 'Ruleset',
-                    value: '501 · Double out',
-                    icon: Icons.rule_folder_outlined),
-                const SizedBox(height: 18),
-                FrostPanel(
-                  radius: 26,
-                  blur: 6,
-                  backgroundOpacity: 0.46,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Players',
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w700)),
-                      const SizedBox(height: 14),
-                      ...preview.map((name) => Padding(
-                            padding: const EdgeInsets.only(bottom: 10),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 34,
-                                  height: 34,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .primary
-                                        .withValues(alpha: 0.16),
-                                  ),
-                                  alignment: Alignment.center,
-                                  child:
-                                      Text(name.characters.first.toUpperCase()),
-                                ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                    child: Text(name,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .titleMedium)),
-                              ],
-                            ),
-                          )),
-                    ],
+                const SizedBox(height: 14),
+                for (final name in preview) ...[
+                  PanelListTile(
+                    title: name,
+                    subtitle: 'Ready for opening leg',
+                    leading: CircleAvatar(
+                      radius: 18,
+                      backgroundColor: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withValues(alpha: 0.16),
+                      child: Text(name.characters.first.toUpperCase()),
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 10),
+                ],
               ],
             ),
-          );
-
-          return wide
-              ? Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Expanded(flex: 6, child: form),
-                  const SizedBox(width: 20),
-                  Expanded(flex: 4, child: previewPanel)
-                ])
-              : Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [form, const SizedBox(height: 20), previewPanel]);
-        },
+          ),
+          const SizedBox(height: 18),
+          const PanelListTile(
+            title: 'Touch-first controls',
+            subtitle: 'Large interactive targets and simplified scan order for phones and tablets.',
+            leading: Icon(Icons.touch_app_rounded),
+          ),
+        ],
       ),
     );
   }
