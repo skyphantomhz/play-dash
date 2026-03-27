@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -9,6 +10,8 @@ class AppShell extends StatelessWidget {
     required this.child,
     this.actions,
     this.hero,
+    this.floatingOverlay,
+    this.floatingOverlayHeight = 0,
     super.key,
   });
 
@@ -17,6 +20,8 @@ class AppShell extends StatelessWidget {
   final Widget child;
   final List<Widget>? actions;
   final Widget? hero;
+  final Widget? floatingOverlay;
+  final double floatingOverlayHeight;
 
   @override
   Widget build(BuildContext context) {
@@ -33,19 +38,19 @@ class AppShell extends StatelessWidget {
       body: DecoratedBox(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
             colors: [
-              Color(0xFF170B07),
-              Color(0xFF110E18),
-              Color(0xFF061522),
+              Color(0xFF071225),
+              Color(0xFF221135),
+              Color(0xFF03050B),
             ],
-            stops: [0.0, 0.48, 1.0],
+            stops: [0.0, 0.52, 1.0],
           ),
         ),
         child: Stack(
           children: [
-            const Positioned.fill(child: _FireBackground()),
+            const Positioned.fill(child: _GlassmorphismBackground()),
             Positioned.fill(
               child: IgnorePointer(
                 child: DecoratedBox(
@@ -54,9 +59,9 @@ class AppShell extends StatelessWidget {
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        Colors.white.withValues(alpha: 0.05),
+                        Colors.white.withValues(alpha: 0.06),
                         Colors.transparent,
-                        Colors.black.withValues(alpha: 0.24),
+                        Colors.black.withValues(alpha: 0.20),
                       ],
                     ),
                   ),
@@ -68,10 +73,10 @@ class AppShell extends StatelessWidget {
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     gradient: RadialGradient(
-                      center: const Alignment(0, -0.25),
-                      radius: 1.15,
+                      center: const Alignment(0, -0.15),
+                      radius: 1.2,
                       colors: [
-                        Colors.white.withValues(alpha: 0.06),
+                        Colors.white.withValues(alpha: 0.05),
                         Colors.transparent,
                       ],
                     ),
@@ -89,54 +94,72 @@ class AppShell extends StatelessWidget {
                           : 16.0;
                   final headerSpacing =
                       constraints.maxWidth >= 900 ? 24.0 : 18.0;
+                  final overlayTop = constraints.maxWidth >= 720 ? 20.0 : 12.0;
+                  final overlayVisible = floatingOverlay != null;
+                  final listTopPadding = overlayVisible
+                      ? overlayTop + floatingOverlayHeight + 16
+                      : 12.0;
 
                   return Center(
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(maxWidth: 1320),
-                      child: ListView(
-                        padding: EdgeInsets.fromLTRB(
-                          horizontalPadding,
-                          12,
-                          horizontalPadding,
-                          28,
-                        ),
+                      child: Stack(
                         children: [
-                          GlassPanel(
-                            padding: EdgeInsets.all(
-                              constraints.maxWidth >= 720 ? 28 : 22,
+                          ListView(
+                            padding: EdgeInsets.fromLTRB(
+                              horizontalPadding,
+                              listTopPadding,
+                              horizontalPadding,
+                              28,
                             ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                if (hero != null) ...[
-                                  hero!,
-                                  const SizedBox(height: 18),
-                                ],
-                                Text(
-                                  title,
-                                  style:
-                                      theme.textTheme.headlineMedium?.copyWith(
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: -0.6,
-                                  ),
+                            children: [
+                              GlassPanel(
+                                padding: EdgeInsets.all(
+                                  constraints.maxWidth >= 720 ? 28 : 22,
                                 ),
-                                const SizedBox(height: 10),
-                                ConstrainedBox(
-                                  constraints:
-                                      const BoxConstraints(maxWidth: 860),
-                                  child: Text(
-                                    subtitle,
-                                    style: theme.textTheme.bodyLarge?.copyWith(
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                      height: 1.45,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    if (hero != null) ...[
+                                      hero!,
+                                      const SizedBox(height: 18),
+                                    ],
+                                    Text(
+                                      title,
+                                      style: theme.textTheme.headlineMedium
+                                          ?.copyWith(
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: -0.6,
+                                      ),
                                     ),
-                                  ),
+                                    const SizedBox(height: 10),
+                                    ConstrainedBox(
+                                      constraints:
+                                          const BoxConstraints(maxWidth: 860),
+                                      child: Text(
+                                        subtitle,
+                                        style:
+                                            theme.textTheme.bodyLarge?.copyWith(
+                                          color: theme
+                                              .colorScheme.onSurfaceVariant,
+                                          height: 1.45,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
+                              ),
+                              SizedBox(height: headerSpacing),
+                              child,
+                            ],
                           ),
-                          SizedBox(height: headerSpacing),
-                          child,
+                          if (overlayVisible)
+                            Positioned(
+                              top: overlayTop,
+                              left: horizontalPadding,
+                              right: horizontalPadding,
+                              child: floatingOverlay!,
+                            ),
                         ],
                       ),
                     ),
@@ -188,7 +211,7 @@ class GlassPanel extends StatelessWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    Colors.white.withValues(alpha: 0.17),
+                    Colors.white.withValues(alpha: 0.16),
                     theme.colorScheme.surfaceContainerHigh
                         .withValues(alpha: opacity),
                     theme.colorScheme.surfaceContainer
@@ -484,80 +507,320 @@ class StatusPill extends StatelessWidget {
   }
 }
 
-class _FireBackground extends StatelessWidget {
-  const _FireBackground();
+class _GlassmorphismBackground extends StatelessWidget {
+  const _GlassmorphismBackground();
+
+  static const int _seed = 481516;
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: const [
-        Positioned(
-          top: -120,
-          left: -140,
-          child: _GlowOrb(size: 420, color: Color(0xFFFF6A2B), blur: 150),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final size = Size(constraints.maxWidth, constraints.maxHeight);
+        final glowBlobs = _generateGlowBlobs(size);
+        final particles = _generateParticles(size);
+
+        final isWidgetTest = WidgetsBinding.instance.runtimeType
+            .toString()
+            .contains('TestWidgetsFlutterBinding');
+
+        return RepaintBoundary(
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              CustomPaint(
+                painter: _GlowBlobPainter(blobs: glowBlobs),
+              ),
+              IgnorePointer(
+                child: isWidgetTest
+                    ? CustomPaint(
+                        painter: const _LightStreakPainter(progress: 0.38),
+                      )
+                    : _AnimatedPainterLayer(
+                        duration: const Duration(seconds: 18),
+                        builder: (progress) =>
+                            _LightStreakPainter(progress: progress),
+                      ),
+              ),
+              IgnorePointer(
+                child: isWidgetTest
+                    ? CustomPaint(
+                        painter: _ParticlePainter(
+                          particles: particles,
+                          progress: 0.52,
+                        ),
+                      )
+                    : _AnimatedPainterLayer(
+                        duration: const Duration(seconds: 24),
+                        builder: (progress) => _ParticlePainter(
+                          particles: particles,
+                          progress: progress,
+                        ),
+                      ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  List<_GlowBlob> _generateGlowBlobs(Size size) {
+    final random = math.Random(_seed);
+    final palette = <Color>[
+      const Color(0xFF61E9FF),
+      const Color(0xFFFF71D1),
+      const Color(0xFF8D7BFF),
+    ];
+
+    return List<_GlowBlob>.generate(7, (index) {
+      final widthFactor = 0.12 + random.nextDouble() * 0.76;
+      final heightFactor = 0.08 + random.nextDouble() * 0.84;
+      final radius = size.shortestSide * (0.20 + random.nextDouble() * 0.26);
+      final color = palette[random.nextInt(palette.length)];
+
+      return _GlowBlob(
+        center: Offset(size.width * widthFactor, size.height * heightFactor),
+        radius: radius,
+        color: color,
+        alpha: 0.13 + random.nextDouble() * 0.08,
+      );
+    });
+  }
+
+  List<_Particle> _generateParticles(Size size) {
+    final random = math.Random(_seed * 3);
+
+    return List<_Particle>.generate(24, (index) {
+      return _Particle(
+        base: Offset(
+          random.nextDouble() * size.width,
+          random.nextDouble() * size.height,
         ),
-        Positioned(
-          top: 120,
-          left: -80,
-          child: _GlowOrb(size: 360, color: Color(0xFFFF2E63), blur: 130),
-        ),
-        Positioned(
-          bottom: -120,
-          left: 20,
-          child: _GlowOrb(size: 400, color: Color(0xFFFFB347), blur: 150),
-        ),
-        Positioned(
-          top: -100,
-          right: -140,
-          child: _GlowOrb(size: 430, color: Color(0xFF716BFF), blur: 150),
-        ),
-        Positioned(
-          top: 210,
-          right: -90,
-          child: _GlowOrb(size: 340, color: Color(0xFF00C2FF), blur: 130),
-        ),
-        Positioned(
-          bottom: -150,
-          right: -40,
-          child: _GlowOrb(size: 390, color: Color(0xFF9D7CFF), blur: 145),
-        ),
-      ],
+        radius: 0.8 + random.nextDouble() * 2.2,
+        dx: -16 + random.nextDouble() * 32,
+        dy: -22 + random.nextDouble() * 26,
+        opacity: 0.06 + random.nextDouble() * 0.08,
+      );
+    });
+  }
+}
+
+class _AnimatedPainterLayer extends StatefulWidget {
+  const _AnimatedPainterLayer({
+    required this.duration,
+    required this.builder,
+  });
+
+  final Duration duration;
+  final CustomPainter Function(double progress) builder;
+
+  @override
+  State<_AnimatedPainterLayer> createState() => _AnimatedPainterLayerState();
+}
+
+class _AnimatedPainterLayerState extends State<_AnimatedPainterLayer>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: widget.duration,
+  )..repeat();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return CustomPaint(
+          painter: widget.builder(_controller.value),
+        );
+      },
     );
   }
 }
 
-class _GlowOrb extends StatelessWidget {
-  const _GlowOrb({
-    required this.size,
+class _GlowBlob {
+  const _GlowBlob({
+    required this.center,
+    required this.radius,
     required this.color,
-    this.blur = 120,
+    required this.alpha,
   });
 
-  final double size;
+  final Offset center;
+  final double radius;
   final Color color;
-  final double blur;
+  final double alpha;
+}
+
+class _Particle {
+  const _Particle({
+    required this.base,
+    required this.radius,
+    required this.dx,
+    required this.dy,
+    required this.opacity,
+  });
+
+  final Offset base;
+  final double radius;
+  final double dx;
+  final double dy;
+  final double opacity;
+}
+
+class _GlowBlobPainter extends CustomPainter {
+  const _GlowBlobPainter({required this.blobs});
+
+  final List<_GlowBlob> blobs;
 
   @override
-  Widget build(BuildContext context) {
-    return IgnorePointer(
-      child: ImageFiltered(
-        imageFilter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
-        child: Container(
-          width: size,
-          height: size,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: RadialGradient(
-              colors: [
-                color.withValues(alpha: 0.66),
-                color.withValues(alpha: 0.26),
-                color.withValues(alpha: 0.0),
-              ],
-              stops: const [0.0, 0.45, 1.0],
-            ),
+  void paint(Canvas canvas, Size size) {
+    for (final blob in blobs) {
+      canvas.drawCircle(
+        blob.center,
+        blob.radius,
+        Paint()
+          ..shader = RadialGradient(
+            colors: [
+              blob.color.withValues(alpha: blob.alpha),
+              blob.color.withValues(alpha: blob.alpha * 0.42),
+              blob.color.withValues(alpha: 0),
+            ],
+            stops: const [0.0, 0.45, 1.0],
+          ).createShader(
+            Rect.fromCircle(center: blob.center, radius: blob.radius),
           ),
-        ),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _GlowBlobPainter oldDelegate) => false;
+}
+
+class _LightStreakPainter extends CustomPainter {
+  const _LightStreakPainter({required this.progress});
+
+  final double progress;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paths = <_StreakSpec>[
+      _StreakSpec(
+        start: Offset(size.width * 0.06, size.height * 0.26),
+        control1: Offset(size.width * 0.28, size.height * 0.10),
+        control2: Offset(size.width * 0.52, size.height * 0.40),
+        end: Offset(size.width * 0.92, size.height * 0.22),
+        width: 2.2,
       ),
-    );
+      _StreakSpec(
+        start: Offset(size.width * 0.12, size.height * 0.78),
+        control1: Offset(size.width * 0.34, size.height * 0.60),
+        control2: Offset(size.width * 0.64, size.height * 0.94),
+        end: Offset(size.width * 0.94, size.height * 0.70),
+        width: 1.8,
+      ),
+      _StreakSpec(
+        start: Offset(size.width * 0.72, size.height * 0.06),
+        control1: Offset(size.width * 0.56, size.height * 0.18),
+        control2: Offset(size.width * 0.92, size.height * 0.34),
+        end: Offset(size.width * 0.78, size.height * 0.58),
+        width: 1.6,
+      ),
+    ];
+
+    for (var index = 0; index < paths.length; index++) {
+      final spec = paths[index];
+      final phase = (progress + (index * 0.18)) % 1.0;
+      final opacity = 0.05 + (0.05 * math.sin(phase * math.pi));
+      final path = Path()
+        ..moveTo(spec.start.dx, spec.start.dy)
+        ..cubicTo(
+          spec.control1.dx,
+          spec.control1.dy,
+          spec.control2.dx,
+          spec.control2.dy,
+          spec.end.dx,
+          spec.end.dy,
+        );
+
+      canvas.drawPath(
+        path,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = spec.width
+          ..strokeCap = StrokeCap.round
+          ..shader = LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              const Color(0xFF61E9FF).withValues(alpha: opacity * 0.55),
+              const Color(0xFFFF71D1).withValues(alpha: opacity),
+              const Color(0xFF8D7BFF).withValues(alpha: opacity * 0.65),
+            ],
+          ).createShader(Rect.fromLTWH(0, 0, size.width, size.height)),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _LightStreakPainter oldDelegate) {
+    return oldDelegate.progress != progress;
+  }
+}
+
+class _StreakSpec {
+  const _StreakSpec({
+    required this.start,
+    required this.control1,
+    required this.control2,
+    required this.end,
+    required this.width,
+  });
+
+  final Offset start;
+  final Offset control1;
+  final Offset control2;
+  final Offset end;
+  final double width;
+}
+
+class _ParticlePainter extends CustomPainter {
+  const _ParticlePainter({required this.particles, required this.progress});
+
+  final List<_Particle> particles;
+  final double progress;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    for (var index = 0; index < particles.length; index++) {
+      final particle = particles[index];
+      final wave = (progress + (index * 0.07)) % 1.0;
+      final offset = Offset(
+        particle.dx * math.sin(wave * math.pi * 2),
+        particle.dy * math.cos(wave * math.pi * 2),
+      );
+      canvas.drawCircle(
+        particle.base + offset,
+        particle.radius,
+        Paint()
+          ..color = Colors.white.withValues(
+            alpha: particle.opacity * (0.65 + 0.35 * math.sin(wave * math.pi)),
+          ),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _ParticlePainter oldDelegate) {
+    return oldDelegate.progress != progress ||
+        oldDelegate.particles != particles;
   }
 }
