@@ -70,7 +70,7 @@ class CricketGamePage extends ConsumerWidget {
                       radius: 20,
                       blur: 22,
                       background: Colors.white.withValues(alpha: 0.06),
-                      borderColor: Colors.white.withValues(alpha: 0.12),
+                      borderColor: Colors.white.withValues(alpha: 0.05),
                       padding: const EdgeInsets.all(18),
                       child: Column(
                         children: [
@@ -120,6 +120,7 @@ class CricketGamePage extends ConsumerWidget {
                         const SizedBox(height: 14),
                         InteractiveDartboard(
                           enabled: winner == null,
+                          compact: true,
                           onThrow: controller.addThrow,
                         ),
                       ],
@@ -254,7 +255,7 @@ class _CricketPlayerCard extends StatelessWidget {
       radius: 20,
       blur: 18,
       background: Colors.white.withValues(alpha: isActive ? 0.08 : 0.05),
-      borderColor: Colors.white.withValues(alpha: isActive ? 0.16 : 0.10),
+      borderColor: Colors.white.withValues(alpha: isActive ? 0.07 : 0.04),
       glowColor: isActive ? const Color(0xFF37D8FF) : const Color(0xFFFF4FD8),
       padding: const EdgeInsets.all(14),
       child: Column(
@@ -308,8 +309,8 @@ class _CricketPlayerCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(14),
                   color: Colors.white.withValues(alpha: 0.05),
-                  border:
-                      Border.all(color: Colors.white.withValues(alpha: 0.10)),
+                  border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.05), width: 0.8),
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,

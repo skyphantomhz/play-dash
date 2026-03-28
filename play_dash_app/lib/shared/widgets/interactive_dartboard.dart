@@ -9,11 +9,13 @@ class InteractiveDartboard extends StatefulWidget {
   const InteractiveDartboard({
     required this.onThrow,
     this.enabled = true,
+    this.compact = false,
     super.key,
   });
 
   final ValueChanged<DartThrow> onThrow;
   final bool enabled;
+  final bool compact;
 
   static const List<int> _segmentOrder = <int>[
     20,
@@ -61,6 +63,9 @@ class _InteractiveDartboardState extends State<InteractiveDartboard>
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final isCompactLayout = widget.compact || screenWidth < 600;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -93,46 +98,58 @@ class _InteractiveDartboardState extends State<InteractiveDartboard>
               child: child,
             );
           },
-          child: AspectRatio(
-            aspectRatio: 1,
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final size =
-                    math.min(constraints.maxWidth, constraints.maxHeight);
-                return Center(
-                  child: GestureDetector(
-                    onTapUp: widget.enabled
-                        ? (details) {
-                            final box =
-                                context.findRenderObject() as RenderBox?;
-                            if (box == null) return;
-                            final local =
-                                box.globalToLocal(details.globalPosition);
-                            final result =
-                                _throwForPosition(local, Size(size, size));
-                            setState(() => _lastHit = result.hit);
-                            _controller
-                              ..reset()
-                              ..forward();
-                            widget.onThrow(result.dartThrow);
-                          }
-                        : null,
-                    child: SizedBox(
-                      width: size,
-                      height: size,
-                      child: CustomPaint(
-                        painter: _DartboardPainter(
-                          colorScheme: scheme,
-                          highlight: _lastHit,
-                          progress: _controller.value,
-                          disabled: !widget.enabled,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final availableWidth = constraints.maxWidth;
+              final availableHeight = constraints.maxHeight.isFinite
+                  ? constraints.maxHeight
+                  : availableWidth;
+              final availableSize = math.min(availableWidth, availableHeight);
+              final maxBoardSize = isCompactLayout
+                  ? math.min(availableWidth * 0.84, 320.0)
+                  : math.min(availableWidth, 520.0);
+              final minBoardSize = isCompactLayout ? 220.0 : 260.0;
+              final boardSize =
+                  availableSize.clamp(minBoardSize, maxBoardSize).toDouble();
+
+              return Center(
+                child: SizedBox.square(
+                  dimension: boardSize,
+                  child: Builder(
+                    builder: (boardContext) {
+                      return GestureDetector(
+                        onTapUp: widget.enabled
+                            ? (details) {
+                                final box = boardContext.findRenderObject()
+                                    as RenderBox?;
+                                if (box == null) return;
+                                final local =
+                                    box.globalToLocal(details.globalPosition);
+                                final result = _throwForPosition(
+                                  local,
+                                  Size(boardSize, boardSize),
+                                );
+                                setState(() => _lastHit = result.hit);
+                                _controller
+                                  ..reset()
+                                  ..forward();
+                                widget.onThrow(result.dartThrow);
+                              }
+                            : null,
+                        child: CustomPaint(
+                          painter: _DartboardPainter(
+                            colorScheme: scheme,
+                            highlight: _lastHit,
+                            progress: _controller.value,
+                            disabled: !widget.enabled,
+                          ),
                         ),
-                      ),
-                    ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
+                ),
+              );
+            },
           ),
         ),
         const SizedBox(height: 16),
@@ -244,7 +261,8 @@ class _LegendChip extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(999),
         color: Colors.white.withValues(alpha: 0.06),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+        border:
+            Border.all(color: Colors.white.withValues(alpha: 0.05), width: 0.8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

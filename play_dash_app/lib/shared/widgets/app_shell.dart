@@ -42,7 +42,7 @@ class RootAppShell extends StatelessWidget {
                 radius: 28,
                 blur: 26,
                 background: Colors.white.withValues(alpha: 0.05),
-                borderColor: Colors.white.withValues(alpha: 0.12),
+                borderColor: Colors.white.withValues(alpha: 0.05),
                 padding: EdgeInsets.all(isDesktop ? 14 : 8),
                 child: isDesktop
                     ? Row(
@@ -103,7 +103,8 @@ class _ShellSurface extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(isDesktop ? 26 : 24),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+        border:
+            Border.all(color: Colors.white.withValues(alpha: 0.05), width: 0.8),
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -156,7 +157,7 @@ class GlassPanel extends StatelessWidget {
     this.radius = 20,
     this.blur = 20,
     this.background = const Color(0x14FFFFFF),
-    this.borderColor = const Color(0x1FFFFFFF),
+    this.borderColor = const Color(0x12FFFFFF),
     this.glowColor,
     this.shadowColor = const Color(0x66000000),
     this.onTap,
@@ -186,15 +187,15 @@ class GlassPanel extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(radius),
             color: background,
-            border: Border.all(color: borderColor),
+            border: Border.all(color: borderColor, width: 0.8),
             boxShadow: [
               BoxShadow(
-                  color: shadowColor.withValues(alpha: 0.45),
+                  color: shadowColor.withValues(alpha: 0.34),
                   blurRadius: 20,
                   offset: const Offset(0, 10)),
               if (glowColor != null)
                 BoxShadow(
-                    color: glowColor!.withValues(alpha: 0.18), blurRadius: 28),
+                    color: glowColor!.withValues(alpha: 0.12), blurRadius: 24),
             ],
           ),
           child: child,
@@ -236,9 +237,9 @@ class NeonCard extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(radius),
         boxShadow: [
-          BoxShadow(color: accent.withValues(alpha: 0.22), blurRadius: 26),
+          BoxShadow(color: accent.withValues(alpha: 0.16), blurRadius: 24),
           BoxShadow(
-              color: (secondaryAccent ?? accent).withValues(alpha: 0.14),
+              color: (secondaryAccent ?? accent).withValues(alpha: 0.10),
               blurRadius: 42),
         ],
       ),
@@ -247,7 +248,7 @@ class NeonCard extends StatelessWidget {
         padding: padding,
         blur: 24,
         background: Colors.white.withValues(alpha: 0.06),
-        borderColor: Colors.white.withValues(alpha: 0.14),
+        borderColor: Colors.white.withValues(alpha: 0.06),
         glowColor: accent,
         onTap: onTap,
         child: child,
@@ -313,8 +314,11 @@ class _GlassButtonState extends State<GlassButton> {
                         : const LinearGradient(
                             colors: [Color(0x22FFFFFF), Color(0x18FFFFFF)]),
                     border: Border.all(
-                        color: Colors.white
-                            .withValues(alpha: widget.highlight ? 0 : 0.10)),
+                      color: Colors.white.withValues(
+                        alpha: widget.highlight ? 0.0 : 0.05,
+                      ),
+                      width: 0.8,
+                    ),
                     boxShadow: [
                       BoxShadow(
                         color: (widget.highlight
@@ -393,8 +397,11 @@ class ScoreBadge extends StatelessWidget {
             ? const LinearGradient(
                 colors: [Color(0xFF37D8FF), Color(0xFF8B5CF6)])
             : null,
-        color: highlight ? null : Colors.white.withValues(alpha: 0.06),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+        color: highlight ? null : Colors.white.withValues(alpha: 0.08),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: highlight ? 0.0 : 0.05),
+          width: 0.8,
+        ),
       ),
       child: Text(value,
           style: TextStyle(
@@ -422,7 +429,8 @@ class StatusPill extends StatelessWidget {
         color: tinted
             ? const Color(0x2237D8FF)
             : Colors.white.withValues(alpha: 0.06),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+        border:
+            Border.all(color: Colors.white.withValues(alpha: 0.05), width: 0.8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -507,7 +515,7 @@ class MetricCard extends StatelessWidget {
       radius: 16,
       blur: 16,
       background: Colors.white.withValues(alpha: highlight ? 0.09 : 0.05),
-      borderColor: Colors.white.withValues(alpha: highlight ? 0.18 : 0.10),
+      borderColor: Colors.white.withValues(alpha: highlight ? 0.08 : 0.04),
       glowColor: highlight ? const Color(0xFF37D8FF) : null,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       child: Row(
@@ -560,7 +568,7 @@ class PanelListTile extends StatelessWidget {
       radius: 16,
       blur: 16,
       background: Colors.white.withValues(alpha: highlight ? 0.08 : 0.05),
-      borderColor: Colors.white.withValues(alpha: highlight ? 0.16 : 0.10),
+      borderColor: Colors.white.withValues(alpha: highlight ? 0.07 : 0.04),
       glowColor: highlight ? const Color(0xFF37D8FF) : null,
       padding: const EdgeInsets.all(12),
       child: Row(
@@ -608,7 +616,7 @@ class PlayerAvatar extends StatelessWidget {
         shape: BoxShape.circle,
         gradient: LinearGradient(colors: colors),
         border:
-            Border.all(color: Colors.white.withValues(alpha: 0.65), width: 2),
+            Border.all(color: Colors.white.withValues(alpha: 0.38), width: 1.4),
         boxShadow: [
           BoxShadow(color: colors.first.withValues(alpha: 0.35), blurRadius: 20)
         ],
@@ -641,7 +649,7 @@ class _DesktopSidebar extends StatelessWidget {
       radius: 24,
       blur: 24,
       background: Colors.white.withValues(alpha: 0.05),
-      borderColor: Colors.white.withValues(alpha: 0.12),
+      borderColor: Colors.white.withValues(alpha: 0.05),
       padding: const EdgeInsets.all(14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -700,7 +708,9 @@ class _SidebarNavTile extends StatelessWidget {
               ? Colors.white.withValues(alpha: 0.08)
               : Colors.transparent,
           border: Border.all(
-              color: Colors.white.withValues(alpha: selected ? 0.14 : 0.03)),
+            color: Colors.white.withValues(alpha: selected ? 0.06 : 0.02),
+            width: 0.8,
+          ),
           boxShadow: selected
               ? [const BoxShadow(color: Color(0x4437D8FF), blurRadius: 20)]
               : null,
@@ -737,7 +747,8 @@ class _BrandBadge extends StatelessWidget {
             borderRadius: BorderRadius.circular(10),
             gradient: const LinearGradient(
                 colors: [Color(0xFF133C69), Color(0xFF091B35)]),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
+            border: Border.all(
+                color: Colors.white.withValues(alpha: 0.07), width: 0.8),
           ),
           alignment: Alignment.center,
           child: Text('Wb',
@@ -772,7 +783,7 @@ class _MobileBottomBar extends StatelessWidget {
       radius: 18,
       blur: 20,
       background: Colors.white.withValues(alpha: 0.06),
-      borderColor: Colors.white.withValues(alpha: 0.12),
+      borderColor: Colors.white.withValues(alpha: 0.05),
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
       child: Row(
         children: _primaryNavItems.map((item) {

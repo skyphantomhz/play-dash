@@ -261,6 +261,7 @@ class _BoardStage extends StatelessWidget {
           const SizedBox(height: 14),
           InteractiveDartboard(
             enabled: winner == null,
+            compact: compact,
             onThrow: controller.addThrow,
           ),
           const SizedBox(height: 12),
@@ -316,7 +317,7 @@ class _UndoStateChip extends StatelessWidget {
       radius: 18,
       blur: 16,
       background: Colors.white.withValues(alpha: 0.06),
-      borderColor: Colors.white.withValues(alpha: 0.12),
+      borderColor: Colors.white.withValues(alpha: 0.05),
       glowColor: const Color(0xFF37D8FF),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       child: Row(
@@ -349,7 +350,7 @@ class _LatestScoreCard extends StatelessWidget {
       radius: 18,
       blur: 16,
       background: Colors.white.withValues(alpha: 0.08),
-      borderColor: Colors.white.withValues(alpha: 0.14),
+      borderColor: Colors.white.withValues(alpha: 0.05),
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
       child: const Column(
         children: [
