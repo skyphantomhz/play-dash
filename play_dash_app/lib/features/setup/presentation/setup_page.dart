@@ -99,6 +99,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
               )
             : SingleChildScrollView(
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _SetupHero(playerName: preview.last, compact: true),
                     const SizedBox(height: 12),
@@ -125,6 +126,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
       },
     );
   }
+}
 
 class _SetupHero extends StatelessWidget {
   const _SetupHero({required this.playerName, this.compact = false});
