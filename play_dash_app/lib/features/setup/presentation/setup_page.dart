@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../shared/widgets/app_shell.dart';
-
 import '../../../shared/models/player.dart';
+import '../../../shared/widgets/app_shell.dart';
 import '../../x01/application/x01_controller.dart';
 
 class SetupScreen extends ConsumerStatefulWidget {
@@ -22,16 +21,17 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   late final List<TextEditingController> _nameControllers = List.generate(
     _maxPlayers,
     (index) => TextEditingController(
-        text: [
-      'Mike Johnson',
-      'Dipti Williams',
-      'Camme Davis',
-      'Sarah Williams',
-      'Leo',
-      'Noah',
-      'Ava',
-      'Luca'
-    ][index]),
+      text: [
+        'Mike Johnson',
+        'Dipti Williams',
+        'Camme Davis',
+        'Sarah Williams',
+        'Leo',
+        'Noah',
+        'Ava',
+        'Luca'
+      ][index],
+    ),
   );
 
   @override
@@ -46,8 +46,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     final players = List<Player>.generate(_playerCount, (index) {
       final value = _nameControllers[index].text.trim();
       return Player(
-          id: 'player-${index + 1}',
-          name: value.isEmpty ? 'Player ${index + 1}' : value);
+        id: 'player-${index + 1}',
+        name: value.isEmpty ? 'Player ${index + 1}' : value,
+      );
     });
     ref.read(x01ControllerProvider.notifier).startMatch(players: players);
     try {
@@ -65,7 +66,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final desktop = constraints.maxWidth >= 1180;
-        return desktop
+        final content = desktop
             ? Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -97,32 +98,35 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                   ),
                 ],
               )
-            : SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _SetupHero(playerName: preview.last, compact: true),
-                    const SizedBox(height: 12),
-                    _SetupConfig(
-                      playerCount: _playerCount,
-                      minPlayers: _minPlayers,
-                      maxPlayers: _maxPlayers,
-                      nameControllers: _nameControllers,
-                      onPlayerCountChanged: (value) =>
-                          setState(() => _playerCount = value.round()),
-                      onChanged: () => setState(() {}),
-                      compact: true,
-                    ),
-                    const SizedBox(height: 12),
-                    _SetupSideRail(
-                      preview: preview,
-                      playerCount: _playerCount,
-                      onStart: _startMatch,
-                      compact: true,
-                    ),
-                  ],
-                ),
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _SetupHero(playerName: preview.last, compact: true),
+                  const SizedBox(height: 12),
+                  _SetupConfig(
+                    playerCount: _playerCount,
+                    minPlayers: _minPlayers,
+                    maxPlayers: _maxPlayers,
+                    nameControllers: _nameControllers,
+                    onPlayerCountChanged: (value) =>
+                        setState(() => _playerCount = value.round()),
+                    onChanged: () => setState(() {}),
+                    compact: true,
+                  ),
+                  const SizedBox(height: 12),
+                  _SetupSideRail(
+                    preview: preview,
+                    playerCount: _playerCount,
+                    onStart: _startMatch,
+                    compact: true,
+                  ),
+                ],
               );
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: content,
+        );
       },
     );
   }
@@ -145,46 +149,61 @@ class _SetupHero extends StatelessWidget {
           Row(
             children: [
               const PlayerAvatar(
-                  name: 'Sarah',
-                  colors: [Color(0xFFFF4FD8), Color(0xFF8B5CF6)]),
+                name: 'Sarah',
+                colors: [Color(0xFFFF4FD8), Color(0xFF8B5CF6)],
+              ),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Setup Game',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w800,
-                            fontSize: compact ? 18 : 20)),
+                    Text(
+                      'Setup Game',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: compact ? 18 : 20,
+                      ),
+                    ),
                     const SizedBox(height: 4),
-                    Text('$playerName  ·  24/10  ·  Days',
-                        style: const TextStyle(
-                            color: Color(0xB3FFFFFF), fontSize: 11.5)),
+                    Text(
+                      '$playerName  ·  24/10  ·  Days',
+                      style: const TextStyle(
+                        color: Color(0xB3FFFFFF),
+                        fontSize: 11.5,
+                      ),
+                    ),
                   ],
                 ),
               ),
             ],
           ),
           const SizedBox(height: 20),
-          Text('301',
-              style: TextStyle(
-                  color: const Color(0xFFBDF5FF),
-                  fontSize: compact ? 56 : 68,
-                  fontWeight: FontWeight.w900,
-                  height: 0.95)),
+          Text(
+            '301',
+            style: TextStyle(
+              color: const Color(0xFFBDF5FF),
+              fontSize: compact ? 56 : 68,
+              fontWeight: FontWeight.w900,
+              height: 0.95,
+            ),
+          ),
           const SizedBox(height: 8),
-          const Text('S.01  |  Score 5',
-              style: TextStyle(
-                  color: Color(0xB3FFFFFF), fontWeight: FontWeight.w600)),
+          const Text(
+            'S.01  |  Score 5',
+            style: TextStyle(
+              color: Color(0xB3FFFFFF),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           const SizedBox(height: 16),
-          Row(
-            children: const [
-              Expanded(child: _SetupTab(label: 'Global', active: true)),
-              SizedBox(width: 8),
-              Expanded(child: _SetupTab(label: 'Friends')),
-              SizedBox(width: 8),
-              Expanded(child: _SetupTab(label: 'This Month')),
+          const Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _SetupTab(label: 'Global', active: true),
+              _SetupTab(label: 'Friends'),
+              _SetupTab(label: 'This Month'),
             ],
           ),
         ],
@@ -221,36 +240,41 @@ class _SetupConfig extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SectionHeading(
-              title: 'Setup Game',
-              subtitle:
-                  'Glass inputs, cyan focus, and stacked controls to match the mobile setup panel.',
-              trailing:
-                  ScoreBadge(value: '$playerCount Players', highlight: true)),
+            title: 'Setup Game',
+            subtitle:
+                'Glass inputs, cyan focus, and stacked controls to match the mobile setup panel.',
+            trailing:
+                ScoreBadge(value: '$playerCount Players', highlight: true),
+          ),
           const SizedBox(height: 16),
           Slider(
-              value: playerCount.toDouble(),
-              min: minPlayers.toDouble(),
-              max: maxPlayers.toDouble(),
-              divisions: maxPlayers - minPlayers,
-              onChanged: onPlayerCountChanged),
+            value: playerCount.toDouble(),
+            min: minPlayers.toDouble(),
+            max: maxPlayers.toDouble(),
+            divisions: maxPlayers - minPlayers,
+            onChanged: onPlayerCountChanged,
+          ),
           const SizedBox(height: 10),
-          Wrap(
+          const Wrap(
             spacing: 10,
             runSpacing: 10,
-            children: const [
+            children: [
               MetricCard(
-                  label: 'Mode',
-                  value: 'X01',
-                  icon: Icons.sports_score_rounded,
-                  highlight: true),
+                label: 'Mode',
+                value: 'X01',
+                icon: Icons.sports_score_rounded,
+                highlight: true,
+              ),
               MetricCard(
-                  label: 'Target',
-                  value: '301 / 501',
-                  icon: Icons.flag_rounded),
+                label: 'Target',
+                value: '301 / 501',
+                icon: Icons.flag_rounded,
+              ),
               MetricCard(
-                  label: 'Checkout',
-                  value: 'Single Out',
-                  icon: Icons.adjust_rounded),
+                label: 'Checkout',
+                value: 'Single Out',
+                icon: Icons.adjust_rounded,
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -258,11 +282,14 @@ class _SetupConfig extends StatelessWidget {
             TextField(
               controller: nameControllers[i],
               style: const TextStyle(
-                  color: Colors.white, fontWeight: FontWeight.w600),
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
               onChanged: (_) => onChanged(),
               decoration: InputDecoration(
-                  labelText: 'Player ${i + 1}',
-                  prefixIcon: const Icon(Icons.person_outline_rounded)),
+                labelText: 'Player ${i + 1}',
+                prefixIcon: const Icon(Icons.person_outline_rounded),
+              ),
             ),
             const SizedBox(height: 10),
           ],
@@ -273,11 +300,12 @@ class _SetupConfig extends StatelessWidget {
 }
 
 class _SetupSideRail extends StatelessWidget {
-  const _SetupSideRail(
-      {required this.preview,
-      required this.playerCount,
-      required this.onStart,
-      this.compact = false});
+  const _SetupSideRail({
+    required this.preview,
+    required this.playerCount,
+    required this.onStart,
+    this.compact = false,
+  });
 
   final List<String> preview;
   final int playerCount;
@@ -294,9 +322,10 @@ class _SetupSideRail extends StatelessWidget {
           child: Column(
             children: [
               const SectionHeading(
-                  title: 'Best Order',
-                  subtitle:
-                      'Shortlist the roster with bright chips and compact player rows.'),
+                title: 'Best Order',
+                subtitle:
+                    'Shortlist the roster with bright chips and compact player rows.',
+              ),
               const SizedBox(height: 14),
               for (final entry in preview.asMap().entries) ...[
                 PanelListTile(
@@ -307,21 +336,23 @@ class _SetupSideRail extends StatelessWidget {
                           ? '40'
                           : '00',
                   leading: PlayerAvatar(
-                      name: entry.value,
-                      colors: [
-                        entry.key.isEven
-                            ? const Color(0xFF37D8FF)
-                            : const Color(0xFFFF4FD8),
-                        const Color(0xFF8B5CF6)
-                      ],
-                      radius: 18),
+                    name: entry.value,
+                    colors: [
+                      entry.key.isEven
+                          ? const Color(0xFF37D8FF)
+                          : const Color(0xFFFF4FD8),
+                      const Color(0xFF8B5CF6),
+                    ],
+                    radius: 18,
+                  ),
                   trailing: ScoreBadge(
-                      value: entry.key == 0
-                          ? '80'
-                          : entry.key == 1
-                              ? '40'
-                              : '00',
-                      highlight: entry.key == 1),
+                    value: entry.key == 0
+                        ? '80'
+                        : entry.key == 1
+                            ? '40'
+                            : '00',
+                    highlight: entry.key == 1,
+                  ),
                 ),
                 const SizedBox(height: 10),
               ],
@@ -329,9 +360,12 @@ class _SetupSideRail extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 14),
-        NeonCard(
-          accent: const Color(0xFFFF4FD8),
-          secondaryAccent: const Color(0xFF37D8FF),
+        GlassPanel(
+          radius: 20,
+          blur: 22,
+          background: Colors.white.withValues(alpha: 0.06),
+          borderColor: Colors.white.withValues(alpha: 0.12),
+          padding: const EdgeInsets.all(18),
           child: Column(
             children: [
               const _DropdownLine(title: 'Stay Game', value: 'X01'),
@@ -343,15 +377,19 @@ class _SetupSideRail extends StatelessWidget {
               const _DropdownLine(title: 'Best Games', value: 'Best 7 legs'),
               const SizedBox(height: 10),
               _DropdownLine(
-                  title: 'Speaker & Scoreboard', value: '$playerCount Players'),
+                title: 'Speaker & Scoreboard',
+                value: '$playerCount Players',
+              ),
               const SizedBox(height: 18),
               SizedBox(
-                  width: double.infinity,
-                  child: GlassButton(
-                      label: 'Start Game',
-                      icon: Icons.play_arrow_rounded,
-                      highlight: true,
-                      onPressed: onStart)),
+                width: double.infinity,
+                child: GlassButton(
+                  label: 'Start Game',
+                  icon: Icons.play_arrow_rounded,
+                  highlight: true,
+                  onPressed: onStart,
+                ),
+              ),
             ],
           ),
         ),
@@ -368,21 +406,35 @@ class _DropdownLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GlassPanel(
-      radius: 16,
-      blur: 18,
-      background: Colors.white.withValues(alpha: 0.05),
-      borderColor: Colors.white.withValues(alpha: 0.10),
+    return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        color: Colors.white.withValues(alpha: 0.05),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+      ),
       child: Row(
         children: [
           Expanded(
-              child: Text(title,
-                  style: const TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.w700))),
-          Text(value,
+            child: Text(
+              title,
               style: const TextStyle(
-                  color: Color(0xFF9FEFFF), fontWeight: FontWeight.w700)),
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: Color(0xFF9FEFFF),
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
           const SizedBox(width: 8),
           const Icon(Icons.expand_more_rounded,
               color: Colors.white70, size: 18),
@@ -401,7 +453,7 @@ class _SetupTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 9),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
       alignment: Alignment.center,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(999),
@@ -412,9 +464,14 @@ class _SetupTab extends StatelessWidget {
         color: active ? null : Colors.white.withValues(alpha: 0.05),
         border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
       ),
-      child: Text(label,
-          style: const TextStyle(
-              color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
     );
   }
 }

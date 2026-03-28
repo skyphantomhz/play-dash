@@ -97,15 +97,19 @@ class _InteractiveDartboardState extends State<InteractiveDartboard>
             aspectRatio: 1,
             child: LayoutBuilder(
               builder: (context, constraints) {
-                final size = math.min(constraints.maxWidth, constraints.maxHeight);
+                final size =
+                    math.min(constraints.maxWidth, constraints.maxHeight);
                 return Center(
                   child: GestureDetector(
                     onTapUp: widget.enabled
                         ? (details) {
-                            final box = context.findRenderObject() as RenderBox?;
+                            final box =
+                                context.findRenderObject() as RenderBox?;
                             if (box == null) return;
-                            final local = box.globalToLocal(details.globalPosition);
-                            final result = _throwForPosition(local, Size(size, size));
+                            final local =
+                                box.globalToLocal(details.globalPosition);
+                            final result =
+                                _throwForPosition(local, Size(size, size));
                             setState(() => _lastHit = result.hit);
                             _controller
                               ..reset()
@@ -140,7 +144,9 @@ class _InteractiveDartboardState extends State<InteractiveDartboard>
             const _LegendChip(label: 'Double', color: Color(0xFFE56A6E)),
             const _LegendChip(label: 'Triple', color: Color(0xFF3CC9A3)),
             _LegendChip(
-              label: _lastHit == null ? 'Ready' : _formatThrow(_lastHit!.dartThrow),
+              label: _lastHit == null
+                  ? 'Ready'
+                  : _formatThrow(_lastHit!.dartThrow),
               color: scheme.primary,
             ),
           ],
@@ -188,14 +194,16 @@ class _InteractiveDartboardState extends State<InteractiveDartboard>
       final dart = DartThrow(segment: segment, multiplier: 2);
       return _ThrowResult(
         dartThrow: dart,
-        hit: _BoardHit(segment: segment, multiplier: 2, ring: _BoardRing.double),
+        hit:
+            _BoardHit(segment: segment, multiplier: 2, ring: _BoardRing.double),
       );
     }
     if (normalizedDistance >= 0.54 && normalizedDistance <= 0.62) {
       final dart = DartThrow(segment: segment, multiplier: 3);
       return _ThrowResult(
         dartThrow: dart,
-        hit: _BoardHit(segment: segment, multiplier: 3, ring: _BoardRing.triple),
+        hit:
+            _BoardHit(segment: segment, multiplier: 3, ring: _BoardRing.triple),
       );
     }
 
@@ -329,14 +337,18 @@ class _DartboardPainter extends CustomPainter {
     final innerRadius = radius * innerFactor;
     final outerRadius = radius * outerFactor;
 
-    for (var index = 0; index < InteractiveDartboard._segmentOrder.length; index++) {
+    for (var index = 0;
+        index < InteractiveDartboard._segmentOrder.length;
+        index++) {
       final segment = InteractiveDartboard._segmentOrder[index];
       final start = (-math.pi / 2) + (index * sweep);
-      final isHighlighted = highlight?.segment == segment && highlight?.ring == ring;
+      final isHighlighted =
+          highlight?.segment == segment && highlight?.ring == ring;
       final path = Path()
         ..moveTo(center.dx + (innerRadius * math.cos(start)),
             center.dy + (innerRadius * math.sin(start)))
-        ..arcTo(Rect.fromCircle(center: center, radius: outerRadius), start, sweep, false)
+        ..arcTo(Rect.fromCircle(center: center, radius: outerRadius), start,
+            sweep, false)
         ..lineTo(center.dx + (innerRadius * math.cos(start + sweep)),
             center.dy + (innerRadius * math.sin(start + sweep)))
         ..arcTo(Rect.fromCircle(center: center, radius: innerRadius),
@@ -387,8 +399,10 @@ class _DartboardPainter extends CustomPainter {
     final outerBullSelected = highlight?.ring == _BoardRing.outerBull;
     final bullSelected = highlight?.ring == _BoardRing.bull;
 
-    canvas.drawCircle(center, radius * 0.10, Paint()..color = const Color(0xFF3CC9A3));
-    canvas.drawCircle(center, radius * 0.05, Paint()..color = const Color(0xFFE56A6E));
+    canvas.drawCircle(
+        center, radius * 0.10, Paint()..color = const Color(0xFF3CC9A3));
+    canvas.drawCircle(
+        center, radius * 0.05, Paint()..color = const Color(0xFFE56A6E));
 
     if (outerBullSelected || bullSelected) {
       canvas.drawCircle(
@@ -403,7 +417,9 @@ class _DartboardPainter extends CustomPainter {
       canvas.drawCircle(
         center,
         radius * (outerBullSelected ? 0.13 : 0.08),
-        Paint()..color = _highlightColor(highlight!.ring).withValues(alpha: 0.08 + (0.04 * pulse)),
+        Paint()
+          ..color = _highlightColor(highlight!.ring)
+              .withValues(alpha: 0.08 + (0.04 * pulse)),
       );
     }
   }
@@ -413,7 +429,9 @@ class _DartboardPainter extends CustomPainter {
       ..color = Colors.white.withValues(alpha: 0.18)
       ..strokeWidth = 1;
 
-    for (var index = 0; index < InteractiveDartboard._segmentOrder.length; index++) {
+    for (var index = 0;
+        index < InteractiveDartboard._segmentOrder.length;
+        index++) {
       final angle = (-math.pi / 2) + (index * (math.pi / 10));
       canvas.drawLine(
         Offset(center.dx + radius * 0.10 * math.cos(angle),
@@ -430,7 +448,9 @@ class _DartboardPainter extends CustomPainter {
       textDirection: TextDirection.ltr,
       textAlign: TextAlign.center,
     );
-    for (var index = 0; index < InteractiveDartboard._segmentOrder.length; index++) {
+    for (var index = 0;
+        index < InteractiveDartboard._segmentOrder.length;
+        index++) {
       final angle = (-math.pi / 2) + ((index + 0.5) * (math.pi / 10));
       final point = Offset(center.dx + radius * 0.77 * math.cos(angle),
           center.dy + radius * 0.77 * math.sin(angle));
@@ -446,7 +466,8 @@ class _DartboardPainter extends CustomPainter {
         ),
       );
       painter.layout();
-      painter.paint(canvas, point - Offset(painter.width / 2, painter.height / 2));
+      painter.paint(
+          canvas, point - Offset(painter.width / 2, painter.height / 2));
     }
   }
 
@@ -485,7 +506,16 @@ class _BoardHit {
   final int multiplier;
   final _BoardRing ring;
 
-  DartThrow get dartThrow => DartThrow(segment: segment, multiplier: multiplier);
+  DartThrow get dartThrow =>
+      DartThrow(segment: segment, multiplier: multiplier);
 }
 
-enum _BoardRing { miss, innerSingle, outerSingle, double, triple, outerBull, bull }
+enum _BoardRing {
+  miss,
+  innerSingle,
+  outerSingle,
+  double,
+  triple,
+  outerBull,
+  bull
+}
