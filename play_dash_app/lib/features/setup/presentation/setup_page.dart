@@ -28,16 +28,28 @@ final setupCheckoutModeProvider =
 class SetupGameModeNotifier extends Notifier<SetupGameMode> {
   @override
   SetupGameMode build() => SetupGameMode.x01;
+
+  void setMode(SetupGameMode mode) {
+    state = mode;
+  }
 }
 
 class SetupStartingScoreNotifier extends Notifier<int> {
   @override
   int build() => 301;
+
+  void setStartingScore(int score) {
+    state = score;
+  }
 }
 
 class SetupCheckoutModeNotifier extends Notifier<SetupCheckoutMode> {
   @override
   SetupCheckoutMode build() => SetupCheckoutMode.doubleOut;
+
+  void setCheckoutMode(SetupCheckoutMode mode) {
+    state = mode;
+  }
 }
 
 class SetupScreen extends ConsumerStatefulWidget {
@@ -145,14 +157,15 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                       onPlayerCountChanged: (value) =>
                           setState(() => _playerCount = value.round()),
                       onChanged: () => setState(() {}),
-                      onModeChanged: (value) =>
-                          ref.read(setupGameModeProvider.notifier).state = value,
+                      onModeChanged: (value) => ref
+                          .read(setupGameModeProvider.notifier)
+                          .setMode(value),
                       onStartingScoreChanged: (value) => ref
                           .read(setupStartingScoreProvider.notifier)
-                          .state = value,
+                          .setStartingScore(value),
                       onCheckoutChanged: (value) => ref
                           .read(setupCheckoutModeProvider.notifier)
-                          .state = value,
+                          .setCheckoutMode(value),
                     ),
                   ),
                   const SizedBox(width: 18),
@@ -191,14 +204,15 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                     onPlayerCountChanged: (value) =>
                         setState(() => _playerCount = value.round()),
                     onChanged: () => setState(() {}),
-                    onModeChanged: (value) =>
-                        ref.read(setupGameModeProvider.notifier).state = value,
+                    onModeChanged: (value) => ref
+                        .read(setupGameModeProvider.notifier)
+                        .setMode(value),
                     onStartingScoreChanged: (value) => ref
                         .read(setupStartingScoreProvider.notifier)
-                        .state = value,
+                        .setStartingScore(value),
                     onCheckoutChanged: (value) => ref
                         .read(setupCheckoutModeProvider.notifier)
-                        .state = value,
+                        .setCheckoutMode(value),
                     compact: true,
                   ),
                   const SizedBox(height: 12),

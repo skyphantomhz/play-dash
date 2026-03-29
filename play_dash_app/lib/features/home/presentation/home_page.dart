@@ -27,11 +27,12 @@ class _DesktopHomeLayout extends StatelessWidget {
   final WidgetRef ref;
 
   void _openSetup(BuildContext context, SetupGameMode mode) {
-    ref.read(setupGameModeProvider.notifier).state = mode;
+    ref.read(setupGameModeProvider.notifier).setMode(mode);
     if (mode == SetupGameMode.x01) {
-      ref.read(setupStartingScoreProvider.notifier).state = 301;
-      ref.read(setupCheckoutModeProvider.notifier).state =
-          SetupCheckoutMode.doubleOut;
+      ref.read(setupStartingScoreProvider.notifier).setStartingScore(301);
+      ref
+          .read(setupCheckoutModeProvider.notifier)
+          .setCheckoutMode(SetupCheckoutMode.doubleOut);
     }
     context.go('/setup');
   }
@@ -110,11 +111,12 @@ class _MobileHomeLayout extends StatelessWidget {
   final WidgetRef ref;
 
   void _openSetup(BuildContext context, SetupGameMode mode) {
-    ref.read(setupGameModeProvider.notifier).state = mode;
+    ref.read(setupGameModeProvider.notifier).setMode(mode);
     if (mode == SetupGameMode.x01) {
-      ref.read(setupStartingScoreProvider.notifier).state = 301;
-      ref.read(setupCheckoutModeProvider.notifier).state =
-          SetupCheckoutMode.doubleOut;
+      ref.read(setupStartingScoreProvider.notifier).setStartingScore(301);
+      ref
+          .read(setupCheckoutModeProvider.notifier)
+          .setCheckoutMode(SetupCheckoutMode.doubleOut);
     }
     context.go('/setup');
   }
