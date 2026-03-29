@@ -14,16 +14,16 @@ enum SetupCheckoutMode { singleOut, doubleOut }
 
 final setupGameModeProvider =
     NotifierProvider<SetupGameModeNotifier, SetupGameMode>(
-      SetupGameModeNotifier.new,
-    );
+  SetupGameModeNotifier.new,
+);
 final setupStartingScoreProvider =
     NotifierProvider<SetupStartingScoreNotifier, int>(
-      SetupStartingScoreNotifier.new,
-    );
+  SetupStartingScoreNotifier.new,
+);
 final setupCheckoutModeProvider =
     NotifierProvider<SetupCheckoutModeNotifier, SetupCheckoutMode>(
-      SetupCheckoutModeNotifier.new,
-    );
+  SetupCheckoutModeNotifier.new,
+);
 
 class SetupGameModeNotifier extends Notifier<SetupGameMode> {
   @override
@@ -117,6 +117,65 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     context.go('/match/cricket');
   }
 
+  Future<void> _selectMode() async {
+    final currentMode = ref.read(setupGameModeProvider);
+    final selection = await _showSetupSelectionSheet<SetupGameMode>(
+      context: context,
+      title: 'Select mode',
+      subtitle: 'Choose the game type for this match.',
+      currentValue: currentMode,
+      items: SetupGameMode.values,
+      labelBuilder: (mode) => mode.label,
+      iconBuilder: (mode) => mode == SetupGameMode.x01
+          ? Icons.sports_score_rounded
+          : Icons.sports_martial_arts_rounded,
+    );
+
+    if (selection == null || !mounted) return;
+
+    ref.read(setupGameModeProvider.notifier).setMode(selection);
+  }
+
+  Future<void> _selectTarget() async {
+    if (ref.read(setupGameModeProvider) != SetupGameMode.x01) return;
+
+    final currentScore = ref.read(setupStartingScoreProvider);
+    final selection = await _showSetupSelectionSheet<int>(
+      context: context,
+      title: 'Select target',
+      subtitle: 'Pick the starting score for your X01 match.',
+      currentValue: currentScore,
+      items: const [301, 501, 701],
+      labelBuilder: (score) => '$score',
+      iconBuilder: (_) => Icons.flag_rounded,
+    );
+
+    if (selection == null || !mounted) return;
+
+    ref.read(setupStartingScoreProvider.notifier).setStartingScore(selection);
+  }
+
+  Future<void> _selectCheckout() async {
+    if (ref.read(setupGameModeProvider) != SetupGameMode.x01) return;
+
+    final currentCheckout = ref.read(setupCheckoutModeProvider);
+    final selection = await _showSetupSelectionSheet<SetupCheckoutMode>(
+      context: context,
+      title: 'Select checkout',
+      subtitle: 'Choose how players are allowed to finish the leg.',
+      currentValue: currentCheckout,
+      items: SetupCheckoutMode.values,
+      labelBuilder: (mode) => mode.label,
+      iconBuilder: (mode) => mode == SetupCheckoutMode.singleOut
+          ? Icons.radio_button_checked_rounded
+          : Icons.adjust_rounded,
+    );
+
+    if (selection == null || !mounted) return;
+
+    ref.read(setupCheckoutModeProvider.notifier).setCheckoutMode(selection);
+  }
+
   @override
   Widget build(BuildContext context) {
     final preview = List<String>.generate(_playerCount, (index) {
@@ -157,15 +216,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                       onPlayerCountChanged: (value) =>
                           setState(() => _playerCount = value.round()),
                       onChanged: () => setState(() {}),
-                      onModeChanged: (value) => ref
-                          .read(setupGameModeProvider.notifier)
-                          .setMode(value),
-                      onStartingScoreChanged: (value) => ref
-                          .read(setupStartingScoreProvider.notifier)
-                          .setStartingScore(value),
-                      onCheckoutChanged: (value) => ref
-                          .read(setupCheckoutModeProvider.notifier)
-                          .setCheckoutMode(value),
+                      onModeTap: _selectMode,
+                      onStartingScoreTap: _selectTarget,
+                      onCheckoutTap: _selectCheckout,
                     ),
                   ),
                   const SizedBox(width: 18),
@@ -177,6 +230,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                       mode: mode,
                       startingScore: startingScore,
                       checkout: checkout,
+                      onModeTap: _selectMode,
+                      onStartingScoreTap: _selectTarget,
+                      onCheckoutTap: _selectCheckout,
                       onStart: _startMatch,
                     ),
                   ),
@@ -204,15 +260,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                     onPlayerCountChanged: (value) =>
                         setState(() => _playerCount = value.round()),
                     onChanged: () => setState(() {}),
-                    onModeChanged: (value) => ref
-                        .read(setupGameModeProvider.notifier)
-                        .setMode(value),
-                    onStartingScoreChanged: (value) => ref
-                        .read(setupStartingScoreProvider.notifier)
-                        .setStartingScore(value),
-                    onCheckoutChanged: (value) => ref
-                        .read(setupCheckoutModeProvider.notifier)
-                        .setCheckoutMode(value),
+                    onModeTap: _selectMode,
+                    onStartingScoreTap: _selectTarget,
+                    onCheckoutTap: _selectCheckout,
                     compact: true,
                   ),
                   const SizedBox(height: 12),
@@ -222,6 +272,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                     mode: mode,
                     startingScore: startingScore,
                     checkout: checkout,
+                    onModeTap: _selectMode,
+                    onStartingScoreTap: _selectTarget,
+                    onCheckoutTap: _selectCheckout,
                     onStart: _startMatch,
                     compact: true,
                   ),
@@ -339,9 +392,9 @@ class _SetupConfig extends StatelessWidget {
     required this.nameControllers,
     required this.onPlayerCountChanged,
     required this.onChanged,
-    required this.onModeChanged,
-    required this.onStartingScoreChanged,
-    required this.onCheckoutChanged,
+    required this.onModeTap,
+    required this.onStartingScoreTap,
+    required this.onCheckoutTap,
     this.compact = false,
   });
 
@@ -354,9 +407,9 @@ class _SetupConfig extends StatelessWidget {
   final List<TextEditingController> nameControllers;
   final ValueChanged<double> onPlayerCountChanged;
   final VoidCallback onChanged;
-  final ValueChanged<SetupGameMode> onModeChanged;
-  final ValueChanged<int> onStartingScoreChanged;
-  final ValueChanged<SetupCheckoutMode> onCheckoutChanged;
+  final VoidCallback onModeTap;
+  final VoidCallback onStartingScoreTap;
+  final VoidCallback onCheckoutTap;
   final bool compact;
 
   @override
@@ -369,8 +422,10 @@ class _SetupConfig extends StatelessWidget {
         children: [
           SectionHeading(
             title: 'Setup Game',
-            subtitle: 'Configure the mode, target, checkout, and player roster.',
-            trailing: ScoreBadge(value: '$playerCount Players', highlight: true),
+            subtitle:
+                'Configure the mode, target, checkout, and player roster.',
+            trailing:
+                ScoreBadge(value: '$playerCount Players', highlight: true),
           ),
           const SizedBox(height: 16),
           Slider(
@@ -385,61 +440,33 @@ class _SetupConfig extends StatelessWidget {
           _SelectionCard(
             label: 'Mode',
             icon: Icons.sports_score_rounded,
-            child: SegmentedButton<SetupGameMode>(
-              showSelectedIcon: false,
-              segments: const [
-                ButtonSegment(value: SetupGameMode.x01, label: Text('X01')),
-                ButtonSegment(value: SetupGameMode.cricket, label: Text('Cricket')),
-              ],
-              selected: {mode},
-              onSelectionChanged: (values) => onModeChanged(values.first),
-            ),
+            value: mode.label,
+            hint: 'Tap to choose match type',
+            onTap: onModeTap,
           ),
           const SizedBox(height: 12),
           if (mode == SetupGameMode.x01) ...[
             _SelectionCard(
               label: 'Target',
               icon: Icons.flag_rounded,
-              child: Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [301, 501, 701]
-                    .map(
-                      (value) => ChoiceChip(
-                        label: Text('$value'),
-                        selected: startingScore == value,
-                        onSelected: (_) => onStartingScoreChanged(value),
-                      ),
-                    )
-                    .toList(),
-              ),
+              value: '$startingScore',
+              hint: 'Tap to choose starting score',
+              onTap: onStartingScoreTap,
             ),
             const SizedBox(height: 12),
             _SelectionCard(
               label: 'Checkout',
               icon: Icons.adjust_rounded,
-              child: SegmentedButton<SetupCheckoutMode>(
-                showSelectedIcon: false,
-                segments: const [
-                  ButtonSegment(
-                    value: SetupCheckoutMode.singleOut,
-                    label: Text('Single Out'),
-                  ),
-                  ButtonSegment(
-                    value: SetupCheckoutMode.doubleOut,
-                    label: Text('Double Out'),
-                  ),
-                ],
-                selected: {checkout},
-                onSelectionChanged: (values) => onCheckoutChanged(values.first),
-              ),
+              value: checkout.label,
+              hint: 'Tap to choose finish rule',
+              onTap: onCheckoutTap,
             ),
             const SizedBox(height: 12),
           ] else ...[
-            const Wrap(
+            Wrap(
               spacing: 10,
               runSpacing: 10,
-              children: [
+              children: const [
                 MetricCard(
                   label: 'Mode',
                   value: 'Cricket',
@@ -483,6 +510,9 @@ class _SetupSideRail extends StatelessWidget {
     required this.mode,
     required this.startingScore,
     required this.checkout,
+    required this.onModeTap,
+    required this.onStartingScoreTap,
+    required this.onCheckoutTap,
     required this.onStart,
     this.compact = false,
   });
@@ -492,6 +522,9 @@ class _SetupSideRail extends StatelessWidget {
   final SetupGameMode mode;
   final int startingScore;
   final SetupCheckoutMode checkout;
+  final VoidCallback onModeTap;
+  final VoidCallback onStartingScoreTap;
+  final VoidCallback onCheckoutTap;
   final VoidCallback onStart;
   final bool compact;
 
@@ -506,13 +539,16 @@ class _SetupSideRail extends StatelessWidget {
             children: [
               const SectionHeading(
                 title: 'Player Preview',
-                subtitle: 'Live roster preview mirrors slider and text input changes.',
+                subtitle:
+                    'Live roster preview mirrors slider and text input changes.',
               ),
               const SizedBox(height: 14),
               for (final entry in preview.asMap().entries) ...[
                 PanelListTile(
                   title: entry.value,
-                  subtitle: entry.key == 0 ? 'Starts first' : 'Player ${entry.key + 1}',
+                  subtitle: entry.key == 0
+                      ? 'Starts first'
+                      : 'Player ${entry.key + 1}',
                   leading: PlayerAvatar(
                     name: entry.value,
                     colors: [
@@ -543,16 +579,24 @@ class _SetupSideRail extends StatelessWidget {
           padding: const EdgeInsets.all(18),
           child: Column(
             children: [
-              _DropdownLine(title: 'Game Mode', value: mode.label),
+              _DropdownLine(
+                title: 'Game Mode',
+                value: mode.label,
+                onTap: onModeTap,
+              ),
               const SizedBox(height: 10),
               _DropdownLine(
                 title: 'Target',
-                value: mode == SetupGameMode.x01 ? '$startingScore' : '15-20 + Bull',
+                value: mode == SetupGameMode.x01
+                    ? '$startingScore'
+                    : '15-20 + Bull',
+                onTap: mode == SetupGameMode.x01 ? onStartingScoreTap : null,
               ),
               const SizedBox(height: 10),
               _DropdownLine(
                 title: 'Checkout',
                 value: mode == SetupGameMode.x01 ? checkout.label : 'Marks Win',
+                onTap: mode == SetupGameMode.x01 ? onCheckoutTap : null,
               ),
               const SizedBox(height: 10),
               _DropdownLine(title: 'Start Order', value: preview.first),
@@ -583,54 +627,92 @@ class _SelectionCard extends StatelessWidget {
   const _SelectionCard({
     required this.label,
     required this.icon,
-    required this.child,
+    required this.value,
+    required this.hint,
+    required this.onTap,
   });
 
   final String label;
   final IconData icon;
-  final Widget child;
+  final String value;
+  final String hint;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return GlassPanel(
-      radius: 18,
-      blur: 18,
-      background: Colors.white.withValues(alpha: 0.05),
-      borderColor: Colors.white.withValues(alpha: 0.08),
-      padding: const EdgeInsets.all(14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: GlassPanel(
+          radius: 18,
+          blur: 18,
+          background: Colors.white.withValues(alpha: 0.05),
+          borderColor: Colors.white.withValues(alpha: 0.08),
+          padding: const EdgeInsets.all(14),
+          child: Row(
             children: [
               Icon(icon, color: const Color(0xFF9FEFFF), size: 18),
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      value,
+                      style: const TextStyle(
+                        color: Color(0xFF9FEFFF),
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      hint,
+                      style: const TextStyle(
+                        color: Color(0xB3FFFFFF),
+                        fontSize: 11.5,
+                      ),
+                    ),
+                  ],
                 ),
+              ),
+              const SizedBox(width: 8),
+              const Icon(
+                Icons.keyboard_arrow_down_rounded,
+                color: Colors.white70,
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          child,
-        ],
+        ),
       ),
     );
   }
 }
 
 class _DropdownLine extends StatelessWidget {
-  const _DropdownLine({required this.title, required this.value});
+  const _DropdownLine({
+    required this.title,
+    required this.value,
+    this.onTap,
+  });
 
   final String title;
   final String value;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final child = Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
@@ -648,6 +730,15 @@ class _DropdownLine extends StatelessWidget {
               ),
             ),
           ),
+          if (onTap != null)
+            const Padding(
+              padding: EdgeInsets.only(right: 8),
+              child: Icon(
+                Icons.touch_app_rounded,
+                size: 16,
+                color: Color(0xB3FFFFFF),
+              ),
+            ),
           Flexible(
             child: Text(
               value,
@@ -659,10 +750,187 @@ class _DropdownLine extends StatelessWidget {
               ),
             ),
           ),
+          if (onTap != null) ...[
+            const SizedBox(width: 4),
+            const Icon(
+              Icons.keyboard_arrow_down_rounded,
+              color: Colors.white70,
+            ),
+          ],
         ],
       ),
     );
+
+    if (onTap == null) return child;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: child,
+      ),
+    );
   }
+}
+
+class _SetupSelectionTile<T> extends StatelessWidget {
+  const _SetupSelectionTile({
+    required this.label,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: GlassPanel(
+          radius: 18,
+          blur: 18,
+          background: Colors.white.withValues(alpha: selected ? 0.11 : 0.05),
+          borderColor: Colors.white.withValues(alpha: selected ? 0.18 : 0.08),
+          glowColor: selected ? const Color(0xFF37D8FF) : null,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          child: Row(
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: selected
+                      ? const LinearGradient(
+                          colors: [Color(0xFF37D8FF), Color(0xFF8B5CF6)],
+                        )
+                      : null,
+                  color: selected ? null : Colors.white.withValues(alpha: 0.08),
+                ),
+                child: Icon(icon, color: Colors.white, size: 18),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14.5,
+                  ),
+                ),
+              ),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                width: 22,
+                height: 22,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: selected
+                        ? const Color(0xFF9FEFFF)
+                        : Colors.white.withValues(alpha: 0.28),
+                    width: 1.5,
+                  ),
+                  color:
+                      selected ? const Color(0x339FEFFF) : Colors.transparent,
+                ),
+                child: selected
+                    ? const Icon(
+                        Icons.check_rounded,
+                        size: 14,
+                        color: Color(0xFF9FEFFF),
+                      )
+                    : null,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+Future<T?> _showSetupSelectionSheet<T>({
+  required BuildContext context,
+  required String title,
+  required String subtitle,
+  required T currentValue,
+  required List<T> items,
+  required String Function(T value) labelBuilder,
+  required IconData Function(T value) iconBuilder,
+}) {
+  return showModalBottomSheet<T>(
+    context: context,
+    backgroundColor: Colors.transparent,
+    isScrollControlled: true,
+    builder: (context) {
+      return SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+          child: GlassPanel(
+            radius: 28,
+            blur: 28,
+            background: const Color(0xFF0B1022).withValues(alpha: 0.92),
+            borderColor: Colors.white.withValues(alpha: 0.10),
+            padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 44,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(999),
+                    color: Colors.white.withValues(alpha: 0.18),
+                  ),
+                ),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    color: Color(0xB3FFFFFF),
+                    fontSize: 12.5,
+                    height: 1.45,
+                  ),
+                ),
+                const SizedBox(height: 18),
+                ...items.map(
+                  (item) => Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: _SetupSelectionTile<T>(
+                      label: labelBuilder(item),
+                      icon: iconBuilder(item),
+                      selected: item == currentValue,
+                      onTap: () => Navigator.of(context).pop(item),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    },
+  );
 }
 
 class _SetupTab extends StatelessWidget {
@@ -702,7 +970,6 @@ extension on SetupGameMode {
 }
 
 extension on SetupCheckoutMode {
-  String get label => this == SetupCheckoutMode.singleOut
-      ? 'Single Out'
-      : 'Double Out';
+  String get label =>
+      this == SetupCheckoutMode.singleOut ? 'Single Out' : 'Double Out';
 }
