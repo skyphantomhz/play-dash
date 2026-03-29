@@ -13,10 +13,32 @@ enum SetupGameMode { x01, cricket }
 enum SetupCheckoutMode { singleOut, doubleOut }
 
 final setupGameModeProvider =
-    StateProvider<SetupGameMode>((ref) => SetupGameMode.x01);
-final setupStartingScoreProvider = StateProvider<int>((ref) => 301);
+    NotifierProvider<SetupGameModeNotifier, SetupGameMode>(
+      SetupGameModeNotifier.new,
+    );
+final setupStartingScoreProvider =
+    NotifierProvider<SetupStartingScoreNotifier, int>(
+      SetupStartingScoreNotifier.new,
+    );
 final setupCheckoutModeProvider =
-    StateProvider<SetupCheckoutMode>((ref) => SetupCheckoutMode.doubleOut);
+    NotifierProvider<SetupCheckoutModeNotifier, SetupCheckoutMode>(
+      SetupCheckoutModeNotifier.new,
+    );
+
+class SetupGameModeNotifier extends Notifier<SetupGameMode> {
+  @override
+  SetupGameMode build() => SetupGameMode.x01;
+}
+
+class SetupStartingScoreNotifier extends Notifier<int> {
+  @override
+  int build() => 301;
+}
+
+class SetupCheckoutModeNotifier extends Notifier<SetupCheckoutMode> {
+  @override
+  SetupCheckoutMode build() => SetupCheckoutMode.doubleOut;
+}
 
 class SetupScreen extends ConsumerStatefulWidget {
   const SetupScreen({super.key});
