@@ -1,24 +1,40 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../shared/widgets/app_shell.dart';
+import '../../setup/presentation/setup_page.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends ConsumerWidget {
   const HomePage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final width = MediaQuery.sizeOf(context).width;
     final desktop = width >= 1180;
 
-    return desktop ? const _DesktopHomeLayout() : const _MobileHomeLayout();
+    return desktop
+        ? _DesktopHomeLayout(ref: ref)
+        : _MobileHomeLayout(ref: ref);
   }
 }
 
 class _DesktopHomeLayout extends StatelessWidget {
-  const _DesktopHomeLayout();
+  const _DesktopHomeLayout({required this.ref});
+
+  final WidgetRef ref;
+
+  void _openSetup(BuildContext context, SetupGameMode mode) {
+    ref.read(setupGameModeProvider.notifier).state = mode;
+    if (mode == SetupGameMode.x01) {
+      ref.read(setupStartingScoreProvider.notifier).state = 301;
+      ref.read(setupCheckoutModeProvider.notifier).state =
+          SetupCheckoutMode.doubleOut;
+    }
+    context.go('/setup');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,24 +49,24 @@ class _DesktopHomeLayout extends StatelessWidget {
                 title: 'CRICKET',
                 subtitle: 'Classic Cricket',
                 metaLeft: '2 - 6 Players',
-                metaRight: '10 • 0 / 20 hits',
+                metaRight: '15 • 20 • Bull',
                 playerName: 'Mike Johnson',
-                playerMeta: '2nd · 0 Cricket',
+                playerMeta: 'Setup classic marks play',
                 accent: const Color(0xFF37D8FF),
                 secondaryAccent: const Color(0xFF4DA3FF),
                 icon: Icons.sports_martial_arts_rounded,
-                onPressed: () => context.go('/match/cricket'),
+                onPressed: () => _openSetup(context, SetupGameMode.cricket),
               ),
               const SizedBox(height: 16),
               _ModeCard(
                 title: 'X01',
                 subtitle: '301 · 501 · 701',
                 metaLeft: '1 - 8 Players',
-                metaRight: '1 / 10 legs',
+                metaRight: 'Configurable checkout',
                 accent: const Color(0xFFFF4FD8),
                 secondaryAccent: const Color(0xFF8B5CF6),
                 icon: Icons.close_rounded,
-                onPressed: () => context.go('/setup'),
+                onPressed: () => _openSetup(context, SetupGameMode.x01),
               ),
               const SizedBox(height: 16),
               Row(
@@ -71,7 +87,7 @@ class _DesktopHomeLayout extends StatelessWidget {
                       subtitle: 'Create a Game',
                       icon: Icons.settings_suggest_rounded,
                       accent: const Color(0xFF8B5CF6),
-                      onTap: () => context.go('/setup'),
+                      onTap: () => _openSetup(context, SetupGameMode.x01),
                     ),
                   ),
                 ],
@@ -89,7 +105,19 @@ class _DesktopHomeLayout extends StatelessWidget {
 }
 
 class _MobileHomeLayout extends StatelessWidget {
-  const _MobileHomeLayout();
+  const _MobileHomeLayout({required this.ref});
+
+  final WidgetRef ref;
+
+  void _openSetup(BuildContext context, SetupGameMode mode) {
+    ref.read(setupGameModeProvider.notifier).state = mode;
+    if (mode == SetupGameMode.x01) {
+      ref.read(setupStartingScoreProvider.notifier).state = 301;
+      ref.read(setupCheckoutModeProvider.notifier).state =
+          SetupCheckoutMode.doubleOut;
+    }
+    context.go('/setup');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -104,24 +132,24 @@ class _MobileHomeLayout extends StatelessWidget {
             title: 'CRICKET',
             subtitle: 'Classic Cricket',
             metaLeft: '2 - 6 Players',
-            metaRight: '10 / 20 hits',
+            metaRight: '15 • 20 • Bull',
             accent: const Color(0xFF37D8FF),
             secondaryAccent: const Color(0xFF4DA3FF),
             icon: Icons.sports_martial_arts_rounded,
             compact: compactCards,
-            onPressed: () => context.go('/match/cricket'),
+            onPressed: () => _openSetup(context, SetupGameMode.cricket),
           ),
           const SizedBox(height: 10),
           _ModeCard(
             title: 'X01',
             subtitle: '301 · 501 · 701',
             metaLeft: '1 - 8 Players',
-            metaRight: '10 / 20 legs',
+            metaRight: 'Configurable checkout',
             accent: const Color(0xFFFF4FD8),
             secondaryAccent: const Color(0xFF8B5CF6),
             icon: Icons.close_rounded,
             compact: compactCards,
-            onPressed: () => context.go('/setup'),
+            onPressed: () => _openSetup(context, SetupGameMode.x01),
           ),
           const SizedBox(height: 10),
           _QuickActionCard(
@@ -139,7 +167,7 @@ class _MobileHomeLayout extends StatelessWidget {
             icon: Icons.settings_suggest_rounded,
             accent: const Color(0xFF8B5CF6),
             compact: true,
-            onTap: () => context.go('/setup'),
+            onTap: () => _openSetup(context, SetupGameMode.x01),
           ),
         ],
       ),
@@ -188,9 +216,9 @@ class _ModeCard extends StatelessWidget {
           if (playerName != null) ...[
             Row(
               children: [
-                const PlayerAvatar(
-                    name: 'Mike Johnson',
-                    colors: [Color(0xFF37D8FF), Color(0xFF4DA3FF)],
+                PlayerAvatar(
+                    name: playerName!,
+                    colors: [accent, secondaryAccent],
                     radius: 18),
                 const SizedBox(width: 10),
                 Expanded(
@@ -330,7 +358,7 @@ class _CenterGameShowcase extends StatelessWidget {
             children: [StatusPill(label: 'GAME SCREEN', tinted: true)],
           ),
           const SizedBox(height: 8),
-          const Text('XG1 • 80 Player • Rom of 3 legs',
+          const Text('X01 • Live setup • Interactive board',
               style: TextStyle(
                   color: Colors.white,
                   fontSize: 12,
@@ -338,7 +366,7 @@ class _CenterGameShowcase extends StatelessWidget {
           const SizedBox(height: 18),
           const Expanded(child: _HeroBoard()),
           const SizedBox(height: 10),
-          const Text('Tap a section to score',
+          const Text('Choose a mode, then configure players and rules',
               style: TextStyle(
                   color: Colors.white70,
                   fontSize: 13,
@@ -348,17 +376,17 @@ class _CenterGameShowcase extends StatelessWidget {
             children: const [
               Expanded(
                   child: _FooterAction(
-                      title: 'Undo',
-                      subtitle: 'Score/Dart 20',
-                      icon: Icons.undo_rounded,
+                      title: 'Setup',
+                      subtitle: 'Players & rules',
+                      icon: Icons.tune_rounded,
                       accent: Color(0xFF37D8FF))),
               SizedBox(width: 12),
               Expanded(child: _CenterScoreCard()),
               SizedBox(width: 12),
               Expanded(
                   child: _FooterAction(
-                      title: 'End Turn',
-                      subtitle: '',
+                      title: 'Play',
+                      subtitle: 'Tap to score',
                       icon: Icons.bolt_rounded,
                       accent: Color(0xFFFF4FD8),
                       highlighted: true)),
@@ -442,13 +470,13 @@ class _CenterScoreCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       child: const Column(
         children: [
-          Text('60',
+          Text('GO',
               style: TextStyle(
                   color: Colors.white,
                   fontSize: 42,
                   fontWeight: FontWeight.w900,
                   letterSpacing: -1.2)),
-          Text('Latest Scored',
+          Text('Quick Setup',
               style: TextStyle(color: Color(0xB3FFFFFF), fontSize: 11.5)),
         ],
       ),
@@ -484,7 +512,7 @@ class _HeroScoreCard extends StatelessWidget {
           Row(
             children: [
               PlayerAvatar(
-                  name: 'Sarah Williams',
+                  name: 'Setup',
                   colors: [Color(0xFFFF4FD8), Color(0xFF8B5CF6)]),
               SizedBox(width: 10),
               Expanded(
@@ -493,9 +521,9 @@ class _HeroScoreCard extends StatelessWidget {
                   children: [
                     Align(
                         alignment: Alignment.centerRight,
-                        child: StatusPill(label: 'WAITING', tinted: true)),
+                        child: StatusPill(label: 'READY', tinted: true)),
                     SizedBox(height: 8),
-                    Text('Sarah Williams',
+                    Text('Setup & Play',
                         style: TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w700,
@@ -513,7 +541,7 @@ class _HeroScoreCard extends StatelessWidget {
                   fontSize: 58,
                   letterSpacing: -2)),
           SizedBox(height: 4),
-          Text('S.01  |  Roun 5',
+          Text('X01  |  Double Out',
               style: TextStyle(
                   color: Color(0xB3FFFFFF), fontWeight: FontWeight.w600)),
           SizedBox(height: 12),
@@ -536,26 +564,27 @@ class _ActivityRail extends StatelessWidget {
       child: Column(
         children: const [
           PanelListTile(
-              title: 'Mike Obhooy',
-              subtitle: 'Trents       310',
-              leading: Icon(Icons.person, color: Colors.white)),
+              title: 'X01',
+              subtitle: '301 · 501 · 701',
+              leading: Icon(Icons.close_rounded, color: Colors.white)),
           SizedBox(height: 10),
           PanelListTile(
-              title: 'T. Nations',
-              subtitle: 'St Nomos      7',
-              leading: Icon(Icons.person, color: Colors.white)),
+              title: 'Cricket',
+              subtitle: '15-20 and bull',
+              leading: Icon(Icons.sports_martial_arts_rounded,
+                  color: Colors.white)),
           SizedBox(height: 10),
           PanelListTile(
-              title: 'Rehcroring',
-              subtitle: 'Setting      30',
+              title: 'Quick Setup',
+              subtitle: 'Roster + settings',
               leading: Icon(Icons.settings, color: Colors.white)),
           SizedBox(height: 16),
-          SectionHeading(title: 'Throw History', compact: true),
+          SectionHeading(title: 'Live Flow', compact: true),
           SizedBox(height: 10),
-          _HistoryLine(left: '60  - 3.20 low', right: '+0:35'),
-          _HistoryLine(left: '90  - 5.23 visit', right: '+0:50'),
-          _HistoryLine(left: '1.90 loss', right: '+0:12'),
-          _HistoryLine(left: '98 loss', right: '+0:18'),
+          _HistoryLine(left: '1. Pick a mode', right: 'Home'),
+          _HistoryLine(left: '2. Configure players', right: 'Setup'),
+          _HistoryLine(left: '3. Start match', right: 'Go'),
+          _HistoryLine(left: '4. Tap board to score', right: 'Play'),
         ],
       ),
     );
@@ -685,22 +714,6 @@ class _BoardPainter extends CustomPainter {
       tp.layout();
       tp.paint(canvas, point - Offset(tp.width / 2, tp.height / 2));
     }
-
-    final beam = Paint()
-      ..shader = const LinearGradient(colors: [
-        Color(0x00FFFFFF),
-        Color(0xAAFFF2A8),
-        Color(0xAAFF4FD8),
-        Color(0x0037D8FF)
-      ]).createShader(
-          Rect.fromCenter(center: center, width: 80, height: radius * 1.3));
-    canvas.save();
-    canvas.translate(center.dx, center.dy);
-    canvas.rotate(0.8);
-    canvas.drawRect(
-        Rect.fromCenter(center: Offset.zero, width: 34, height: radius * 1.1),
-        beam);
-    canvas.restore();
   }
 
   @override

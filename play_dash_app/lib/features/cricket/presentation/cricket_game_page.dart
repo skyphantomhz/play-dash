@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../shared/models/dart_throw.dart';
 import '../../../shared/models/player.dart';
 import '../../../shared/widgets/app_shell.dart';
 import '../../../shared/widgets/interactive_dartboard.dart';
@@ -18,6 +19,13 @@ class CricketGamePage extends ConsumerWidget {
     final canUndo = ref.watch(cricketCanUndoProvider);
     final activePlayer = _activePlayer(state.players, state.currentPlayerIndex);
     final winner = _findPlayerById(state.players, state.game.winnerPlayerId);
+    final throwHistory = controller.throwHistory;
+    final currentTurnThrows = controller.currentTurnThrows;
+    final latestThrow = throwHistory.isEmpty ? null : throwHistory.last;
+    final latestScore = latestThrow == null
+        ? 0
+        : latestThrow.segment * latestThrow.multiplier;
+    final canEndTurn = winner == null && currentTurnThrows.isNotEmpty;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -33,6 +41,9 @@ class CricketGamePage extends ConsumerWidget {
                       score: activePlayer == null
                           ? 0
                           : state.game.scores[activePlayer.id] ?? 0,
+                      turnLabel: winner != null
+                          ? '${winner.name} wins'
+                          : 'Throw ${currentTurnThrows.length + 1} of 3',
                     ),
                   ),
                   const SizedBox(width: 18),
@@ -48,7 +59,7 @@ class CricketGamePage extends ConsumerWidget {
                                 ? 'Cricket Board'
                                 : '${winner.name} Wins',
                             subtitle:
-                                'Large center board with lighter glass and neon accent ring.',
+                                'Interactive board writes throws into the live Cricket controller.',
                             trailing: ScoreBadge(
                               value: canUndo ? 'Undo Ready' : 'Locked',
                               highlight: canUndo,
@@ -58,6 +69,31 @@ class CricketGamePage extends ConsumerWidget {
                           InteractiveDartboard(
                             enabled: winner == null,
                             onThrow: controller.addThrow,
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: GlassButton(
+                                  label: 'Undo',
+                                  icon: Icons.undo_rounded,
+                                  onPressed: canUndo ? controller.undo : null,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              _LatestCricketScoreCard(latestScore: latestScore),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: GlassButton(
+                                  label: 'End Turn',
+                                  icon: Icons.bolt_rounded,
+                                  highlight: true,
+                                  onPressed: canEndTurn
+                                      ? controller.resetCurrentTurn
+                                      : null,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -85,6 +121,46 @@ class CricketGamePage extends ConsumerWidget {
                             ),
                             const SizedBox(height: 10),
                           ],
+                          const SizedBox(height: 6),
+                          const SectionHeading(title: 'Throw History', compact: true),
+                          const SizedBox(height: 10),
+                          if (throwHistory.isEmpty)
+                            const PanelListTile(
+                              title: 'No throws yet',
+                              subtitle: 'Tap the board to open the round.',
+                              leading: Icon(Icons.touch_app_rounded,
+                                  color: Colors.white),
+                            )
+                          else
+                            for (final entry in throwHistory
+                                .reversed
+                                .take(8)
+                                .toList()
+                                .asMap()
+                                .entries) ...[
+                              PanelListTile(
+                                title: formatThrow(entry.value),
+                                subtitle:
+                                    'Throw ${entry.key + 1} · ${entry.value.segment * entry.value.multiplier} scored',
+                                leading: CircleAvatar(
+                                  radius: 16,
+                                  backgroundColor: Colors.white12,
+                                  child: Text(
+                                    '${entry.key + 1}',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                ),
+                                trailing: ScoreBadge(
+                                  value:
+                                      '${entry.value.segment * entry.value.multiplier}',
+                                  highlight: entry.key == 0,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                            ],
                         ],
                       ),
                     ),
@@ -99,6 +175,9 @@ class CricketGamePage extends ConsumerWidget {
                     score: activePlayer == null
                         ? 0
                         : state.game.scores[activePlayer.id] ?? 0,
+                    turnLabel: winner != null
+                        ? '${winner.name} wins'
+                        : 'Throw ${currentTurnThrows.length + 1} of 3',
                   ),
                   const SizedBox(height: 12),
                   NeonCard(
@@ -111,7 +190,7 @@ class CricketGamePage extends ConsumerWidget {
                               ? 'Cricket Board'
                               : '${winner.name} Wins',
                           subtitle:
-                              'Mobile board view uses the same glass-and-neon system.',
+                              'Mobile board view uses the same live controller state.',
                           trailing: ScoreBadge(
                             value: canUndo ? 'Undo' : 'Locked',
                             highlight: canUndo,
@@ -122,6 +201,29 @@ class CricketGamePage extends ConsumerWidget {
                           enabled: winner == null,
                           compact: true,
                           onThrow: controller.addThrow,
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: GlassButton(
+                                label: 'Undo',
+                                icon: Icons.undo_rounded,
+                                onPressed: canUndo ? controller.undo : null,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: GlassButton(
+                                label: 'End Turn',
+                                icon: Icons.bolt_rounded,
+                                highlight: true,
+                                onPressed: canEndTurn
+                                    ? controller.resetCurrentTurn
+                                    : null,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -136,6 +238,39 @@ class CricketGamePage extends ConsumerWidget {
                     ),
                     const SizedBox(height: 10),
                   ],
+                  const SizedBox(height: 10),
+                  GlassPanel(
+                    radius: 20,
+                    blur: 18,
+                    background: Colors.white.withValues(alpha: 0.05),
+                    borderColor: Colors.white.withValues(alpha: 0.05),
+                    padding: const EdgeInsets.all(14),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SectionHeading(title: 'Throw History', compact: true),
+                        const SizedBox(height: 10),
+                        if (throwHistory.isEmpty)
+                          const Text(
+                            'No throws yet',
+                            style: TextStyle(color: Colors.white70),
+                          )
+                        else
+                          for (final entry in throwHistory
+                              .reversed
+                              .take(8)
+                              .toList()) ...[
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: Text(
+                                '${formatThrow(entry)} · ${entry.segment * entry.multiplier}',
+                                style: const TextStyle(color: Colors.white70),
+                              ),
+                            ),
+                          ],
+                      ],
+                    ),
+                  ),
                 ],
               );
 
@@ -157,13 +292,33 @@ class CricketGamePage extends ConsumerWidget {
     }
     return null;
   }
+
+  static String formatThrow(DartThrow dartThrow) {
+    if (dartThrow.segment == 25) {
+      return dartThrow.multiplier == 2 ? 'Bull' : 'Outer Bull';
+    }
+    if (dartThrow.segment == 0 || dartThrow.multiplier == 0) {
+      return 'Miss';
+    }
+    return switch (dartThrow.multiplier) {
+      1 => 'Single ${dartThrow.segment}',
+      2 => 'Double ${dartThrow.segment}',
+      3 => 'Triple ${dartThrow.segment}',
+      _ => '${dartThrow.multiplier}x ${dartThrow.segment}',
+    };
+  }
 }
 
 class _CricketHero extends StatelessWidget {
-  const _CricketHero({required this.player, required this.score});
+  const _CricketHero({
+    required this.player,
+    required this.score,
+    required this.turnLabel,
+  });
 
   final Player? player;
   final int score;
+  final String turnLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -221,15 +376,47 @@ class _CricketHero extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 6),
-          const Center(
+          Center(
             child: Text(
-              'Marks & points live',
-              style: TextStyle(
+              turnLabel,
+              style: const TextStyle(
                 color: Color(0xB3FFFFFF),
                 fontWeight: FontWeight.w600,
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LatestCricketScoreCard extends StatelessWidget {
+  const _LatestCricketScoreCard({required this.latestScore});
+
+  final int latestScore;
+
+  @override
+  Widget build(BuildContext context) {
+    return GlassPanel(
+      radius: 18,
+      blur: 18,
+      background: Colors.white.withValues(alpha: 0.08),
+      borderColor: Colors.white.withValues(alpha: 0.14),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+      child: Column(
+        children: [
+          Text(
+            '$latestScore',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 32,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -1.2,
+            ),
+          ),
+          const Text('Latest Hit',
+              style: TextStyle(color: Color(0xB3FFFFFF), fontSize: 11.5)),
         ],
       ),
     );

@@ -16,8 +16,12 @@ final x01CanUndoProvider = Provider<bool>((ref) {
 
 class X01Controller extends Notifier<X01MatchState> {
   final List<X01MatchState> _history = <X01MatchState>[];
+  final List<List<DartThrow>> _turnSnapshots = <List<DartThrow>>[];
+  final List<List<DartThrow>> _historySnapshots = <List<DartThrow>>[];
+  List<DartThrow> _throwHistory = <DartThrow>[];
 
   bool get canUndo => _history.isNotEmpty;
+  List<DartThrow> get throwHistory => List.unmodifiable(_throwHistory);
 
   @override
   X01MatchState build() {
@@ -26,7 +30,7 @@ class X01Controller extends Notifier<X01MatchState> {
       const Player(id: 'player-1', name: 'Player 1'),
       const Player(id: 'player-2', name: 'Player 2'),
     ];
-
+    _throwHistory = <DartThrow>[];
     return X01MatchState(
       players: players,
       settings: settings,
@@ -43,6 +47,9 @@ class X01Controller extends Notifier<X01MatchState> {
     X01MatchSettings settings = const X01MatchSettings(),
   }) {
     _history.clear();
+    _turnSnapshots.clear();
+    _historySnapshots.clear();
+    _throwHistory = <DartThrow>[];
     state = X01MatchState(
       players: players,
       settings: settings,
@@ -81,6 +88,9 @@ class X01Controller extends Notifier<X01MatchState> {
     final shouldMoveToNextPlayer = turnResult.bust || didUseAllDarts;
 
     _history.add(previousState);
+    _turnSnapshots.add(List<DartThrow>.from(previousState.game.currentTurnThrows));
+    _historySnapshots.add(List<DartThrow>.from(_throwHistory));
+    _throwHistory = [..._throwHistory, dartThrow];
 
     state = state.copyWith(
       currentPlayerIndex: shouldMoveToNextPlayer
@@ -103,15 +113,27 @@ class X01Controller extends Notifier<X01MatchState> {
     }
 
     state = _history.removeLast();
+    final previousTurn = _turnSnapshots.removeLast();
+    final previousHistory = _historySnapshots.removeLast();
+    _throwHistory = List<DartThrow>.from(previousHistory);
+    state = state.copyWith(
+      game: state.game.copyWith(
+        currentTurnThrows: List.unmodifiable(previousTurn),
+      ),
+    );
   }
 
   void resetCurrentTurn() {
-    if (state.game.currentTurnThrows.isEmpty) {
+    if (state.game.currentTurnThrows.isEmpty || state.game.winnerPlayerId != null) {
       return;
     }
 
     _history.add(state);
+    _turnSnapshots.add(List<DartThrow>.from(state.game.currentTurnThrows));
+    _historySnapshots.add(List<DartThrow>.from(_throwHistory));
     state = state.copyWith(
+      currentPlayerIndex:
+          _nextPlayerIndex(state.currentPlayerIndex, state.players.length),
       game: state.game.copyWith(
         currentTurnThrows: const <DartThrow>[],
       ),

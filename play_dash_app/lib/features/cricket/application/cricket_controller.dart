@@ -18,8 +18,14 @@ final cricketCanUndoProvider = Provider<bool>((ref) {
 class CricketController extends Notifier<CricketMatchState> {
   static const List<int> _segments = <int>[15, 16, 17, 18, 19, 20, 25];
   final List<CricketMatchState> _history = <CricketMatchState>[];
+  final List<List<DartThrow>> _turnSnapshots = <List<DartThrow>>[];
+  final List<List<DartThrow>> _historySnapshots = <List<DartThrow>>[];
+  List<DartThrow> _throwHistory = <DartThrow>[];
+  List<DartThrow> _currentTurnThrows = <DartThrow>[];
 
   bool get canUndo => _history.isNotEmpty;
+  List<DartThrow> get throwHistory => List.unmodifiable(_throwHistory);
+  List<DartThrow> get currentTurnThrows => List.unmodifiable(_currentTurnThrows);
 
   @override
   CricketMatchState build() {
@@ -28,8 +34,33 @@ class CricketController extends Notifier<CricketMatchState> {
       const Player(id: 'player-1', name: 'Player 1'),
       const Player(id: 'player-2', name: 'Player 2'),
     ];
+    _throwHistory = <DartThrow>[];
+    _currentTurnThrows = <DartThrow>[];
 
     return CricketMatchState(
+      players: players,
+      settings: settings,
+      game: CricketGameState(
+        marks: {
+          for (final player in players) player.id: _emptyMarks(),
+        },
+        scores: {
+          for (final player in players) player.id: 0,
+        },
+      ),
+    );
+  }
+
+  void startMatch({
+    required List<Player> players,
+    CricketMatchSettings settings = const CricketMatchSettings(),
+  }) {
+    _history.clear();
+    _turnSnapshots.clear();
+    _historySnapshots.clear();
+    _throwHistory = <DartThrow>[];
+    _currentTurnThrows = <DartThrow>[];
+    state = CricketMatchState(
       players: players,
       settings: settings,
       game: CricketGameState(
@@ -53,7 +84,6 @@ class CricketController extends Notifier<CricketMatchState> {
     final currentMarks =
         Map<int, int>.from(state.game.marks[currentPlayer.id] ?? _emptyMarks());
     final currentScore = state.game.scores[currentPlayer.id] ?? 0;
-
     final settings = state.settings as CricketMatchSettings;
 
     final throwResult = CricketEngine.applyThrow(
@@ -66,13 +96,20 @@ class CricketController extends Notifier<CricketMatchState> {
       ..[currentPlayer.id] = Map.unmodifiable(throwResult.updatedMarks);
     final updatedScores = Map<String, int>.from(state.game.scores)
       ..[currentPlayer.id] = currentScore + throwResult.scoreAdded;
+    final updatedCurrentTurnThrows = [..._currentTurnThrows, dartThrow];
 
     final winnerId = _resolveWinner(updatedMarks, updatedScores);
+    final shouldAdvanceTurn =
+        winnerId != null || updatedCurrentTurnThrows.length >= 3;
 
     _history.add(previousState);
+    _turnSnapshots.add(List<DartThrow>.from(_currentTurnThrows));
+    _historySnapshots.add(List<DartThrow>.from(_throwHistory));
+    _throwHistory = [..._throwHistory, dartThrow];
+    _currentTurnThrows = shouldAdvanceTurn ? <DartThrow>[] : updatedCurrentTurnThrows;
 
     state = state.copyWith(
-      currentPlayerIndex: winnerId == null
+      currentPlayerIndex: shouldAdvanceTurn
           ? _nextPlayerIndex(state.currentPlayerIndex, state.players.length)
           : state.currentPlayerIndex,
       game: state.game.copyWith(
@@ -83,12 +120,30 @@ class CricketController extends Notifier<CricketMatchState> {
     );
   }
 
+  void resetCurrentTurn() {
+    if (_currentTurnThrows.isEmpty || state.game.winnerPlayerId != null) {
+      return;
+    }
+
+    _history.add(state);
+    _turnSnapshots.add(List<DartThrow>.from(_currentTurnThrows));
+    _historySnapshots.add(List<DartThrow>.from(_throwHistory));
+    _currentTurnThrows = <DartThrow>[];
+    state = state.copyWith(
+      currentPlayerIndex:
+          _nextPlayerIndex(state.currentPlayerIndex, state.players.length),
+    );
+  }
+
   void undo() {
     if (_history.isEmpty) {
       return;
     }
 
     state = _history.removeLast();
+    _currentTurnThrows = _turnSnapshots.removeLast();
+    _throwHistory = _historySnapshots.removeLast();
+    state = state.copyWith(currentPlayerIndex: state.currentPlayerIndex);
   }
 
   Map<int, int> _emptyMarks() => {

@@ -19,6 +19,11 @@ class X01GamePage extends ConsumerWidget {
     final settings = state.settings as X01MatchSettings;
     final activePlayer = _activePlayer(state.players, state.currentPlayerIndex);
     final winner = _findPlayerById(state.players, state.game.winnerPlayerId);
+    final throwHistory = controller.throwHistory;
+    final latestThrow = throwHistory.isEmpty ? null : throwHistory.last;
+    final latestScore = latestThrow == null
+        ? 0
+        : latestThrow.segment * latestThrow.multiplier;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -30,13 +35,16 @@ class X01GamePage extends ConsumerWidget {
                   Expanded(
                     flex: 24,
                     child: _PlayerPanel(
-                      name: activePlayer?.name ?? 'Latest Johnson',
+                      name: activePlayer?.name ?? 'No Player',
                       score: state.game.scores[activePlayer?.id] ??
                           settings.startingScore,
                       accent: const Color(0xFF37D8FF),
                       meta:
-                          'S.01  |  Score ${state.game.currentTurnThrows.length + 2}',
-                      active: true,
+                          '${settings.startingScore}  |  ${settings.doubleOut ? 'Double Out' : 'Single Out'}',
+                      turnLabel: winner != null
+                          ? '${winner.name} wins'
+                          : 'Throw ${state.game.currentTurnThrows.length + 1} of 3',
+                      active: winner == null,
                     ),
                   ),
                   const SizedBox(width: 18),
@@ -46,6 +54,9 @@ class X01GamePage extends ConsumerWidget {
                       controller: controller,
                       winner: winner,
                       canUndo: canUndo,
+                      latestScore: latestScore,
+                      canEndTurn:
+                          winner == null && state.game.currentTurnThrows.isNotEmpty,
                     ),
                   ),
                   const SizedBox(width: 18),
@@ -56,7 +67,7 @@ class X01GamePage extends ConsumerWidget {
                       activePlayer: activePlayer,
                       scores: state.game.scores,
                       settings: settings,
-                      throws: state.game.currentTurnThrows,
+                      throws: throwHistory.reversed.toList(),
                       winner: winner,
                     ),
                   ),
@@ -66,13 +77,16 @@ class X01GamePage extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   _PlayerPanel(
-                    name: activePlayer?.name ?? 'Latest Johnson',
+                    name: activePlayer?.name ?? 'No Player',
                     score: state.game.scores[activePlayer?.id] ??
                         settings.startingScore,
                     accent: const Color(0xFF37D8FF),
                     meta:
-                        'S.01  |  Score ${state.game.currentTurnThrows.length + 2}',
-                    active: true,
+                        '${settings.startingScore}  |  ${settings.doubleOut ? 'Double Out' : 'Single Out'}',
+                    turnLabel: winner != null
+                        ? '${winner.name} wins'
+                        : 'Throw ${state.game.currentTurnThrows.length + 1} of 3',
+                    active: winner == null,
                     compact: true,
                   ),
                   const SizedBox(height: 12),
@@ -80,6 +94,9 @@ class X01GamePage extends ConsumerWidget {
                     controller: controller,
                     winner: winner,
                     canUndo: canUndo,
+                    latestScore: latestScore,
+                    canEndTurn:
+                        winner == null && state.game.currentTurnThrows.isNotEmpty,
                     compact: true,
                   ),
                   const SizedBox(height: 12),
@@ -88,12 +105,17 @@ class X01GamePage extends ConsumerWidget {
                     activePlayer: activePlayer,
                     scores: state.game.scores,
                     settings: settings,
-                    throws: state.game.currentTurnThrows,
+                    throws: throwHistory.reversed.toList(),
                     winner: winner,
                     compact: true,
                   ),
                   const SizedBox(height: 12),
-                  _BottomActions(controller: controller, canUndo: canUndo),
+                  _BottomActions(
+                    controller: controller,
+                    canUndo: canUndo,
+                    canEndTurn:
+                        winner == null && state.game.currentTurnThrows.isNotEmpty,
+                  ),
                 ],
               );
 
@@ -142,6 +164,7 @@ class _PlayerPanel extends StatelessWidget {
     required this.score,
     required this.accent,
     required this.meta,
+    required this.turnLabel,
     this.active = false,
     this.compact = false,
   });
@@ -150,6 +173,7 @@ class _PlayerPanel extends StatelessWidget {
   final int score;
   final Color accent;
   final String meta;
+  final String turnLabel;
   final bool active;
   final bool compact;
 
@@ -218,10 +242,10 @@ class _PlayerPanel extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 6),
-          const Center(
+          Center(
             child: Text(
-              'S.01  |  Score 5',
-              style: TextStyle(
+              turnLabel,
+              style: const TextStyle(
                 color: Color(0xB3FFFFFF),
                 fontWeight: FontWeight.w600,
               ),
@@ -238,12 +262,16 @@ class _BoardStage extends StatelessWidget {
     required this.controller,
     required this.winner,
     required this.canUndo,
+    required this.latestScore,
+    required this.canEndTurn,
     this.compact = false,
   });
 
-  final dynamic controller;
+  final X01Controller controller;
   final Player? winner;
   final bool canUndo;
+  final int latestScore;
+  final bool canEndTurn;
   final bool compact;
 
   @override
@@ -253,10 +281,9 @@ class _BoardStage extends StatelessWidget {
       secondaryAccent: const Color(0xFFFF4FD8),
       child: Column(
         children: [
-          const SectionHeading(
-            title: 'Game Screen',
-            subtitle:
-                'Tap the board to score. Large centered board with bottom action rail mirrors the reference.',
+          SectionHeading(
+            title: winner == null ? 'Game Screen' : '${winner!.name} Wins',
+            subtitle: 'Tap the board to score. Buttons update from controller state.',
           ),
           const SizedBox(height: 14),
           InteractiveDartboard(
@@ -268,9 +295,9 @@ class _BoardStage extends StatelessWidget {
           if (compact)
             Column(
               children: [
-                _UndoStateChip(canUndo: canUndo),
+                _UndoStateChip(canUndo: canUndo, onPressed: canUndo ? controller.undo : null),
                 const SizedBox(height: 10),
-                const _LatestScoreCard(),
+                _LatestScoreCard(latestScore: latestScore),
                 const SizedBox(height: 10),
                 SizedBox(
                   width: double.infinity,
@@ -278,7 +305,7 @@ class _BoardStage extends StatelessWidget {
                     label: 'End Turn',
                     icon: Icons.bolt_rounded,
                     highlight: true,
-                    onPressed: controller.resetCurrentTurn,
+                    onPressed: canEndTurn ? controller.resetCurrentTurn : null,
                   ),
                 ),
               ],
@@ -286,16 +313,21 @@ class _BoardStage extends StatelessWidget {
           else
             Row(
               children: [
-                Expanded(child: _UndoStateChip(canUndo: canUndo)),
+                Expanded(
+                  child: _UndoStateChip(
+                    canUndo: canUndo,
+                    onPressed: canUndo ? controller.undo : null,
+                  ),
+                ),
                 const SizedBox(width: 12),
-                const _LatestScoreCard(),
+                _LatestScoreCard(latestScore: latestScore),
                 const SizedBox(width: 12),
                 Expanded(
                   child: GlassButton(
                     label: 'End Turn',
                     icon: Icons.bolt_rounded,
                     highlight: true,
-                    onPressed: controller.resetCurrentTurn,
+                    onPressed: canEndTurn ? controller.resetCurrentTurn : null,
                   ),
                 ),
               ],
@@ -307,42 +339,25 @@ class _BoardStage extends StatelessWidget {
 }
 
 class _UndoStateChip extends StatelessWidget {
-  const _UndoStateChip({required this.canUndo});
+  const _UndoStateChip({required this.canUndo, required this.onPressed});
 
   final bool canUndo;
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
-    return GlassPanel(
-      radius: 18,
-      blur: 16,
-      background: Colors.white.withValues(alpha: 0.06),
-      borderColor: Colors.white.withValues(alpha: 0.05),
-      glowColor: const Color(0xFF37D8FF),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      child: Row(
-        children: [
-          const Icon(Icons.undo_rounded, color: Colors.white, size: 18),
-          const SizedBox(width: 8),
-          Flexible(
-            child: Text(
-              canUndo ? 'Undo Ready' : 'Undo Locked',
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w800,
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ],
-      ),
+    return GlassButton(
+      label: canUndo ? 'Undo Ready' : 'Undo Locked',
+      icon: Icons.undo_rounded,
+      onPressed: onPressed,
     );
   }
 }
 
 class _LatestScoreCard extends StatelessWidget {
-  const _LatestScoreCard();
+  const _LatestScoreCard({required this.latestScore});
+
+  final int latestScore;
 
   @override
   Widget build(BuildContext context) {
@@ -352,18 +367,18 @@ class _LatestScoreCard extends StatelessWidget {
       background: Colors.white.withValues(alpha: 0.08),
       borderColor: Colors.white.withValues(alpha: 0.05),
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-      child: const Column(
+      child: Column(
         children: [
           Text(
-            '60',
-            style: TextStyle(
+            '$latestScore',
+            style: const TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.w900,
               fontSize: 42,
               letterSpacing: -1.2,
             ),
           ),
-          Text(
+          const Text(
             'Latest Scored',
             style: TextStyle(color: Color(0xB3FFFFFF), fontSize: 11.5),
           ),
@@ -399,11 +414,14 @@ class _ScoreRail extends StatelessWidget {
       secondaryAccent: const Color(0xFF8B5CF6),
       child: Column(
         children: [
-          for (final player in players.take(compact ? players.length : 4)) ...[
+          for (final player in players.take(compact ? players.length : 8)) ...[
             PanelListTile(
               title: player.name,
-              subtitle:
-                  player.id == activePlayer?.id ? 'Current Player' : 'Waiting',
+              subtitle: player.id == winner?.id
+                  ? 'Winner'
+                  : player.id == activePlayer?.id
+                      ? 'Current Player'
+                      : 'Waiting',
               leading: PlayerAvatar(
                 name: player.name,
                 colors: [
@@ -416,10 +434,10 @@ class _ScoreRail extends StatelessWidget {
               ),
               trailing: ScoreBadge(
                 value: '${scores[player.id] ?? settings.startingScore}',
-                highlight: player.id == activePlayer?.id,
+                highlight: player.id == activePlayer?.id || player.id == winner?.id,
                 large: player.id == activePlayer?.id,
               ),
-              highlight: player.id == activePlayer?.id,
+              highlight: player.id == activePlayer?.id || player.id == winner?.id,
             ),
             const SizedBox(height: 10),
           ],
@@ -433,11 +451,11 @@ class _ScoreRail extends StatelessWidget {
               leading: Icon(Icons.touch_app_rounded, color: Colors.white),
             )
           else
-            for (final entry in throws.asMap().entries) ...[
+            for (final entry in throws.take(8).toList().asMap().entries) ...[
               PanelListTile(
                 title: X01GamePage.formatThrow(entry.value),
                 subtitle:
-                    'Throw ${entry.key + 1} · ${entry.value.segment * entry.value.multiplier} points',
+                    'Visit ${entry.key + 1} · ${entry.value.segment * entry.value.multiplier} points',
                 leading: CircleAvatar(
                   radius: 16,
                   backgroundColor: Colors.white12,
@@ -451,23 +469,11 @@ class _ScoreRail extends StatelessWidget {
                 ),
                 trailing: ScoreBadge(
                   value: '${entry.value.segment * entry.value.multiplier}',
-                  highlight: entry.key == throws.length - 1,
+                  highlight: entry.key == 0,
                 ),
               ),
               const SizedBox(height: 8),
             ],
-          if (winner != null) ...[
-            const SizedBox(height: 12),
-            PanelListTile(
-              title: '${winner!.name} wins',
-              subtitle: 'Checkout completed',
-              leading: const Icon(
-                Icons.emoji_events_rounded,
-                color: Color(0xFFFFD95B),
-              ),
-              highlight: true,
-            ),
-          ],
         ],
       ),
     );
@@ -475,10 +481,15 @@ class _ScoreRail extends StatelessWidget {
 }
 
 class _BottomActions extends StatelessWidget {
-  const _BottomActions({required this.controller, required this.canUndo});
+  const _BottomActions({
+    required this.controller,
+    required this.canUndo,
+    required this.canEndTurn,
+  });
 
-  final dynamic controller;
+  final X01Controller controller;
   final bool canUndo;
+  final bool canEndTurn;
 
   @override
   Widget build(BuildContext context) {
@@ -497,7 +508,7 @@ class _BottomActions extends StatelessWidget {
             label: 'End Turn',
             icon: Icons.bolt_rounded,
             highlight: true,
-            onPressed: controller.resetCurrentTurn,
+            onPressed: canEndTurn ? controller.resetCurrentTurn : null,
           ),
         ),
       ],

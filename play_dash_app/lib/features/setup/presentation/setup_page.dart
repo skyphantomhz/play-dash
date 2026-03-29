@@ -2,9 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../shared/models/match_settings.dart';
 import '../../../shared/models/player.dart';
 import '../../../shared/widgets/app_shell.dart';
+import '../../cricket/application/cricket_controller.dart';
 import '../../x01/application/x01_controller.dart';
+
+enum SetupGameMode { x01, cricket }
+
+enum SetupCheckoutMode { singleOut, doubleOut }
+
+final setupGameModeProvider =
+    StateProvider<SetupGameMode>((ref) => SetupGameMode.x01);
+final setupStartingScoreProvider = StateProvider<int>((ref) => 301);
+final setupCheckoutModeProvider =
+    StateProvider<SetupCheckoutMode>((ref) => SetupCheckoutMode.doubleOut);
 
 class SetupScreen extends ConsumerStatefulWidget {
   const SetupScreen({super.key});
@@ -43,6 +55,10 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
   }
 
   void _startMatch() {
+    final mode = ref.read(setupGameModeProvider);
+    final startingScore = ref.read(setupStartingScoreProvider);
+    final checkout = ref.read(setupCheckoutModeProvider);
+
     final players = List<Player>.generate(_playerCount, (index) {
       final value = _nameControllers[index].text.trim();
       return Player(
@@ -50,10 +66,21 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
         name: value.isEmpty ? 'Player ${index + 1}' : value,
       );
     });
-    ref.read(x01ControllerProvider.notifier).startMatch(players: players);
-    try {
+
+    if (mode == SetupGameMode.x01) {
+      ref.read(x01ControllerProvider.notifier).startMatch(
+            players: players,
+            settings: X01MatchSettings(
+              startingScore: startingScore,
+              doubleOut: checkout == SetupCheckoutMode.doubleOut,
+            ),
+          );
       context.go('/match/x01');
-    } catch (_) {}
+      return;
+    }
+
+    ref.read(cricketControllerProvider.notifier).startMatch(players: players);
+    context.go('/match/cricket');
   }
 
   @override
@@ -62,6 +89,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
       final value = _nameControllers[index].text.trim();
       return value.isEmpty ? 'Player ${index + 1}' : value;
     });
+    final mode = ref.watch(setupGameModeProvider);
+    final startingScore = ref.watch(setupStartingScoreProvider);
+    final checkout = ref.watch(setupCheckoutModeProvider);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -72,7 +102,12 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                 children: [
                   Expanded(
                     flex: 30,
-                    child: _SetupHero(playerName: preview.last),
+                    child: _SetupHero(
+                      playerName: preview.last,
+                      playerCount: _playerCount,
+                      mode: mode,
+                      startingScore: startingScore,
+                    ),
                   ),
                   const SizedBox(width: 18),
                   Expanded(
@@ -81,10 +116,21 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                       playerCount: _playerCount,
                       minPlayers: _minPlayers,
                       maxPlayers: _maxPlayers,
+                      mode: mode,
+                      startingScore: startingScore,
+                      checkout: checkout,
                       nameControllers: _nameControllers,
                       onPlayerCountChanged: (value) =>
                           setState(() => _playerCount = value.round()),
                       onChanged: () => setState(() {}),
+                      onModeChanged: (value) =>
+                          ref.read(setupGameModeProvider.notifier).state = value,
+                      onStartingScoreChanged: (value) => ref
+                          .read(setupStartingScoreProvider.notifier)
+                          .state = value,
+                      onCheckoutChanged: (value) => ref
+                          .read(setupCheckoutModeProvider.notifier)
+                          .state = value,
                     ),
                   ),
                   const SizedBox(width: 18),
@@ -93,6 +139,9 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                     child: _SetupSideRail(
                       preview: preview,
                       playerCount: _playerCount,
+                      mode: mode,
+                      startingScore: startingScore,
+                      checkout: checkout,
                       onStart: _startMatch,
                     ),
                   ),
@@ -101,22 +150,42 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
             : Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _SetupHero(playerName: preview.last, compact: true),
+                  _SetupHero(
+                    playerName: preview.last,
+                    playerCount: _playerCount,
+                    mode: mode,
+                    startingScore: startingScore,
+                    compact: true,
+                  ),
                   const SizedBox(height: 12),
                   _SetupConfig(
                     playerCount: _playerCount,
                     minPlayers: _minPlayers,
                     maxPlayers: _maxPlayers,
+                    mode: mode,
+                    startingScore: startingScore,
+                    checkout: checkout,
                     nameControllers: _nameControllers,
                     onPlayerCountChanged: (value) =>
                         setState(() => _playerCount = value.round()),
                     onChanged: () => setState(() {}),
+                    onModeChanged: (value) =>
+                        ref.read(setupGameModeProvider.notifier).state = value,
+                    onStartingScoreChanged: (value) => ref
+                        .read(setupStartingScoreProvider.notifier)
+                        .state = value,
+                    onCheckoutChanged: (value) => ref
+                        .read(setupCheckoutModeProvider.notifier)
+                        .state = value,
                     compact: true,
                   ),
                   const SizedBox(height: 12),
                   _SetupSideRail(
                     preview: preview,
                     playerCount: _playerCount,
+                    mode: mode,
+                    startingScore: startingScore,
+                    checkout: checkout,
                     onStart: _startMatch,
                     compact: true,
                   ),
@@ -133,9 +202,18 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
 }
 
 class _SetupHero extends StatelessWidget {
-  const _SetupHero({required this.playerName, this.compact = false});
+  const _SetupHero({
+    required this.playerName,
+    required this.playerCount,
+    required this.mode,
+    required this.startingScore,
+    this.compact = false,
+  });
 
   final String playerName;
+  final int playerCount;
+  final SetupGameMode mode;
+  final int startingScore;
   final bool compact;
 
   @override
@@ -148,9 +226,9 @@ class _SetupHero extends StatelessWidget {
         children: [
           Row(
             children: [
-              const PlayerAvatar(
-                name: 'Sarah',
-                colors: [Color(0xFFFF4FD8), Color(0xFF8B5CF6)],
+              PlayerAvatar(
+                name: playerName,
+                colors: const [Color(0xFFFF4FD8), Color(0xFF8B5CF6)],
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -167,7 +245,7 @@ class _SetupHero extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '$playerName  ·  24/10  ·  Days',
+                      '$playerName  ·  $playerCount players  ·  ${mode.label}',
                       style: const TextStyle(
                         color: Color(0xB3FFFFFF),
                         fontSize: 11.5,
@@ -180,7 +258,7 @@ class _SetupHero extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           Text(
-            '301',
+            mode == SetupGameMode.x01 ? '$startingScore' : 'CRICKET',
             style: TextStyle(
               color: const Color(0xFFBDF5FF),
               fontSize: compact ? 56 : 68,
@@ -189,21 +267,23 @@ class _SetupHero extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'S.01  |  Score 5',
-            style: TextStyle(
+          Text(
+            mode == SetupGameMode.x01
+                ? '${mode.label}  |  $playerCount players'
+                : 'Classic Cricket  |  $playerCount players',
+            style: const TextStyle(
               color: Color(0xB3FFFFFF),
               fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 16),
-          const Wrap(
+          Wrap(
             spacing: 8,
             runSpacing: 8,
             children: [
-              _SetupTab(label: 'Global', active: true),
-              _SetupTab(label: 'Friends'),
-              _SetupTab(label: 'This Month'),
+              _SetupTab(label: mode.label, active: true),
+              _SetupTab(label: '$playerCount Players'),
+              _SetupTab(label: playerName),
             ],
           ),
         ],
@@ -217,18 +297,30 @@ class _SetupConfig extends StatelessWidget {
     required this.playerCount,
     required this.minPlayers,
     required this.maxPlayers,
+    required this.mode,
+    required this.startingScore,
+    required this.checkout,
     required this.nameControllers,
     required this.onPlayerCountChanged,
     required this.onChanged,
+    required this.onModeChanged,
+    required this.onStartingScoreChanged,
+    required this.onCheckoutChanged,
     this.compact = false,
   });
 
   final int playerCount;
   final int minPlayers;
   final int maxPlayers;
+  final SetupGameMode mode;
+  final int startingScore;
+  final SetupCheckoutMode checkout;
   final List<TextEditingController> nameControllers;
   final ValueChanged<double> onPlayerCountChanged;
   final VoidCallback onChanged;
+  final ValueChanged<SetupGameMode> onModeChanged;
+  final ValueChanged<int> onStartingScoreChanged;
+  final ValueChanged<SetupCheckoutMode> onCheckoutChanged;
   final bool compact;
 
   @override
@@ -241,10 +333,8 @@ class _SetupConfig extends StatelessWidget {
         children: [
           SectionHeading(
             title: 'Setup Game',
-            subtitle:
-                'Glass inputs, cyan focus, and stacked controls to match the mobile setup panel.',
-            trailing:
-                ScoreBadge(value: '$playerCount Players', highlight: true),
+            subtitle: 'Configure the mode, target, checkout, and player roster.',
+            trailing: ScoreBadge(value: '$playerCount Players', highlight: true),
           ),
           const SizedBox(height: 16),
           Slider(
@@ -252,32 +342,83 @@ class _SetupConfig extends StatelessWidget {
             min: minPlayers.toDouble(),
             max: maxPlayers.toDouble(),
             divisions: maxPlayers - minPlayers,
+            label: '$playerCount',
             onChanged: onPlayerCountChanged,
           ),
           const SizedBox(height: 10),
-          const Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: [
-              MetricCard(
-                label: 'Mode',
-                value: 'X01',
-                icon: Icons.sports_score_rounded,
-                highlight: true,
-              ),
-              MetricCard(
-                label: 'Target',
-                value: '301 / 501',
-                icon: Icons.flag_rounded,
-              ),
-              MetricCard(
-                label: 'Checkout',
-                value: 'Single Out',
-                icon: Icons.adjust_rounded,
-              ),
-            ],
+          _SelectionCard(
+            label: 'Mode',
+            icon: Icons.sports_score_rounded,
+            child: SegmentedButton<SetupGameMode>(
+              showSelectedIcon: false,
+              segments: const [
+                ButtonSegment(value: SetupGameMode.x01, label: Text('X01')),
+                ButtonSegment(value: SetupGameMode.cricket, label: Text('Cricket')),
+              ],
+              selected: {mode},
+              onSelectionChanged: (values) => onModeChanged(values.first),
+            ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
+          if (mode == SetupGameMode.x01) ...[
+            _SelectionCard(
+              label: 'Target',
+              icon: Icons.flag_rounded,
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [301, 501, 701]
+                    .map(
+                      (value) => ChoiceChip(
+                        label: Text('$value'),
+                        selected: startingScore == value,
+                        onSelected: (_) => onStartingScoreChanged(value),
+                      ),
+                    )
+                    .toList(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            _SelectionCard(
+              label: 'Checkout',
+              icon: Icons.adjust_rounded,
+              child: SegmentedButton<SetupCheckoutMode>(
+                showSelectedIcon: false,
+                segments: const [
+                  ButtonSegment(
+                    value: SetupCheckoutMode.singleOut,
+                    label: Text('Single Out'),
+                  ),
+                  ButtonSegment(
+                    value: SetupCheckoutMode.doubleOut,
+                    label: Text('Double Out'),
+                  ),
+                ],
+                selected: {checkout},
+                onSelectionChanged: (values) => onCheckoutChanged(values.first),
+              ),
+            ),
+            const SizedBox(height: 12),
+          ] else ...[
+            const Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                MetricCard(
+                  label: 'Mode',
+                  value: 'Cricket',
+                  icon: Icons.sports_martial_arts_rounded,
+                  highlight: true,
+                ),
+                MetricCard(
+                  label: 'Marks',
+                  value: '15-20 + Bull',
+                  icon: Icons.filter_alt_rounded,
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+          ],
           for (int i = 0; i < playerCount; i++) ...[
             TextField(
               controller: nameControllers[i],
@@ -303,12 +444,18 @@ class _SetupSideRail extends StatelessWidget {
   const _SetupSideRail({
     required this.preview,
     required this.playerCount,
+    required this.mode,
+    required this.startingScore,
+    required this.checkout,
     required this.onStart,
     this.compact = false,
   });
 
   final List<String> preview;
   final int playerCount;
+  final SetupGameMode mode;
+  final int startingScore;
+  final SetupCheckoutMode checkout;
   final VoidCallback onStart;
   final bool compact;
 
@@ -322,19 +469,14 @@ class _SetupSideRail extends StatelessWidget {
           child: Column(
             children: [
               const SectionHeading(
-                title: 'Best Order',
-                subtitle:
-                    'Shortlist the roster with bright chips and compact player rows.',
+                title: 'Player Preview',
+                subtitle: 'Live roster preview mirrors slider and text input changes.',
               ),
               const SizedBox(height: 14),
               for (final entry in preview.asMap().entries) ...[
                 PanelListTile(
                   title: entry.value,
-                  subtitle: entry.key == 0
-                      ? '80'
-                      : entry.key == 1
-                          ? '40'
-                          : '00',
+                  subtitle: entry.key == 0 ? 'Starts first' : 'Player ${entry.key + 1}',
                   leading: PlayerAvatar(
                     name: entry.value,
                     colors: [
@@ -346,13 +488,10 @@ class _SetupSideRail extends StatelessWidget {
                     radius: 18,
                   ),
                   trailing: ScoreBadge(
-                    value: entry.key == 0
-                        ? '80'
-                        : entry.key == 1
-                            ? '40'
-                            : '00',
-                    highlight: entry.key == 1,
+                    value: '#${entry.key + 1}',
+                    highlight: entry.key == 0,
                   ),
+                  highlight: entry.key == 0,
                 ),
                 const SizedBox(height: 10),
               ],
@@ -368,13 +507,19 @@ class _SetupSideRail extends StatelessWidget {
           padding: const EdgeInsets.all(18),
           child: Column(
             children: [
-              const _DropdownLine(title: 'Stay Game', value: 'X01'),
+              _DropdownLine(title: 'Game Mode', value: mode.label),
               const SizedBox(height: 10),
-              const _DropdownLine(title: 'Start Order', value: 'Mike Johnson'),
+              _DropdownLine(
+                title: 'Target',
+                value: mode == SetupGameMode.x01 ? '$startingScore' : '15-20 + Bull',
+              ),
               const SizedBox(height: 10),
-              const _DropdownLine(title: 'Scoring', value: 'Single Out'),
+              _DropdownLine(
+                title: 'Checkout',
+                value: mode == SetupGameMode.x01 ? checkout.label : 'Marks Win',
+              ),
               const SizedBox(height: 10),
-              const _DropdownLine(title: 'Best Games', value: 'Best 7 legs'),
+              _DropdownLine(title: 'Start Order', value: preview.first),
               const SizedBox(height: 10),
               _DropdownLine(
                 title: 'Speaker & Scoreboard',
@@ -394,6 +539,49 @@ class _SetupSideRail extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _SelectionCard extends StatelessWidget {
+  const _SelectionCard({
+    required this.label,
+    required this.icon,
+    required this.child,
+  });
+
+  final String label;
+  final IconData icon;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return GlassPanel(
+      radius: 18,
+      blur: 18,
+      background: Colors.white.withValues(alpha: 0.05),
+      borderColor: Colors.white.withValues(alpha: 0.08),
+      padding: const EdgeInsets.all(14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: const Color(0xFF9FEFFF), size: 18),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          child,
+        ],
+      ),
     );
   }
 }
@@ -435,9 +623,6 @@ class _DropdownLine extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 8),
-          const Icon(Icons.expand_more_rounded,
-              color: Colors.white70, size: 18),
         ],
       ),
     );
@@ -474,4 +659,14 @@ class _SetupTab extends StatelessWidget {
       ),
     );
   }
+}
+
+extension on SetupGameMode {
+  String get label => this == SetupGameMode.x01 ? 'X01' : 'Cricket';
+}
+
+extension on SetupCheckoutMode {
+  String get label => this == SetupCheckoutMode.singleOut
+      ? 'Single Out'
+      : 'Double Out';
 }
