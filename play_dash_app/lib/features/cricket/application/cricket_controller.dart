@@ -53,6 +53,7 @@ class CricketController extends Notifier<CricketMatchState> {
 
   void startMatch({
     required List<Player> players,
+    int startingPlayerIndex = 0,
     CricketMatchSettings settings = const CricketMatchSettings(),
   }) {
     _history.clear();
@@ -60,7 +61,11 @@ class CricketController extends Notifier<CricketMatchState> {
     _historySnapshots.clear();
     _throwHistory = <DartThrow>[];
     _currentTurnThrows = <DartThrow>[];
+    final initialPlayerIndex = players.isEmpty
+        ? 0
+        : startingPlayerIndex.clamp(0, players.length - 1).toInt();
     state = CricketMatchState(
+      currentPlayerIndex: initialPlayerIndex,
       players: players,
       settings: settings,
       game: CricketGameState(

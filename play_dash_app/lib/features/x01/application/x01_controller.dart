@@ -44,13 +44,18 @@ class X01Controller extends Notifier<X01MatchState> {
 
   void startMatch({
     required List<Player> players,
+    int startingPlayerIndex = 0,
     X01MatchSettings settings = const X01MatchSettings(),
   }) {
     _history.clear();
     _turnSnapshots.clear();
     _historySnapshots.clear();
     _throwHistory = <DartThrow>[];
+    final initialPlayerIndex = players.isEmpty
+        ? 0
+        : startingPlayerIndex.clamp(0, players.length - 1).toInt();
     state = X01MatchState(
+      currentPlayerIndex: initialPlayerIndex,
       players: players,
       settings: settings,
       game: X01GameState(

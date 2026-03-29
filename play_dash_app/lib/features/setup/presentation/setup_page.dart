@@ -24,6 +24,10 @@ final setupCheckoutModeProvider =
     NotifierProvider<SetupCheckoutModeNotifier, SetupCheckoutMode>(
   SetupCheckoutModeNotifier.new,
 );
+final setupStartingPlayerIndexProvider =
+    NotifierProvider<SetupStartingPlayerIndexNotifier, int>(
+  SetupStartingPlayerIndexNotifier.new,
+);
 
 class SetupGameModeNotifier extends Notifier<SetupGameMode> {
   @override
@@ -49,6 +53,15 @@ class SetupCheckoutModeNotifier extends Notifier<SetupCheckoutMode> {
 
   void setCheckoutMode(SetupCheckoutMode mode) {
     state = mode;
+  }
+}
+
+class SetupStartingPlayerIndexNotifier extends Notifier<int> {
+  @override
+  int build() => 0;
+
+  void setStartingPlayerIndex(int index) {
+    state = index;
   }
 }
 
@@ -88,10 +101,22 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     super.dispose();
   }
 
+  int _clampStartingPlayerIndex(int index, int playerCount) {
+    if (playerCount <= 1) {
+      return 0;
+    }
+
+    return index.clamp(0, playerCount - 1).toInt();
+  }
+
   void _startMatch() {
     final mode = ref.read(setupGameModeProvider);
     final startingScore = ref.read(setupStartingScoreProvider);
     final checkout = ref.read(setupCheckoutModeProvider);
+    final startingPlayerIndex = _clampStartingPlayerIndex(
+      ref.read(setupStartingPlayerIndexProvider),
+      _playerCount,
+    );
 
     final players = List<Player>.generate(_playerCount, (index) {
       final value = _nameControllers[index].text.trim();
@@ -104,6 +129,7 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     if (mode == SetupGameMode.x01) {
       ref.read(x01ControllerProvider.notifier).startMatch(
             players: players,
+            startingPlayerIndex: startingPlayerIndex,
             settings: X01MatchSettings(
               startingScore: startingScore,
               doubleOut: checkout == SetupCheckoutMode.doubleOut,
@@ -113,7 +139,10 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
       return;
     }
 
-    ref.read(cricketControllerProvider.notifier).startMatch(players: players);
+    ref.read(cricketControllerProvider.notifier).startMatch(
+      players: players,
+      startingPlayerIndex: startingPlayerIndex,
+    );
     context.go('/match/cricket');
   }
 
@@ -176,6 +205,32 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     ref.read(setupCheckoutModeProvider.notifier).setCheckoutMode(selection);
   }
 
+  Future<void> _selectStartingPlayer() async {
+    final players = List<String>.generate(_playerCount, (index) {
+      final value = _nameControllers[index].text.trim();
+      return value.isEmpty ? 'Player ${index + 1}' : value;
+    });
+    final currentIndex = _clampStartingPlayerIndex(
+      ref.read(setupStartingPlayerIndexProvider),
+      players.length,
+    );
+    final selection = await _showSetupSelectionSheet<int>(
+      context: context,
+      title: 'Select start order',
+      subtitle: 'Choose which player starts the match.',
+      currentValue: currentIndex,
+      items: List<int>.generate(players.length, (index) => index),
+      labelBuilder: (index) => players[index],
+      iconBuilder: (_) => Icons.person_rounded,
+    );
+
+    if (selection == null || !mounted) return;
+
+    ref
+        .read(setupStartingPlayerIndexProvider.notifier)
+        .setStartingPlayerIndex(selection);
+  }
+
   @override
   Widget build(BuildContext context) {
     final preview = List<String>.generate(_playerCount, (index) {
@@ -185,6 +240,10 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
     final mode = ref.watch(setupGameModeProvider);
     final startingScore = ref.watch(setupStartingScoreProvider);
     final checkout = ref.watch(setupCheckoutModeProvider);
+    final startingPlayerIndex = _clampStartingPlayerIndex(
+      ref.watch(setupStartingPlayerIndexProvider),
+      _playerCount,
+    );
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -230,9 +289,11 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                       mode: mode,
                       startingScore: startingScore,
                       checkout: checkout,
+                      startingPlayerIndex: startingPlayerIndex,
                       onModeTap: _selectMode,
                       onStartingScoreTap: _selectTarget,
                       onCheckoutTap: _selectCheckout,
+                      onStartingPlayerTap: _selectStartingPlayer,
                       onStart: _startMatch,
                     ),
                   ),
@@ -272,9 +333,11 @@ class _SetupScreenState extends ConsumerState<SetupScreen> {
                     mode: mode,
                     startingScore: startingScore,
                     checkout: checkout,
+                    startingPlayerIndex: startingPlayerIndex,
                     onModeTap: _selectMode,
                     onStartingScoreTap: _selectTarget,
                     onCheckoutTap: _selectCheckout,
+                    onStartingPlayerTap: _selectStartingPlayer,
                     onStart: _startMatch,
                     compact: true,
                   ),
@@ -510,9 +573,11 @@ class _SetupSideRail extends StatelessWidget {
     required this.mode,
     required this.startingScore,
     required this.checkout,
+    required this.startingPlayerIndex,
     required this.onModeTap,
     required this.onStartingScoreTap,
     required this.onCheckoutTap,
+    required this.onStartingPlayerTap,
     required this.onStart,
     this.compact = false,
   });
@@ -522,9 +587,11 @@ class _SetupSideRail extends StatelessWidget {
   final SetupGameMode mode;
   final int startingScore;
   final SetupCheckoutMode checkout;
+  final int startingPlayerIndex;
   final VoidCallback onModeTap;
   final VoidCallback onStartingScoreTap;
   final VoidCallback onCheckoutTap;
+  final VoidCallback onStartingPlayerTap;
   final VoidCallback onStart;
   final bool compact;
 
@@ -546,7 +613,7 @@ class _SetupSideRail extends StatelessWidget {
               for (final entry in preview.asMap().entries) ...[
                 PanelListTile(
                   title: entry.value,
-                  subtitle: entry.key == 0
+                  subtitle: entry.key == startingPlayerIndex
                       ? 'Starts first'
                       : 'Player ${entry.key + 1}',
                   leading: PlayerAvatar(
@@ -561,9 +628,9 @@ class _SetupSideRail extends StatelessWidget {
                   ),
                   trailing: ScoreBadge(
                     value: '#${entry.key + 1}',
-                    highlight: entry.key == 0,
+                    highlight: entry.key == startingPlayerIndex,
                   ),
-                  highlight: entry.key == 0,
+                  highlight: entry.key == startingPlayerIndex,
                 ),
                 const SizedBox(height: 10),
               ],
@@ -599,7 +666,11 @@ class _SetupSideRail extends StatelessWidget {
                 onTap: mode == SetupGameMode.x01 ? onCheckoutTap : null,
               ),
               const SizedBox(height: 10),
-              _DropdownLine(title: 'Start Order', value: preview.first),
+              _DropdownLine(
+                title: 'Start Order',
+                value: preview[startingPlayerIndex],
+                onTap: onStartingPlayerTap,
+              ),
               const SizedBox(height: 10),
               _DropdownLine(
                 title: 'Speaker & Scoreboard',
@@ -870,6 +941,7 @@ Future<T?> _showSetupSelectionSheet<T>({
 }) {
   return showModalBottomSheet<T>(
     context: context,
+    useRootNavigator: true,
     backgroundColor: Colors.transparent,
     isScrollControlled: true,
     builder: (context) {
