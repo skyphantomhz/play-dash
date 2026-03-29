@@ -104,15 +104,29 @@ class _ShellSurface extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(isDesktop ? 26 : 24),
         border:
-            Border.all(color: Colors.white.withValues(alpha: 0.05), width: 0.8),
+            Border.all(color: Colors.white.withValues(alpha: 0.08), width: 0.9),
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF0A0F24), Color(0xFF0B1330), Color(0xFF170A2F)],
+          colors: [Color(0xFF091127), Color(0xFF11153A), Color(0xFF170A2F)],
         ),
-        boxShadow: const [
+        boxShadow: [
+          const BoxShadow(
+            color: Color(0x8A02030A),
+            blurRadius: 36,
+            offset: Offset(0, 20),
+          ),
           BoxShadow(
-              color: Color(0x66000000), blurRadius: 30, offset: Offset(0, 18)),
+            color: const Color(0xFF37D8FF).withValues(alpha: 0.09),
+            blurRadius: 46,
+            spreadRadius: -12,
+          ),
+          BoxShadow(
+            color: const Color(0xFF8B5CF6).withValues(alpha: 0.08),
+            blurRadius: 58,
+            spreadRadius: -20,
+            offset: const Offset(0, 8),
+          ),
         ],
       ),
       child: ClipRRect(
@@ -184,18 +198,61 @@ class GlassPanel extends StatelessWidget {
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeInOut,
           padding: padding,
+          foregroundDecoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(radius),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.10),
+              width: 0.7,
+            ),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.white.withValues(alpha: 0.11),
+                Colors.transparent,
+                Colors.white.withValues(alpha: 0.03),
+              ],
+              stops: const [0.0, 0.32, 1.0],
+            ),
+          ),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(radius),
             color: background,
-            border: Border.all(color: borderColor, width: 0.8),
+            border: Border.all(
+              color: borderColor.withValues(
+                  alpha: (borderColor.a + 0.06).clamp(0.0, 1.0)),
+              width: 0.9,
+            ),
             boxShadow: [
               BoxShadow(
-                  color: shadowColor.withValues(alpha: 0.34),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10)),
-              if (glowColor != null)
+                color: shadowColor.withValues(alpha: 0.48),
+                blurRadius: 28,
+                offset: const Offset(0, 18),
+              ),
+              if (glowColor != null) ...[
                 BoxShadow(
-                    color: glowColor!.withValues(alpha: 0.12), blurRadius: 24),
+                  color: glowColor!.withValues(alpha: 0.10),
+                  blurRadius: 38,
+                  spreadRadius: 1,
+                ),
+                BoxShadow(
+                  color: glowColor!.withValues(alpha: 0.05),
+                  blurRadius: 64,
+                  spreadRadius: 6,
+                ),
+              ] else ...[
+                BoxShadow(
+                  color: const Color(0xFF37D8FF).withValues(alpha: 0.045),
+                  blurRadius: 34,
+                  spreadRadius: -2,
+                ),
+                BoxShadow(
+                  color: const Color(0xFFFF4FD8).withValues(alpha: 0.035),
+                  blurRadius: 54,
+                  spreadRadius: -6,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ],
           ),
           child: child,
@@ -237,10 +294,21 @@ class NeonCard extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(radius),
         boxShadow: [
-          BoxShadow(color: accent.withValues(alpha: 0.16), blurRadius: 24),
           BoxShadow(
-              color: (secondaryAccent ?? accent).withValues(alpha: 0.10),
-              blurRadius: 42),
+            color: Colors.black.withValues(alpha: 0.34),
+            blurRadius: 26,
+            offset: const Offset(0, 18),
+          ),
+          BoxShadow(
+            color: accent.withValues(alpha: 0.11),
+            blurRadius: 34,
+            spreadRadius: 1,
+          ),
+          BoxShadow(
+            color: (secondaryAccent ?? accent).withValues(alpha: 0.07),
+            blurRadius: 58,
+            spreadRadius: 4,
+          ),
         ],
       ),
       child: GlassPanel(
@@ -315,22 +383,39 @@ class _GlassButtonState extends State<GlassButton> {
                             colors: [Color(0x22FFFFFF), Color(0x18FFFFFF)]),
                     border: Border.all(
                       color: Colors.white.withValues(
-                        alpha: widget.highlight ? 0.0 : 0.05,
+                        alpha: widget.highlight ? 0.12 : 0.08,
                       ),
-                      width: 0.8,
+                      width: 0.9,
                     ),
                     boxShadow: [
                       BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.28),
+                        blurRadius: 22,
+                        offset: const Offset(0, 14),
+                      ),
+                      BoxShadow(
                         color: (widget.highlight
                                 ? const Color(0xFF37D8FF)
-                                : Colors.black)
+                                : const Color(0xFF37D8FF))
                             .withValues(
-                                alpha: widget.highlight
-                                    ? (_hovered ? 0.42 : 0.28)
-                                    : 0.24),
-                        blurRadius:
-                            widget.highlight ? (_hovered ? 40 : 30) : 18,
-                        offset: const Offset(0, 12),
+                          alpha: widget.highlight
+                              ? (_hovered ? 0.16 : 0.11)
+                              : (_hovered ? 0.07 : 0.045),
+                        ),
+                        blurRadius: widget.highlight ? 34 : 26,
+                        spreadRadius: widget.highlight ? 1 : 0,
+                      ),
+                      BoxShadow(
+                        color: (widget.highlight
+                                ? const Color(0xFFFF4FD8)
+                                : const Color(0xFF8B5CF6))
+                            .withValues(
+                          alpha: widget.highlight
+                              ? (_hovered ? 0.12 : 0.08)
+                              : (_hovered ? 0.05 : 0.03),
+                        ),
+                        blurRadius: widget.highlight ? 52 : 34,
+                        spreadRadius: widget.highlight ? 2 : 0,
                       ),
                     ],
                   ),
@@ -712,7 +797,21 @@ class _SidebarNavTile extends StatelessWidget {
             width: 0.8,
           ),
           boxShadow: selected
-              ? [const BoxShadow(color: Color(0x4437D8FF), blurRadius: 20)]
+              ? [
+                  const BoxShadow(
+                    color: Color(0x66000000),
+                    blurRadius: 16,
+                    offset: Offset(0, 10),
+                  ),
+                  BoxShadow(
+                    color: const Color(0xFF37D8FF).withValues(alpha: 0.10),
+                    blurRadius: 24,
+                  ),
+                  BoxShadow(
+                    color: const Color(0xFF8B5CF6).withValues(alpha: 0.06),
+                    blurRadius: 36,
+                  ),
+                ]
               : null,
         ),
         child: Row(
@@ -833,13 +932,15 @@ class _AppBackground extends StatelessWidget {
           child: DecoratedBox(
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFF060816),
-                    Color(0xFF0B1330),
-                    Color(0xFF140A2E)
-                  ]),
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF091B35),
+                  Color(0xFF241046),
+                  Color(0xFF020308),
+                ],
+                stops: [0.0, 0.48, 1.0],
+              ),
             ),
           ),
         ),
@@ -860,13 +961,15 @@ class _InnerCosmos extends StatelessWidget {
           child: DecoratedBox(
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFF050917),
-                    Color(0xFF0B1330),
-                    Color(0xFF160B31)
-                  ]),
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF08152D),
+                  Color(0xFF1E103E),
+                  Color(0xFF04050B),
+                ],
+                stops: [0.0, 0.5, 1.0],
+              ),
             ),
           ),
         ),
@@ -920,10 +1023,10 @@ class _StreakPainter extends CustomPainter {
   final bool dense;
 
   static const List<Color> _blobColors = [
-    Color(0x4037D8FF),
-    Color(0x33FF4FD8),
-    Color(0x2E8B5CF6),
-    Color(0x2237D8FF),
+    Color(0x3337D8FF),
+    Color(0x40FF4FD8),
+    Color(0x338B5CF6),
+    Color(0x2637D8FF),
   ];
 
   @override
@@ -936,21 +1039,21 @@ class _StreakPainter extends CustomPainter {
   void _paintGlowBlobs(Canvas canvas, Size size) {
     final blobs = dense
         ? const [
-            (Offset(0.12, 0.16), 0.28, 0.08, 0.06),
-            (Offset(0.88, 0.22), 0.26, -0.07, 0.05),
-            (Offset(0.24, 0.82), 0.30, 0.06, -0.05),
-            (Offset(0.78, 0.72), 0.22, -0.05, -0.04),
+            (Offset(0.14, 0.18), 0.40, 0.05, 0.04),
+            (Offset(0.84, 0.14), 0.36, -0.04, 0.03),
+            (Offset(0.28, 0.84), 0.42, 0.04, -0.03),
+            (Offset(0.82, 0.72), 0.34, -0.03, -0.03),
           ]
         : const [
-            (Offset(0.10, 0.12), 0.34, 0.08, 0.05),
-            (Offset(0.90, 0.28), 0.30, -0.08, 0.06),
-            (Offset(0.22, 0.88), 0.32, 0.07, -0.04),
+            (Offset(0.12, 0.16), 0.46, 0.05, 0.04),
+            (Offset(0.88, 0.22), 0.40, -0.04, 0.03),
+            (Offset(0.24, 0.86), 0.44, 0.04, -0.03),
           ];
 
     for (var i = 0; i < blobs.length; i++) {
       final blob = blobs[i];
-      final dx = _wave(progress + i * 0.13) * blob.$3 * size.width;
-      final dy = _wave(progress * 0.8 + i * 0.21) * blob.$4 * size.height;
+      final dx = _wave(progress * 0.55 + i * 0.12) * blob.$3 * size.width;
+      final dy = _wave(progress * 0.45 + i * 0.19) * blob.$4 * size.height;
       final center =
           Offset(blob.$1.dx * size.width + dx, blob.$1.dy * size.height + dy);
       final radius = size.shortestSide * blob.$2;
@@ -961,11 +1064,15 @@ class _StreakPainter extends CustomPainter {
         radius,
         Paint()
           ..shader = RadialGradient(
+            center: Alignment.center,
+            radius: 1,
             colors: [
               color,
-              color.withValues(alpha: color.a * 0.45),
-              Colors.transparent
+              color.withValues(alpha: color.a * 0.42),
+              color.withValues(alpha: color.a * 0.12),
+              Colors.transparent,
             ],
+            stops: const [0.0, 0.38, 0.72, 1.0],
           ).createShader(rect),
       );
     }
@@ -975,49 +1082,51 @@ class _StreakPainter extends CustomPainter {
     final streaks = [
       _AnimatedStreak(
         color: const Color(0xFF37D8FF),
-        alpha: dense ? 0.26 : 0.22,
-        width: dense ? 1.7 : 1.45,
-        start: Offset(0.04, 0.17),
-        controlA: Offset(0.28, 0.02),
-        controlB: Offset(0.70, 0.32),
-        end: Offset(0.98, 0.16),
-        speed: 1.0,
+        alpha: dense ? 0.14 : 0.11,
+        width: dense ? 1.5 : 1.2,
+        start: const Offset(0.02, 0.18),
+        controlA: const Offset(0.24, 0.04),
+        controlB: const Offset(0.68, 0.30),
+        end: const Offset(0.96, 0.15),
+        speed: 0.88,
         phase: 0.0,
       ),
       _AnimatedStreak(
         color: const Color(0xFFFF4FD8),
-        alpha: dense ? 0.22 : 0.18,
-        width: dense ? 1.35 : 1.2,
-        start: Offset(0.06, 0.74),
-        controlA: Offset(0.22, 0.56),
-        controlB: Offset(0.72, 0.86),
-        end: Offset(0.97, 0.60),
-        speed: 0.82,
+        alpha: dense ? 0.10 : 0.08,
+        width: dense ? 1.2 : 1.0,
+        start: const Offset(0.08, 0.72),
+        controlA: const Offset(0.26, 0.56),
+        controlB: const Offset(0.70, 0.84),
+        end: const Offset(0.94, 0.60),
+        speed: 0.72,
         phase: 0.22,
       ),
       _AnimatedStreak(
         color: const Color(0xFF8B5CF6),
-        alpha: dense ? 0.14 : 0.12,
-        width: 1.1,
-        start: Offset(0.12, 0.46),
-        controlA: Offset(0.36, 0.30),
-        controlB: Offset(0.58, 0.58),
-        end: Offset(0.90, 0.42),
-        speed: 0.64,
+        alpha: dense ? 0.08 : 0.06,
+        width: 1.0,
+        start: const Offset(0.12, 0.44),
+        controlA: const Offset(0.34, 0.32),
+        controlB: const Offset(0.58, 0.56),
+        end: const Offset(0.88, 0.40),
+        speed: 0.56,
         phase: 0.47,
       ),
     ];
 
     for (final streak in streaks) {
       final shiftX =
-          _wave(progress * streak.speed + streak.phase) * 0.04 * size.width;
+          _wave(progress * streak.speed + streak.phase) * 0.022 * size.width;
       final shiftY =
           _wave(progress * (streak.speed * 0.9) + streak.phase + 0.11) *
-              0.03 *
+              0.016 *
               size.height;
       final path = Path()
-        ..moveTo(streak.start.dx * size.width + shiftX,
-            streak.start.dy * size.height + shiftY)
+        ..moveTo(
+          streak.start.dx * size.width + shiftX,
+          streak.start.dy * size.height + shiftY,
+        )
         ..cubicTo(
           streak.controlA.dx * size.width - shiftX * 0.2,
           streak.controlA.dy * size.height + shiftY * 1.3,
@@ -1027,37 +1136,47 @@ class _StreakPainter extends CustomPainter {
           streak.end.dy * size.height + shiftY * 0.4,
         );
 
+      final bounds = path.getBounds().inflate(24);
       final basePaint = Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = streak.width
+        ..strokeCap = StrokeCap.round
         ..shader = LinearGradient(
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
           colors: [
             Colors.transparent,
+            streak.color.withValues(alpha: streak.alpha * 0.55),
             streak.color.withValues(alpha: streak.alpha),
+            streak.color.withValues(alpha: streak.alpha * 0.52),
             Colors.transparent,
           ],
-        ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+          stops: const [0.0, 0.22, 0.5, 0.78, 1.0],
+        ).createShader(bounds);
       canvas.drawPath(path, basePaint);
 
       final pulse = _unitWave(progress * streak.speed + streak.phase);
       final metrics = path.computeMetrics().toList();
       for (final metric in metrics) {
         final start = (metric.length * pulse).clamp(0.0, metric.length);
-        final end = (start + metric.length * 0.18).clamp(0.0, metric.length);
+        final end = (start + metric.length * 0.12).clamp(0.0, metric.length);
         final highlight = metric.extractPath(start, end);
         canvas.drawPath(
           highlight,
           Paint()
             ..style = PaintingStyle.stroke
-            ..strokeWidth = streak.width + 0.9
+            ..strokeWidth = streak.width
             ..strokeCap = StrokeCap.round
             ..shader = LinearGradient(
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
               colors: [
-                streak.color.withValues(alpha: 0.0),
-                streak.color.withValues(alpha: dense ? 0.72 : 0.62),
-                Colors.white.withValues(alpha: dense ? 0.18 : 0.12),
+                Colors.transparent,
+                streak.color.withValues(alpha: dense ? 0.18 : 0.14),
+                Colors.transparent,
               ],
-            ).createShader(Rect.fromLTWH(0, 0, size.width, size.height)),
+              stops: const [0.0, 0.5, 1.0],
+            ).createShader(bounds),
         );
       }
     }
