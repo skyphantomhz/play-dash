@@ -1,6 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:uuid/uuid.dart';
 
+import '../../../core/services/history_providers.dart';
 import '../../../shared/models/dart_throw.dart';
+import '../../../shared/models/match_record.dart';
 import '../../../shared/models/match_settings.dart';
 import '../../../shared/models/match_state.dart';
 import '../../../shared/models/player.dart';
@@ -95,16 +98,38 @@ class CricketController extends Notifier<CricketMatchState> {
     final throwResult = CricketEngine.applyThrow(
       currentMarks: currentMarks,
       dartThrow: dartThrow,
-      scoreOverflow: !settings.cutThroat,
+      scoreOverflow: false,
     );
 
     final updatedMarks = Map<String, Map<int, int>>.from(state.game.marks)
       ..[currentPlayer.id] = Map.unmodifiable(throwResult.updatedMarks);
-    final updatedScores = Map<String, int>.from(state.game.scores)
-      ..[currentPlayer.id] = currentScore + throwResult.scoreAdded;
+
+    final updatedScores = Map<String, int>.from(state.game.scores);
+
+    if (throwResult.overflowMarks > 0) {
+      final opponentsNotClosed = state.players.where((p) {
+        if (p.id == currentPlayer.id) return false;
+        final oppMarks = state.game.marks[p.id]?[throwResult.segment] ?? 0;
+        return oppMarks < 3;
+      }).toList();
+
+      if (opponentsNotClosed.isNotEmpty) {
+        final points = throwResult.overflowMarks *
+            (throwResult.segment == 25 ? 25 : throwResult.segment);
+        if (!settings.cutThroat) {
+          updatedScores[currentPlayer.id] = currentScore + points;
+        } else {
+          for (final opp in opponentsNotClosed) {
+            updatedScores[opp.id] = (updatedScores[opp.id] ?? 0) + points;
+          }
+        }
+      }
+    }
+
     final updatedCurrentTurnThrows = [..._currentTurnThrows, dartThrow];
 
-    final winnerId = _resolveWinner(updatedMarks, updatedScores);
+    final winnerId =
+        _resolveWinner(updatedMarks, updatedScores, settings.cutThroat);
     final shouldAdvanceTurn =
         winnerId != null || updatedCurrentTurnThrows.length >= 3;
 
@@ -125,6 +150,16 @@ class CricketController extends Notifier<CricketMatchState> {
         winnerPlayerId: winnerId,
       ),
     );
+
+    // Persist to history when a winner is determined.
+    if (winnerId != null) {
+      _saveMatchRecord(
+        players: state.players,
+        scores: updatedScores,
+        winnerId: winnerId,
+        settings: settings,
+      );
+    }
   }
 
   void resetCurrentTurn() {
@@ -188,6 +223,7 @@ class CricketController extends Notifier<CricketMatchState> {
   String? _resolveWinner(
     Map<String, Map<int, int>> marks,
     Map<String, int> scores,
+    bool cutThroat,
   ) {
     final closedPlayers = state.players.where((player) {
       final playerMarks = marks[player.id] ?? const <int, int>{};
@@ -198,9 +234,34 @@ class CricketController extends Notifier<CricketMatchState> {
       return null;
     }
 
-    closedPlayers
-        .sort((a, b) => (scores[b.id] ?? 0).compareTo(scores[a.id] ?? 0));
-    return closedPlayers.first.id;
+    if (state.players.length == 1) {
+      return closedPlayers.first.id;
+    }
+
+    for (final player in closedPlayers) {
+      final playerScore = scores[player.id] ?? 0;
+      bool isWinner = true;
+      for (final opp in state.players) {
+        if (opp.id == player.id) continue;
+        final oppScore = scores[opp.id] ?? 0;
+        if (cutThroat) {
+          if (playerScore > oppScore) {
+            isWinner = false;
+            break;
+          }
+        } else {
+          if (playerScore < oppScore) {
+            isWinner = false;
+            break;
+          }
+        }
+      }
+      if (isWinner) {
+        return player.id;
+      }
+    }
+
+    return null;
   }
 
   int _nextPlayerIndex(int currentIndex, int playerCount) {
@@ -209,5 +270,34 @@ class CricketController extends Notifier<CricketMatchState> {
     }
 
     return (currentIndex + 1) % playerCount;
+  }
+
+  void _saveMatchRecord({
+    required List<Player> players,
+    required Map<String, int> scores,
+    required String winnerId,
+    required CricketMatchSettings settings,
+  }) {
+    final record = MatchRecord(
+      id: const Uuid().v4(),
+      gameMode: GameMode.cricket,
+      playedAt: DateTime.now(),
+      cutThroat: settings.cutThroat,
+      playerResults: [
+        for (final player in players)
+          PlayerResult(
+            playerId: player.id,
+            playerName: player.name,
+            won: player.id == winnerId,
+            finalScore: scores[player.id] ?? 0,
+            dartsThrown: players.isNotEmpty
+                ? _throwHistory.length ~/ players.length
+                : 0,
+          ),
+      ],
+    );
+
+    // Fire-and-forget: we don't await to avoid blocking game UI.
+    ref.read(matchHistoryProvider.notifier).addRecord(record);
   }
 }

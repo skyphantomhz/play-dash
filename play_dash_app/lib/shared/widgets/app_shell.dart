@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../services/feedback_service.dart';
 
 class AppBackdrop extends StatelessWidget {
   const AppBackdrop({required this.child, super.key});
@@ -273,7 +274,7 @@ class GlassPanel extends StatelessWidget {
     return Material(
         color: Colors.transparent,
         child: InkWell(
-            onTap: onTap,
+            onTap: onTap == null ? null : () { FeedbackService.instance.playImpact(); onTap!(); },
             borderRadius: BorderRadius.circular(radius),
             child: content));
   }
@@ -328,7 +329,7 @@ class NeonCard extends StatelessWidget {
           background: Colors.white.withValues(alpha: 0.06),
           borderColor: Colors.white.withValues(alpha: 0.06),
           glowColor: accent,
-          onTap: onTap,
+          onTap: onTap == null ? null : () { FeedbackService.instance.playImpact(); onTap!(); },
           child: child,
         ),
       ),
@@ -381,7 +382,7 @@ class _GlassButtonState extends State<GlassButton> {
             child: Material(
               color: Colors.transparent,
               child: InkWell(
-                onTap: widget.onPressed,
+                onTap: widget.onPressed == null ? null : () { FeedbackService.instance.playImpact(); widget.onPressed?.call(); },
                 borderRadius: BorderRadius.circular(widget.compact ? 12 : 16),
                 child: Ink(
                   decoration: BoxDecoration(
@@ -756,7 +757,7 @@ class _DesktopSidebar extends StatelessWidget {
             _SidebarNavTile(
               item: item,
               selected: currentIndex == item.branchIndex,
-              onTap: () => onSelectBranch(item.branchIndex),
+              onTap: () { FeedbackService.instance.playImpact(); onSelectBranch(item.branchIndex); },
             ),
             const SizedBox(height: 8),
           ],
@@ -791,7 +792,7 @@ class _SidebarNavTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: onTap,
+      onTap: () { FeedbackService.instance.playImpact(); onTap(); },
       borderRadius: BorderRadius.circular(16),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
@@ -900,7 +901,7 @@ class _MobileBottomBar extends StatelessWidget {
           final selected = currentIndex == item.branchIndex;
           return Expanded(
             child: InkWell(
-              onTap: () => onSelectBranch(item.branchIndex),
+              onTap: () { FeedbackService.instance.playImpact(); onSelectBranch(item.branchIndex); },
               borderRadius: BorderRadius.circular(14),
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 8),

@@ -7,6 +7,7 @@ import '../../../shared/models/player.dart';
 import '../../../shared/widgets/app_shell.dart';
 import '../../cricket/application/cricket_controller.dart';
 import '../../x01/application/x01_controller.dart';
+import '../../../shared/services/feedback_service.dart';
 
 enum SetupGameMode { x01, cricket }
 
@@ -714,7 +715,7 @@ class _SelectionCard extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: onTap,
+        onTap: () { FeedbackService.instance.playImpact(); onTap(); },
         borderRadius: BorderRadius.circular(18),
         child: GlassPanel(
           radius: 18,
@@ -837,7 +838,7 @@ class _DropdownLine extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: onTap,
+        onTap: onTap == null ? null : () { FeedbackService.instance.playImpact(); onTap!(); },
         borderRadius: BorderRadius.circular(16),
         child: child,
       ),
@@ -863,7 +864,7 @@ class _SetupSelectionTile<T> extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: onTap,
+        onTap: () { FeedbackService.instance.playImpact(); onTap(); },
         borderRadius: BorderRadius.circular(18),
         child: GlassPanel(
           radius: 18,

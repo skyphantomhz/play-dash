@@ -1,6 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:uuid/uuid.dart';
 
+import '../../../core/services/history_providers.dart';
 import '../../../shared/models/dart_throw.dart';
+import '../../../shared/models/match_record.dart';
 import '../../../shared/models/match_settings.dart';
 import '../../../shared/models/match_state.dart';
 import '../../../shared/models/player.dart';
@@ -98,6 +101,9 @@ class X01Controller extends Notifier<X01MatchState> {
     _historySnapshots.add(List<DartThrow>.from(_throwHistory));
     _throwHistory = [..._throwHistory, dartThrow];
 
+    final winnerId =
+        turnResult.finished ? currentPlayer.id : state.game.winnerPlayerId;
+
     state = state.copyWith(
       currentPlayerIndex: shouldMoveToNextPlayer
           ? _nextPlayerIndex(state.currentPlayerIndex, state.players.length)
@@ -107,10 +113,19 @@ class X01Controller extends Notifier<X01MatchState> {
         currentTurnThrows: shouldAdvanceTurn
             ? const <DartThrow>[]
             : List.unmodifiable(updatedThrows),
-        winnerPlayerId:
-            turnResult.finished ? currentPlayer.id : state.game.winnerPlayerId,
+        winnerPlayerId: winnerId,
       ),
     );
+
+    // Persist to history when a winner is determined.
+    if (winnerId != null && state.game.winnerPlayerId == winnerId) {
+      _saveMatchRecord(
+        players: state.players,
+        scores: updatedScores,
+        winnerId: winnerId,
+        settings: settings,
+      );
+    }
   }
 
   void undo() {
@@ -178,5 +193,55 @@ class X01Controller extends Notifier<X01MatchState> {
     }
 
     return (currentIndex + 1) % playerCount;
+  }
+
+  void _saveMatchRecord({
+    required List<Player> players,
+    required Map<String, int> scores,
+    required String winnerId,
+    required X01MatchSettings settings,
+  }) {
+    final dartsPerPlayer = _countDartsPerPlayer(players);
+    final record = MatchRecord(
+      id: const Uuid().v4(),
+      gameMode: GameMode.x01,
+      playedAt: DateTime.now(),
+      startingScore: settings.startingScore,
+      playerResults: [
+        for (final player in players)
+          PlayerResult(
+            playerId: player.id,
+            playerName: player.name,
+            won: player.id == winnerId,
+            finalScore: scores[player.id] ?? 0,
+            dartsThrown: dartsPerPlayer[player.id] ?? 0,
+          ),
+      ],
+    );
+
+    // Fire-and-forget: we don't await to avoid blocking game UI.
+    ref.read(matchHistoryProvider.notifier).addRecord(record);
+  }
+
+  /// Counts how many darts each player threw during the entire match by
+  /// walking through the flat [_throwHistory].  X01 assigns throws in
+  /// round-robin turn order (up to 3 per turn).
+  Map<String, int> _countDartsPerPlayer(List<Player> players) {
+    if (players.isEmpty) return {};
+    final counts = <String, int>{
+      for (final p in players) p.id: 0,
+    };
+    var playerIdx = 0;
+    var throwsInTurn = 0;
+    for (final _ in _throwHistory) {
+      final playerId = players[playerIdx].id;
+      counts[playerId] = (counts[playerId] ?? 0) + 1;
+      throwsInTurn++;
+      if (throwsInTurn >= 3) {
+        throwsInTurn = 0;
+        playerIdx = (playerIdx + 1) % players.length;
+      }
+    }
+    return counts;
   }
 }

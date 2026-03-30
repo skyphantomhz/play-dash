@@ -5,6 +5,9 @@ import 'package:flutter/material.dart';
 import '../models/dart_throw.dart';
 import 'app_shell.dart';
 
+
+import '../services/feedback_service.dart';
+
 class InteractiveDartboard extends StatefulWidget {
   const InteractiveDartboard({
     required this.onThrow,
@@ -142,6 +145,7 @@ class _InteractiveDartboardState extends State<InteractiveDartboard>
                                   _controller
                                     ..reset()
                                     ..forward();
+                                  FeedbackService.instance.playImpact();
                                   widget.onThrow(result.dartThrow);
                                 }
                               : null,
