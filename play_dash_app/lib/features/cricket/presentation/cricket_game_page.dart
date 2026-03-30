@@ -7,6 +7,7 @@ import '../../../shared/models/player.dart';
 import '../../../shared/widgets/app_shell.dart';
 import '../../../shared/widgets/game_over_dialog.dart';
 import '../../../shared/widgets/interactive_dartboard.dart';
+import '../../../shared/services/feedback_service.dart';
 import '../application/cricket_controller.dart';
 
 String cricketFormatThrow(DartThrow dartThrow) {
@@ -61,6 +62,7 @@ class _CricketGamePageState extends ConsumerState<CricketGamePage> {
         }
 
         _dialogVisible = true;
+        FeedbackService.instance.playSuccess();
         await showDialog<void>(
           context: context,
           useRootNavigator: true,

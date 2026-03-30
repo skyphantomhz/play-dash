@@ -8,6 +8,7 @@ import '../../../shared/models/player.dart';
 import '../../../shared/widgets/app_shell.dart';
 import '../../../shared/widgets/game_over_dialog.dart';
 import '../../../shared/widgets/interactive_dartboard.dart';
+import '../../../shared/services/feedback_service.dart';
 import '../application/x01_controller.dart';
 
 String x01FormatThrow(DartThrow dartThrow) {
@@ -60,6 +61,7 @@ class _X01GamePageState extends ConsumerState<X01GamePage> {
         }
 
         _dialogVisible = true;
+        FeedbackService.instance.playSuccess();
         await showDialog<void>(
           context: context,
           useRootNavigator: true,
