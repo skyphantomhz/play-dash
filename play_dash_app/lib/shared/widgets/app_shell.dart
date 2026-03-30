@@ -13,7 +13,7 @@ class AppBackdrop extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        const _AppBackground(),
+        const RepaintBoundary(child: _AppBackground()),
         child,
       ],
     );
@@ -175,6 +175,7 @@ class GlassPanel extends StatelessWidget {
     this.glowColor,
     this.shadowColor = const Color(0x66000000),
     this.onTap,
+    this.useRepaintBoundary = true,
     super.key,
   });
 
@@ -187,10 +188,11 @@ class GlassPanel extends StatelessWidget {
   final Color? glowColor;
   final Color shadowColor;
   final VoidCallback? onTap;
+  final bool useRepaintBoundary;
 
   @override
   Widget build(BuildContext context) {
-    final content = ClipRRect(
+    Widget content = ClipRRect(
       borderRadius: BorderRadius.circular(radius),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
@@ -260,6 +262,10 @@ class GlassPanel extends StatelessWidget {
       ),
     );
 
+    if (useRepaintBoundary) {
+      content = RepaintBoundary(child: content);
+    }
+
     if (onTap == null) return content;
     return Material(
         color: Colors.transparent,
@@ -290,36 +296,38 @@ class NeonCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(radius),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.34),
-            blurRadius: 26,
-            offset: const Offset(0, 18),
-          ),
-          BoxShadow(
-            color: accent.withValues(alpha: 0.11),
-            blurRadius: 34,
-            spreadRadius: 1,
-          ),
-          BoxShadow(
-            color: (secondaryAccent ?? accent).withValues(alpha: 0.07),
-            blurRadius: 58,
-            spreadRadius: 4,
-          ),
-        ],
-      ),
-      child: GlassPanel(
-        radius: radius,
-        padding: padding,
-        blur: 24,
-        background: Colors.white.withValues(alpha: 0.06),
-        borderColor: Colors.white.withValues(alpha: 0.06),
-        glowColor: accent,
-        onTap: onTap,
-        child: child,
+    return RepaintBoundary(
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(radius),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.34),
+              blurRadius: 26,
+              offset: const Offset(0, 18),
+            ),
+            BoxShadow(
+              color: accent.withValues(alpha: 0.11),
+              blurRadius: 34,
+              spreadRadius: 1,
+            ),
+            BoxShadow(
+              color: (secondaryAccent ?? accent).withValues(alpha: 0.07),
+              blurRadius: 58,
+              spreadRadius: 4,
+            ),
+          ],
+        ),
+        child: GlassPanel(
+          radius: radius,
+          padding: padding,
+          blur: 24,
+          background: Colors.white.withValues(alpha: 0.06),
+          borderColor: Colors.white.withValues(alpha: 0.06),
+          glowColor: accent,
+          onTap: onTap,
+          child: child,
+        ),
       ),
     );
   }
@@ -944,7 +952,30 @@ class _AppBackground extends StatelessWidget {
             ),
           ),
         ),
-        Positioned.fill(child: _BackgroundStreaks(dense: false)),
+        Positioned(
+          top: -120,
+          left: -90,
+          child: _GlowBlob(
+            size: 420,
+            colors: [Color(0x3337D8FF), Color(0x0037D8FF)],
+          ),
+        ),
+        Positioned(
+          top: -80,
+          right: -120,
+          child: _GlowBlob(
+            size: 360,
+            colors: [Color(0x2EFF4FD8), Color(0x00FF4FD8)],
+          ),
+        ),
+        Positioned(
+          bottom: -180,
+          left: 120,
+          child: _GlowBlob(
+            size: 460,
+            colors: [Color(0x268B5CF6), Color(0x008B5CF6)],
+          ),
+        ),
       ],
     );
   }
@@ -973,277 +1004,57 @@ class _InnerCosmos extends StatelessWidget {
             ),
           ),
         ),
-        Positioned.fill(child: _BackgroundStreaks()),
+        Positioned(
+          top: -100,
+          left: -70,
+          child: _GlowBlob(
+            size: 300,
+            colors: [Color(0x2237D8FF), Color(0x0037D8FF)],
+          ),
+        ),
+        Positioned(
+          top: 40,
+          right: -110,
+          child: _GlowBlob(
+            size: 260,
+            colors: [Color(0x20FF4FD8), Color(0x00FF4FD8)],
+          ),
+        ),
+        Positioned(
+          bottom: -140,
+          right: 80,
+          child: _GlowBlob(
+            size: 320,
+            colors: [Color(0x188B5CF6), Color(0x008B5CF6)],
+          ),
+        ),
       ],
     );
   }
 }
 
-class _BackgroundStreaks extends StatefulWidget {
-  const _BackgroundStreaks({this.dense = true});
+class _GlowBlob extends StatelessWidget {
+  const _GlowBlob({required this.size, required this.colors});
 
-  final bool dense;
-
-  @override
-  State<_BackgroundStreaks> createState() => _BackgroundStreaksState();
-}
-
-class _BackgroundStreaksState extends State<_BackgroundStreaks>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller = AnimationController(
-    vsync: this,
-    duration: Duration(seconds: widget.dense ? 28 : 36),
-  )..repeat();
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
+  final double size;
+  final List<Color> colors;
 
   @override
   Widget build(BuildContext context) {
     return IgnorePointer(
-      child: AnimatedBuilder(
-        animation: _controller,
-        builder: (context, _) => CustomPaint(
-          painter:
-              _StreakPainter(progress: _controller.value, dense: widget.dense),
-          child: const SizedBox.expand(),
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: RadialGradient(
+            colors: colors,
+            stops: const [0.0, 1.0],
+          ),
         ),
       ),
     );
   }
-}
-
-class _StreakPainter extends CustomPainter {
-  const _StreakPainter({required this.progress, required this.dense});
-
-  final double progress;
-  final bool dense;
-
-  static const List<Color> _blobColors = [
-    Color(0x3337D8FF),
-    Color(0x40FF4FD8),
-    Color(0x338B5CF6),
-    Color(0x2637D8FF),
-  ];
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    _paintGlowBlobs(canvas, size);
-    _paintStreaks(canvas, size);
-    _paintParticles(canvas, size);
-  }
-
-  void _paintGlowBlobs(Canvas canvas, Size size) {
-    final blobs = dense
-        ? const [
-            (Offset(0.14, 0.18), 0.40, 0.05, 0.04),
-            (Offset(0.84, 0.14), 0.36, -0.04, 0.03),
-            (Offset(0.28, 0.84), 0.42, 0.04, -0.03),
-            (Offset(0.82, 0.72), 0.34, -0.03, -0.03),
-          ]
-        : const [
-            (Offset(0.12, 0.16), 0.46, 0.05, 0.04),
-            (Offset(0.88, 0.22), 0.40, -0.04, 0.03),
-            (Offset(0.24, 0.86), 0.44, 0.04, -0.03),
-          ];
-
-    for (var i = 0; i < blobs.length; i++) {
-      final blob = blobs[i];
-      final dx = _wave(progress * 0.55 + i * 0.12) * blob.$3 * size.width;
-      final dy = _wave(progress * 0.45 + i * 0.19) * blob.$4 * size.height;
-      final center =
-          Offset(blob.$1.dx * size.width + dx, blob.$1.dy * size.height + dy);
-      final radius = size.shortestSide * blob.$2;
-      final color = _blobColors[i % _blobColors.length];
-      final rect = Rect.fromCircle(center: center, radius: radius);
-      canvas.drawCircle(
-        center,
-        radius,
-        Paint()
-          ..shader = RadialGradient(
-            center: Alignment.center,
-            radius: 1,
-            colors: [
-              color,
-              color.withValues(alpha: color.a * 0.42),
-              color.withValues(alpha: color.a * 0.12),
-              Colors.transparent,
-            ],
-            stops: const [0.0, 0.38, 0.72, 1.0],
-          ).createShader(rect),
-      );
-    }
-  }
-
-  void _paintStreaks(Canvas canvas, Size size) {
-    final streaks = [
-      _AnimatedStreak(
-        color: const Color(0xFF37D8FF),
-        alpha: dense ? 0.14 : 0.11,
-        width: dense ? 1.5 : 1.2,
-        start: const Offset(0.02, 0.18),
-        controlA: const Offset(0.24, 0.04),
-        controlB: const Offset(0.68, 0.30),
-        end: const Offset(0.96, 0.15),
-        speed: 0.88,
-        phase: 0.0,
-      ),
-      _AnimatedStreak(
-        color: const Color(0xFFFF4FD8),
-        alpha: dense ? 0.10 : 0.08,
-        width: dense ? 1.2 : 1.0,
-        start: const Offset(0.08, 0.72),
-        controlA: const Offset(0.26, 0.56),
-        controlB: const Offset(0.70, 0.84),
-        end: const Offset(0.94, 0.60),
-        speed: 0.72,
-        phase: 0.22,
-      ),
-      _AnimatedStreak(
-        color: const Color(0xFF8B5CF6),
-        alpha: dense ? 0.08 : 0.06,
-        width: 1.0,
-        start: const Offset(0.12, 0.44),
-        controlA: const Offset(0.34, 0.32),
-        controlB: const Offset(0.58, 0.56),
-        end: const Offset(0.88, 0.40),
-        speed: 0.56,
-        phase: 0.47,
-      ),
-    ];
-
-    for (final streak in streaks) {
-      final shiftX =
-          _wave(progress * streak.speed + streak.phase) * 0.022 * size.width;
-      final shiftY =
-          _wave(progress * (streak.speed * 0.9) + streak.phase + 0.11) *
-              0.016 *
-              size.height;
-      final path = Path()
-        ..moveTo(
-          streak.start.dx * size.width + shiftX,
-          streak.start.dy * size.height + shiftY,
-        )
-        ..cubicTo(
-          streak.controlA.dx * size.width - shiftX * 0.2,
-          streak.controlA.dy * size.height + shiftY * 1.3,
-          streak.controlB.dx * size.width + shiftX * 0.9,
-          streak.controlB.dy * size.height - shiftY,
-          streak.end.dx * size.width - shiftX * 0.4,
-          streak.end.dy * size.height + shiftY * 0.4,
-        );
-
-      final bounds = path.getBounds().inflate(24);
-      final basePaint = Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = streak.width
-        ..strokeCap = StrokeCap.round
-        ..shader = LinearGradient(
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-          colors: [
-            Colors.transparent,
-            streak.color.withValues(alpha: streak.alpha * 0.55),
-            streak.color.withValues(alpha: streak.alpha),
-            streak.color.withValues(alpha: streak.alpha * 0.52),
-            Colors.transparent,
-          ],
-          stops: const [0.0, 0.22, 0.5, 0.78, 1.0],
-        ).createShader(bounds);
-      canvas.drawPath(path, basePaint);
-
-      final pulse = _unitWave(progress * streak.speed + streak.phase);
-      final metrics = path.computeMetrics().toList();
-      for (final metric in metrics) {
-        final start = (metric.length * pulse).clamp(0.0, metric.length);
-        final end = (start + metric.length * 0.12).clamp(0.0, metric.length);
-        final highlight = metric.extractPath(start, end);
-        canvas.drawPath(
-          highlight,
-          Paint()
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = streak.width
-            ..strokeCap = StrokeCap.round
-            ..shader = LinearGradient(
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
-              colors: [
-                Colors.transparent,
-                streak.color.withValues(alpha: dense ? 0.18 : 0.14),
-                Colors.transparent,
-              ],
-              stops: const [0.0, 0.5, 1.0],
-            ).createShader(bounds),
-        );
-      }
-    }
-  }
-
-  void _paintParticles(Canvas canvas, Size size) {
-    final count = dense ? 48 : 36;
-    for (var i = 0; i < count; i++) {
-      final seed = i + 1;
-      final baseX = ((seed * 67) % 997) / 997;
-      final baseY = ((seed * 41) % 991) / 991;
-      final driftX =
-          _wave(progress * (0.10 + (i % 5) * 0.015) + i * 0.17) * 0.055;
-      final driftY =
-          _wave(progress * (0.08 + (i % 7) * 0.012) + i * 0.11) * 0.075;
-      final radius = i % 9 == 0 ? 1.8 : (i % 4 == 0 ? 1.3 : 1.0);
-      final opacity = 0.05 + ((i % 6) * 0.018);
-      final color =
-          i.isEven ? const Color(0xFFB9F6FF) : const Color(0xFFFFD2F4);
-      final offset = Offset(
-        (baseX + driftX).clamp(0.0, 1.0) * size.width,
-        (baseY + driftY).clamp(0.0, 1.0) * size.height,
-      );
-      canvas.drawCircle(
-          offset, radius, Paint()..color = color.withValues(alpha: opacity));
-    }
-  }
-
-  double _wave(double value) {
-    final fractional = value - value.floorToDouble();
-    return fractional < 0.5
-        ? fractional * 2 - 0.5
-        : 0.5 - ((fractional - 0.5) * 2);
-  }
-
-  double _unitWave(double value) {
-    final fractional = value - value.floorToDouble();
-    return Curves.easeInOut.transform(fractional);
-  }
-
-  @override
-  bool shouldRepaint(covariant _StreakPainter oldDelegate) =>
-      oldDelegate.progress != progress || oldDelegate.dense != dense;
-}
-
-class _AnimatedStreak {
-  const _AnimatedStreak({
-    required this.color,
-    required this.alpha,
-    required this.width,
-    required this.start,
-    required this.controlA,
-    required this.controlB,
-    required this.end,
-    required this.speed,
-    required this.phase,
-  });
-
-  final Color color;
-  final double alpha;
-  final double width;
-  final Offset start;
-  final Offset controlA;
-  final Offset controlB;
-  final Offset end;
-  final double speed;
-  final double phase;
 }
 
 class _PrimaryNavItem {
