@@ -2,18 +2,91 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/models/dart_throw.dart';
+import '../../../shared/models/match_state.dart';
 import '../../../shared/models/player.dart';
 import '../../../shared/widgets/app_shell.dart';
+import '../../../shared/widgets/game_over_dialog.dart';
 import '../../../shared/widgets/interactive_dartboard.dart';
 import '../application/cricket_controller.dart';
 
-class CricketGamePage extends ConsumerWidget {
+String cricketFormatThrow(DartThrow dartThrow) {
+  if (dartThrow.segment == 25) {
+    return dartThrow.multiplier == 2 ? 'Bull' : 'Outer Bull';
+  }
+  if (dartThrow.segment == 0 || dartThrow.multiplier == 0) {
+    return 'Miss';
+  }
+  return switch (dartThrow.multiplier) {
+    1 => 'Single ${dartThrow.segment}',
+    2 => 'Double ${dartThrow.segment}',
+    3 => 'Triple ${dartThrow.segment}',
+    _ => '${dartThrow.multiplier}x ${dartThrow.segment}',
+  };
+}
+
+class CricketGamePage extends ConsumerStatefulWidget {
   const CricketGamePage({super.key});
 
   static const List<int> segments = <int>[20, 19, 18, 17, 16, 15, 25];
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CricketGamePage> createState() => _CricketGamePageState();
+}
+
+class _CricketGamePageState extends ConsumerState<CricketGamePage> {
+  bool _dialogVisible = false;
+  late final ProviderSubscription<CricketMatchState> _winnerSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _winnerSubscription = ref.listenManual<CricketMatchState>(
+        cricketControllerProvider, (previous, next) {
+      final winnerChanged =
+          previous?.game.winnerPlayerId != next.game.winnerPlayerId;
+      if (!winnerChanged ||
+          next.game.winnerPlayerId == null ||
+          _dialogVisible) {
+        return;
+      }
+
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted || _dialogVisible) {
+          return;
+        }
+
+        final winner = _findPlayerById(next.players, next.game.winnerPlayerId);
+        if (winner == null) {
+          return;
+        }
+
+        _dialogVisible = true;
+        await showDialog<void>(
+          context: context,
+          useRootNavigator: true,
+          barrierDismissible: false,
+          builder: (dialogContext) => GameOverDialog(
+            winnerName: winner.name,
+            statLabel: 'Final Cricket Score',
+            statValue: '${next.game.scores[winner.id] ?? 0} points',
+            onRematch: () async {
+              ref.read(cricketControllerProvider.notifier).rematch();
+            },
+          ),
+        );
+        _dialogVisible = false;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _winnerSubscription.close();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(cricketControllerProvider);
     final controller = ref.read(cricketControllerProvider.notifier);
     final canUndo = ref.watch(cricketCanUndoProvider);
@@ -22,9 +95,8 @@ class CricketGamePage extends ConsumerWidget {
     final throwHistory = controller.throwHistory;
     final currentTurnThrows = controller.currentTurnThrows;
     final latestThrow = throwHistory.isEmpty ? null : throwHistory.last;
-    final latestScore = latestThrow == null
-        ? 0
-        : latestThrow.segment * latestThrow.multiplier;
+    final latestScore =
+        latestThrow == null ? 0 : latestThrow.segment * latestThrow.multiplier;
     final canEndTurn = winner == null && currentTurnThrows.isNotEmpty;
 
     return LayoutBuilder(
@@ -122,7 +194,8 @@ class CricketGamePage extends ConsumerWidget {
                             const SizedBox(height: 10),
                           ],
                           const SizedBox(height: 6),
-                          const SectionHeading(title: 'Throw History', compact: true),
+                          const SectionHeading(
+                              title: 'Throw History', compact: true),
                           const SizedBox(height: 10),
                           if (throwHistory.isEmpty)
                             const PanelListTile(
@@ -132,14 +205,13 @@ class CricketGamePage extends ConsumerWidget {
                                   color: Colors.white),
                             )
                           else
-                            for (final entry in throwHistory
-                                .reversed
+                            for (final entry in throwHistory.reversed
                                 .take(8)
                                 .toList()
                                 .asMap()
                                 .entries) ...[
                               PanelListTile(
-                                title: formatThrow(entry.value),
+                                title: cricketFormatThrow(entry.value),
                                 subtitle:
                                     'Throw ${entry.key + 1} · ${entry.value.segment * entry.value.multiplier} scored',
                                 leading: CircleAvatar(
@@ -248,7 +320,8 @@ class CricketGamePage extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const SectionHeading(title: 'Throw History', compact: true),
+                        const SectionHeading(
+                            title: 'Throw History', compact: true),
                         const SizedBox(height: 10),
                         if (throwHistory.isEmpty)
                           const Text(
@@ -256,14 +329,12 @@ class CricketGamePage extends ConsumerWidget {
                             style: TextStyle(color: Colors.white70),
                           )
                         else
-                          for (final entry in throwHistory
-                              .reversed
-                              .take(8)
-                              .toList()) ...[
+                          for (final entry
+                              in throwHistory.reversed.take(8).toList()) ...[
                             Padding(
                               padding: const EdgeInsets.only(bottom: 8),
                               child: Text(
-                                '${formatThrow(entry)} · ${entry.segment * entry.multiplier}',
+                                '${cricketFormatThrow(entry)} · ${entry.segment * entry.multiplier}',
                                 style: const TextStyle(color: Colors.white70),
                               ),
                             ),
@@ -291,21 +362,6 @@ class CricketGamePage extends ConsumerWidget {
       if (player.id == id) return player;
     }
     return null;
-  }
-
-  static String formatThrow(DartThrow dartThrow) {
-    if (dartThrow.segment == 25) {
-      return dartThrow.multiplier == 2 ? 'Bull' : 'Outer Bull';
-    }
-    if (dartThrow.segment == 0 || dartThrow.multiplier == 0) {
-      return 'Miss';
-    }
-    return switch (dartThrow.multiplier) {
-      1 => 'Single ${dartThrow.segment}',
-      2 => 'Double ${dartThrow.segment}',
-      3 => 'Triple ${dartThrow.segment}',
-      _ => '${dartThrow.multiplier}x ${dartThrow.segment}',
-    };
   }
 }
 

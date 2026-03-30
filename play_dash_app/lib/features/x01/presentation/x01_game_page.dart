@@ -3,16 +3,89 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/models/dart_throw.dart';
 import '../../../shared/models/match_settings.dart';
+import '../../../shared/models/match_state.dart';
 import '../../../shared/models/player.dart';
 import '../../../shared/widgets/app_shell.dart';
+import '../../../shared/widgets/game_over_dialog.dart';
 import '../../../shared/widgets/interactive_dartboard.dart';
 import '../application/x01_controller.dart';
 
-class X01GamePage extends ConsumerWidget {
+String x01FormatThrow(DartThrow dartThrow) {
+  if (dartThrow.segment == 25) {
+    return dartThrow.multiplier == 2 ? 'Bull' : 'Outer Bull';
+  }
+  if (dartThrow.segment == 0 || dartThrow.multiplier == 0) {
+    return 'Miss';
+  }
+  return switch (dartThrow.multiplier) {
+    1 => 'Single ${dartThrow.segment}',
+    2 => 'Double ${dartThrow.segment}',
+    3 => 'Triple ${dartThrow.segment}',
+    _ => '${dartThrow.multiplier}x ${dartThrow.segment}',
+  };
+}
+
+class X01GamePage extends ConsumerStatefulWidget {
   const X01GamePage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<X01GamePage> createState() => _X01GamePageState();
+}
+
+class _X01GamePageState extends ConsumerState<X01GamePage> {
+  bool _dialogVisible = false;
+  late final ProviderSubscription<X01MatchState> _winnerSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _winnerSubscription = ref.listenManual<X01MatchState>(x01ControllerProvider,
+        (previous, next) {
+      final winnerChanged =
+          previous?.game.winnerPlayerId != next.game.winnerPlayerId;
+      if (!winnerChanged ||
+          next.game.winnerPlayerId == null ||
+          _dialogVisible) {
+        return;
+      }
+
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted || _dialogVisible) {
+          return;
+        }
+
+        final winner = _findPlayerById(next.players, next.game.winnerPlayerId);
+        if (winner == null) {
+          return;
+        }
+
+        _dialogVisible = true;
+        await showDialog<void>(
+          context: context,
+          useRootNavigator: true,
+          barrierDismissible: false,
+          builder: (dialogContext) => GameOverDialog(
+            winnerName: winner.name,
+            statLabel: 'Checkout Score',
+            statValue: '${next.game.scores[winner.id] ?? 0} remaining',
+            onRematch: () async {
+              ref.read(x01ControllerProvider.notifier).rematch();
+            },
+          ),
+        );
+        _dialogVisible = false;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _winnerSubscription.close();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(x01ControllerProvider);
     final controller = ref.read(x01ControllerProvider.notifier);
     final canUndo = ref.watch(x01CanUndoProvider);
@@ -21,9 +94,8 @@ class X01GamePage extends ConsumerWidget {
     final winner = _findPlayerById(state.players, state.game.winnerPlayerId);
     final throwHistory = controller.throwHistory;
     final latestThrow = throwHistory.isEmpty ? null : throwHistory.last;
-    final latestScore = latestThrow == null
-        ? 0
-        : latestThrow.segment * latestThrow.multiplier;
+    final latestScore =
+        latestThrow == null ? 0 : latestThrow.segment * latestThrow.multiplier;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -55,8 +127,8 @@ class X01GamePage extends ConsumerWidget {
                       winner: winner,
                       canUndo: canUndo,
                       latestScore: latestScore,
-                      canEndTurn:
-                          winner == null && state.game.currentTurnThrows.isNotEmpty,
+                      canEndTurn: winner == null &&
+                          state.game.currentTurnThrows.isNotEmpty,
                     ),
                   ),
                   const SizedBox(width: 18),
@@ -95,8 +167,8 @@ class X01GamePage extends ConsumerWidget {
                     winner: winner,
                     canUndo: canUndo,
                     latestScore: latestScore,
-                    canEndTurn:
-                        winner == null && state.game.currentTurnThrows.isNotEmpty,
+                    canEndTurn: winner == null &&
+                        state.game.currentTurnThrows.isNotEmpty,
                     compact: true,
                   ),
                   const SizedBox(height: 12),
@@ -113,8 +185,8 @@ class X01GamePage extends ConsumerWidget {
                   _BottomActions(
                     controller: controller,
                     canUndo: canUndo,
-                    canEndTurn:
-                        winner == null && state.game.currentTurnThrows.isNotEmpty,
+                    canEndTurn: winner == null &&
+                        state.game.currentTurnThrows.isNotEmpty,
                   ),
                 ],
               );
@@ -140,21 +212,6 @@ class X01GamePage extends ConsumerWidget {
       }
     }
     return null;
-  }
-
-  static String formatThrow(DartThrow dartThrow) {
-    if (dartThrow.segment == 25) {
-      return dartThrow.multiplier == 2 ? 'Bull' : 'Outer Bull';
-    }
-    if (dartThrow.segment == 0 || dartThrow.multiplier == 0) {
-      return 'Miss';
-    }
-    return switch (dartThrow.multiplier) {
-      1 => 'Single ${dartThrow.segment}',
-      2 => 'Double ${dartThrow.segment}',
-      3 => 'Triple ${dartThrow.segment}',
-      _ => '${dartThrow.multiplier}x ${dartThrow.segment}',
-    };
   }
 }
 
@@ -283,7 +340,8 @@ class _BoardStage extends StatelessWidget {
         children: [
           SectionHeading(
             title: winner == null ? 'Game Screen' : '${winner!.name} Wins',
-            subtitle: 'Tap the board to score. Buttons update from controller state.',
+            subtitle:
+                'Tap the board to score. Buttons update from controller state.',
           ),
           const SizedBox(height: 14),
           InteractiveDartboard(
@@ -295,7 +353,9 @@ class _BoardStage extends StatelessWidget {
           if (compact)
             Column(
               children: [
-                _UndoStateChip(canUndo: canUndo, onPressed: canUndo ? controller.undo : null),
+                _UndoStateChip(
+                    canUndo: canUndo,
+                    onPressed: canUndo ? controller.undo : null),
                 const SizedBox(height: 10),
                 _LatestScoreCard(latestScore: latestScore),
                 const SizedBox(height: 10),
@@ -434,10 +494,12 @@ class _ScoreRail extends StatelessWidget {
               ),
               trailing: ScoreBadge(
                 value: '${scores[player.id] ?? settings.startingScore}',
-                highlight: player.id == activePlayer?.id || player.id == winner?.id,
+                highlight:
+                    player.id == activePlayer?.id || player.id == winner?.id,
                 large: player.id == activePlayer?.id,
               ),
-              highlight: player.id == activePlayer?.id || player.id == winner?.id,
+              highlight:
+                  player.id == activePlayer?.id || player.id == winner?.id,
             ),
             const SizedBox(height: 10),
           ],
@@ -453,7 +515,7 @@ class _ScoreRail extends StatelessWidget {
           else
             for (final entry in throws.take(8).toList().asMap().entries) ...[
               PanelListTile(
-                title: X01GamePage.formatThrow(entry.value),
+                title: x01FormatThrow(entry.value),
                 subtitle:
                     'Visit ${entry.key + 1} · ${entry.value.segment * entry.value.multiplier} points',
                 leading: CircleAvatar(

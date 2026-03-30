@@ -25,7 +25,8 @@ class CricketController extends Notifier<CricketMatchState> {
 
   bool get canUndo => _history.isNotEmpty;
   List<DartThrow> get throwHistory => List.unmodifiable(_throwHistory);
-  List<DartThrow> get currentTurnThrows => List.unmodifiable(_currentTurnThrows);
+  List<DartThrow> get currentTurnThrows =>
+      List.unmodifiable(_currentTurnThrows);
 
   @override
   CricketMatchState build() {
@@ -111,7 +112,8 @@ class CricketController extends Notifier<CricketMatchState> {
     _turnSnapshots.add(List<DartThrow>.from(_currentTurnThrows));
     _historySnapshots.add(List<DartThrow>.from(_throwHistory));
     _throwHistory = [..._throwHistory, dartThrow];
-    _currentTurnThrows = shouldAdvanceTurn ? <DartThrow>[] : updatedCurrentTurnThrows;
+    _currentTurnThrows =
+        shouldAdvanceTurn ? <DartThrow>[] : updatedCurrentTurnThrows;
 
     state = state.copyWith(
       currentPlayerIndex: shouldAdvanceTurn
@@ -149,6 +151,34 @@ class CricketController extends Notifier<CricketMatchState> {
     _currentTurnThrows = _turnSnapshots.removeLast();
     _throwHistory = _historySnapshots.removeLast();
     state = state.copyWith(currentPlayerIndex: state.currentPlayerIndex);
+  }
+
+  void rematch() {
+    final settings = state.settings as CricketMatchSettings;
+    final players = state.players;
+    final startingPlayerIndex = state.players.isEmpty
+        ? 0
+        : state.currentPlayerIndex.clamp(0, state.players.length - 1).toInt();
+
+    _history.clear();
+    _turnSnapshots.clear();
+    _historySnapshots.clear();
+    _throwHistory = <DartThrow>[];
+    _currentTurnThrows = <DartThrow>[];
+
+    state = state.copyWith(
+      currentPlayerIndex: startingPlayerIndex,
+      players: players,
+      settings: settings,
+      game: CricketGameState(
+        marks: {
+          for (final player in players) player.id: _emptyMarks(),
+        },
+        scores: {
+          for (final player in players) player.id: 0,
+        },
+      ),
+    );
   }
 
   Map<int, int> _emptyMarks() => {

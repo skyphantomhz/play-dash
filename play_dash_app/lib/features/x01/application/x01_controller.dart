@@ -93,7 +93,8 @@ class X01Controller extends Notifier<X01MatchState> {
     final shouldMoveToNextPlayer = turnResult.bust || didUseAllDarts;
 
     _history.add(previousState);
-    _turnSnapshots.add(List<DartThrow>.from(previousState.game.currentTurnThrows));
+    _turnSnapshots
+        .add(List<DartThrow>.from(previousState.game.currentTurnThrows));
     _historySnapshots.add(List<DartThrow>.from(_throwHistory));
     _throwHistory = [..._throwHistory, dartThrow];
 
@@ -129,7 +130,8 @@ class X01Controller extends Notifier<X01MatchState> {
   }
 
   void resetCurrentTurn() {
-    if (state.game.currentTurnThrows.isEmpty || state.game.winnerPlayerId != null) {
+    if (state.game.currentTurnThrows.isEmpty ||
+        state.game.winnerPlayerId != null) {
       return;
     }
 
@@ -140,6 +142,31 @@ class X01Controller extends Notifier<X01MatchState> {
       currentPlayerIndex:
           _nextPlayerIndex(state.currentPlayerIndex, state.players.length),
       game: state.game.copyWith(
+        currentTurnThrows: const <DartThrow>[],
+      ),
+    );
+  }
+
+  void rematch() {
+    final settings = state.settings as X01MatchSettings;
+    final players = state.players;
+    final startingPlayerIndex = state.players.isEmpty
+        ? 0
+        : state.currentPlayerIndex.clamp(0, state.players.length - 1).toInt();
+
+    _history.clear();
+    _turnSnapshots.clear();
+    _historySnapshots.clear();
+    _throwHistory = <DartThrow>[];
+
+    state = state.copyWith(
+      currentPlayerIndex: startingPlayerIndex,
+      players: players,
+      settings: settings,
+      game: X01GameState(
+        scores: {
+          for (final player in players) player.id: settings.startingScore,
+        },
         currentTurnThrows: const <DartThrow>[],
       ),
     );
