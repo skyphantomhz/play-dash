@@ -133,7 +133,8 @@ class _ShellSurface extends StatelessWidget {
         borderRadius: BorderRadius.circular(isDesktop ? 26 : 24),
         child: Stack(
           children: [
-            const Positioned.fill(child: _InnerCosmos()),
+            const Positioned.fill(
+                child: RepaintBoundary(child: _InnerCosmos())),
             Column(
               children: [
                 Expanded(
@@ -144,15 +145,17 @@ class _ShellSurface extends StatelessWidget {
                       isDesktop ? 16 : 10,
                       showBottomNav ? 10 : 16,
                     ),
-                    child: navigationShell,
+                    child: RepaintBoundary(child: navigationShell),
                   ),
                 ),
                 if (showBottomNav)
                   Padding(
                     padding: const EdgeInsets.all(10),
-                    child: _MobileBottomBar(
-                      currentIndex: navigationShell.currentIndex,
-                      onSelectBranch: onSelectBranch ?? (_) {},
+                    child: RepaintBoundary(
+                      child: _MobileBottomBar(
+                        currentIndex: navigationShell.currentIndex,
+                        onSelectBranch: onSelectBranch ?? (_) {},
+                      ),
                     ),
                   ),
               ],

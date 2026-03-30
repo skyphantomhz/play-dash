@@ -121,53 +121,58 @@ class _CricketGamePageState extends ConsumerState<CricketGamePage> {
                   const SizedBox(width: 18),
                   Expanded(
                     flex: 40,
-                    child: NeonCard(
-                      accent: const Color(0xFF37D8FF),
-                      secondaryAccent: const Color(0xFFFF4FD8),
-                      child: Column(
-                        children: [
-                          SectionHeading(
-                            title: winner == null
-                                ? 'Cricket Board'
-                                : '${winner.name} Wins',
-                            subtitle:
-                                'Interactive board writes throws into the live Cricket controller.',
-                            trailing: ScoreBadge(
-                              value: canUndo ? 'Undo Ready' : 'Locked',
-                              highlight: canUndo,
+                    child: RepaintBoundary(
+                      child: NeonCard(
+                        accent: const Color(0xFF37D8FF),
+                        secondaryAccent: const Color(0xFFFF4FD8),
+                        child: Column(
+                          children: [
+                            SectionHeading(
+                              title: winner == null
+                                  ? 'Cricket Board'
+                                  : '${winner.name} Wins',
+                              subtitle:
+                                  'Interactive board writes throws into the live Cricket controller.',
+                              trailing: ScoreBadge(
+                                value: canUndo ? 'Undo Ready' : 'Locked',
+                                highlight: canUndo,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 16),
-                          InteractiveDartboard(
-                            enabled: winner == null,
-                            onThrow: controller.addThrow,
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: GlassButton(
-                                  label: 'Undo',
-                                  icon: Icons.undo_rounded,
-                                  onPressed: canUndo ? controller.undo : null,
-                                ),
+                            const SizedBox(height: 16),
+                            RepaintBoundary(
+                              child: InteractiveDartboard(
+                                enabled: winner == null,
+                                onThrow: controller.addThrow,
                               ),
-                              const SizedBox(width: 12),
-                              _LatestCricketScoreCard(latestScore: latestScore),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: GlassButton(
-                                  label: 'End Turn',
-                                  icon: Icons.bolt_rounded,
-                                  highlight: true,
-                                  onPressed: canEndTurn
-                                      ? controller.resetCurrentTurn
-                                      : null,
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: GlassButton(
+                                    label: 'Undo',
+                                    icon: Icons.undo_rounded,
+                                    onPressed: canUndo ? controller.undo : null,
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ],
+                                const SizedBox(width: 12),
+                                _LatestCricketScoreCard(
+                                    latestScore: latestScore),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: GlassButton(
+                                    label: 'End Turn',
+                                    icon: Icons.bolt_rounded,
+                                    highlight: true,
+                                    onPressed: canEndTurn
+                                        ? controller.resetCurrentTurn
+                                        : null,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -252,52 +257,56 @@ class _CricketGamePageState extends ConsumerState<CricketGamePage> {
                         : 'Throw ${currentTurnThrows.length + 1} of 3',
                   ),
                   const SizedBox(height: 12),
-                  NeonCard(
-                    accent: const Color(0xFF37D8FF),
-                    secondaryAccent: const Color(0xFFFF4FD8),
-                    child: Column(
-                      children: [
-                        SectionHeading(
-                          title: winner == null
-                              ? 'Cricket Board'
-                              : '${winner.name} Wins',
-                          subtitle:
-                              'Mobile board view uses the same live controller state.',
-                          trailing: ScoreBadge(
-                            value: canUndo ? 'Undo' : 'Locked',
-                            highlight: canUndo,
+                  RepaintBoundary(
+                    child: NeonCard(
+                      accent: const Color(0xFF37D8FF),
+                      secondaryAccent: const Color(0xFFFF4FD8),
+                      child: Column(
+                        children: [
+                          SectionHeading(
+                            title: winner == null
+                                ? 'Cricket Board'
+                                : '${winner.name} Wins',
+                            subtitle:
+                                'Mobile board view uses the same live controller state.',
+                            trailing: ScoreBadge(
+                              value: canUndo ? 'Undo' : 'Locked',
+                              highlight: canUndo,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 14),
-                        InteractiveDartboard(
-                          enabled: winner == null,
-                          compact: true,
-                          onThrow: controller.addThrow,
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: GlassButton(
-                                label: 'Undo',
-                                icon: Icons.undo_rounded,
-                                onPressed: canUndo ? controller.undo : null,
-                              ),
+                          const SizedBox(height: 14),
+                          RepaintBoundary(
+                            child: InteractiveDartboard(
+                              enabled: winner == null,
+                              compact: true,
+                              onThrow: controller.addThrow,
                             ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: GlassButton(
-                                label: 'End Turn',
-                                icon: Icons.bolt_rounded,
-                                highlight: true,
-                                onPressed: canEndTurn
-                                    ? controller.resetCurrentTurn
-                                    : null,
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: GlassButton(
+                                  label: 'Undo',
+                                  icon: Icons.undo_rounded,
+                                  onPressed: canUndo ? controller.undo : null,
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ],
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: GlassButton(
+                                  label: 'End Turn',
+                                  icon: Icons.bolt_rounded,
+                                  highlight: true,
+                                  onPressed: canEndTurn
+                                      ? controller.resetCurrentTurn
+                                      : null,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(height: 12),

@@ -46,6 +46,12 @@ class InteractiveDartboard extends StatefulWidget {
 
 class _InteractiveDartboardState extends State<InteractiveDartboard>
     with SingleTickerProviderStateMixin {
+  static const double _compactBoardFactor = 0.84;
+  static const double _compactMaxBoardSize = 320;
+  static const double _regularMaxBoardSize = 520;
+  static const double _compactMinBoardSize = 220;
+  static const double _regularMinBoardSize = 260;
+
   late final AnimationController _controller = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 420),
@@ -106,46 +112,54 @@ class _InteractiveDartboardState extends State<InteractiveDartboard>
                   : availableWidth;
               final availableSize = math.min(availableWidth, availableHeight);
               final maxBoardSize = isCompactLayout
-                  ? math.min(availableWidth * 0.84, 320.0)
-                  : math.min(availableWidth, 520.0);
-              final minBoardSize = isCompactLayout ? 220.0 : 260.0;
+                  ? math.min(availableWidth * _compactBoardFactor,
+                      _compactMaxBoardSize)
+                  : math.min(availableWidth, _regularMaxBoardSize);
+              final minBoardSize =
+                  isCompactLayout ? _compactMinBoardSize : _regularMinBoardSize;
               final boardSize =
                   availableSize.clamp(minBoardSize, maxBoardSize).toDouble();
 
               return Center(
                 child: SizedBox.square(
                   dimension: boardSize,
-                  child: Builder(
-                    builder: (boardContext) {
-                      return GestureDetector(
-                        onTapUp: widget.enabled
-                            ? (details) {
-                                final box = boardContext.findRenderObject()
-                                    as RenderBox?;
-                                if (box == null) return;
-                                final local =
-                                    box.globalToLocal(details.globalPosition);
-                                final result = _throwForPosition(
-                                  local,
-                                  Size(boardSize, boardSize),
-                                );
-                                setState(() => _lastHit = result.hit);
-                                _controller
-                                  ..reset()
-                                  ..forward();
-                                widget.onThrow(result.dartThrow);
-                              }
-                            : null,
-                        child: CustomPaint(
-                          painter: _DartboardPainter(
-                            colorScheme: scheme,
-                            highlight: _lastHit,
-                            progress: _controller.value,
-                            disabled: !widget.enabled,
+                  child: RepaintBoundary(
+                    child: Builder(
+                      builder: (boardContext) {
+                        return GestureDetector(
+                          onTapUp: widget.enabled
+                              ? (details) {
+                                  final box = boardContext.findRenderObject()
+                                      as RenderBox?;
+                                  if (box == null) return;
+                                  final local =
+                                      box.globalToLocal(details.globalPosition);
+                                  final result = _throwForPosition(
+                                    local,
+                                    Size.square(boardSize),
+                                  );
+                                  setState(() => _lastHit = result.hit);
+                                  _controller
+                                    ..reset()
+                                    ..forward();
+                                  widget.onThrow(result.dartThrow);
+                                }
+                              : null,
+                          child: CustomPaint(
+                            isComplex: true,
+                            foregroundPainter: _DartboardOverlayPainter(
+                              colorScheme: scheme,
+                              highlight: _lastHit,
+                              progress: _controller.value,
+                              disabled: !widget.enabled,
+                            ),
+                            painter: _DartboardBasePainter(
+                              colorScheme: scheme,
+                            ),
                           ),
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   ),
                 ),
               );
@@ -280,24 +294,17 @@ class _LegendChip extends StatelessWidget {
   }
 }
 
-class _DartboardPainter extends CustomPainter {
-  const _DartboardPainter({
+class _DartboardBasePainter extends CustomPainter {
+  const _DartboardBasePainter({
     required this.colorScheme,
-    required this.highlight,
-    required this.progress,
-    required this.disabled,
   });
 
   final ColorScheme colorScheme;
-  final _BoardHit? highlight;
-  final double progress;
-  final bool disabled;
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2;
-    final pulse = Curves.easeOut.transform(1 - progress);
 
     canvas.drawCircle(
       center,
@@ -310,15 +317,15 @@ class _DartboardPainter extends CustomPainter {
     );
 
     _drawRing(canvas, center, radius, 0.62, 0.90, const Color(0xFFF0E2CA),
-        const Color(0xFF17202F), _BoardRing.outerSingle, pulse);
+        const Color(0xFF17202F));
     _drawRing(canvas, center, radius, 0.54, 0.62, const Color(0xFF3CC9A3),
-        const Color(0xFFE56A6E), _BoardRing.triple, pulse);
+        const Color(0xFFE56A6E));
     _drawRing(canvas, center, radius, 0.10, 0.54, const Color(0xFF17202F),
-        const Color(0xFFF0E2CA), _BoardRing.innerSingle, pulse);
+        const Color(0xFFF0E2CA));
     _drawRing(canvas, center, radius, 0.90, 1.0, const Color(0xFFE56A6E),
-        const Color(0xFF3CC9A3), _BoardRing.double, pulse);
+        const Color(0xFF3CC9A3));
 
-    _drawBull(canvas, center, radius, pulse);
+    _drawBull(canvas, center, radius);
     _drawWires(canvas, center, radius);
     _drawLabels(canvas, center, radius);
 
@@ -330,14 +337,6 @@ class _DartboardPainter extends CustomPainter {
         ..strokeWidth = radius * 0.022
         ..color = Colors.white.withValues(alpha: 0.14),
     );
-
-    if (disabled) {
-      canvas.drawCircle(
-        center,
-        radius,
-        Paint()..color = Colors.black.withValues(alpha: 0.34),
-      );
-    }
   }
 
   void _drawRing(
@@ -348,8 +347,6 @@ class _DartboardPainter extends CustomPainter {
     double outerFactor,
     Color evenColor,
     Color oddColor,
-    _BoardRing ring,
-    double pulse,
   ) {
     const sweep = math.pi / 10;
     final innerRadius = radius * innerFactor;
@@ -358,10 +355,7 @@ class _DartboardPainter extends CustomPainter {
     for (var index = 0;
         index < InteractiveDartboard._segmentOrder.length;
         index++) {
-      final segment = InteractiveDartboard._segmentOrder[index];
       final start = (-math.pi / 2) + (index * sweep);
-      final isHighlighted =
-          highlight?.segment == segment && highlight?.ring == ring;
       final path = Path()
         ..moveTo(center.dx + (innerRadius * math.cos(start)),
             center.dy + (innerRadius * math.sin(start)))
@@ -388,21 +382,6 @@ class _DartboardPainter extends CustomPainter {
           ).createShader(Rect.fromCircle(center: center, radius: outerRadius)),
       );
 
-      if (isHighlighted) {
-        final color = _highlightColor(ring);
-        canvas.drawPath(
-          path,
-          Paint()
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 4
-            ..color = color.withValues(alpha: 0.86 - (0.10 * progress)),
-        );
-        canvas.drawPath(
-          path,
-          Paint()..color = color.withValues(alpha: 0.14 + (0.06 * pulse)),
-        );
-      }
-
       canvas.drawPath(
         path,
         Paint()
@@ -413,33 +392,11 @@ class _DartboardPainter extends CustomPainter {
     }
   }
 
-  void _drawBull(Canvas canvas, Offset center, double radius, double pulse) {
-    final outerBullSelected = highlight?.ring == _BoardRing.outerBull;
-    final bullSelected = highlight?.ring == _BoardRing.bull;
-
+  void _drawBull(Canvas canvas, Offset center, double radius) {
     canvas.drawCircle(
         center, radius * 0.10, Paint()..color = const Color(0xFF3CC9A3));
     canvas.drawCircle(
         center, radius * 0.05, Paint()..color = const Color(0xFFE56A6E));
-
-    if (outerBullSelected || bullSelected) {
-      canvas.drawCircle(
-        center,
-        radius * (outerBullSelected ? 0.12 : 0.07),
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 3.5
-          ..color = _highlightColor(highlight!.ring)
-              .withValues(alpha: 0.88 - (0.08 * progress)),
-      );
-      canvas.drawCircle(
-        center,
-        radius * (outerBullSelected ? 0.13 : 0.08),
-        Paint()
-          ..color = _highlightColor(highlight!.ring)
-              .withValues(alpha: 0.08 + (0.04 * pulse)),
-      );
-    }
   }
 
   void _drawWires(Canvas canvas, Offset center, double radius) {
@@ -489,6 +446,87 @@ class _DartboardPainter extends CustomPainter {
     }
   }
 
+  @override
+  bool shouldRepaint(covariant _DartboardBasePainter oldDelegate) =>
+      oldDelegate.colorScheme != colorScheme;
+}
+
+class _DartboardOverlayPainter extends CustomPainter {
+  const _DartboardOverlayPainter({
+    required this.colorScheme,
+    required this.highlight,
+    required this.progress,
+    required this.disabled,
+  });
+
+  final ColorScheme colorScheme;
+  final _BoardHit? highlight;
+  final double progress;
+  final bool disabled;
+
+  static final Map<int, _BoardRingPathCache> _ringPathCache =
+      <int, _BoardRingPathCache>{};
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2;
+    final pulse = Curves.easeOut.transform(1 - progress);
+
+    if (highlight case final _BoardHit hit when hit.ring != _BoardRing.miss) {
+      if (hit.ring == _BoardRing.outerBull || hit.ring == _BoardRing.bull) {
+        final isOuterBull = hit.ring == _BoardRing.outerBull;
+        final color = _highlightColor(hit.ring);
+        canvas.drawCircle(
+          center,
+          radius * (isOuterBull ? 0.12 : 0.07),
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 3.5
+            ..color = color.withValues(alpha: 0.88 - (0.08 * progress)),
+        );
+        canvas.drawCircle(
+          center,
+          radius * (isOuterBull ? 0.13 : 0.08),
+          Paint()..color = color.withValues(alpha: 0.08 + (0.04 * pulse)),
+        );
+      } else {
+        final path = _ringPath(size, hit.segment, hit.ring);
+        if (path != null) {
+          final color = _highlightColor(hit.ring);
+          canvas.drawPath(
+            path,
+            Paint()
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = 4
+              ..color = color.withValues(alpha: 0.86 - (0.10 * progress)),
+          );
+          canvas.drawPath(
+            path,
+            Paint()..color = color.withValues(alpha: 0.14 + (0.06 * pulse)),
+          );
+        }
+      }
+    }
+
+    if (disabled) {
+      canvas.drawCircle(
+        center,
+        radius,
+        Paint()..color = Colors.black.withValues(alpha: 0.34),
+      );
+    }
+  }
+
+  Path? _ringPath(Size size, int segment, _BoardRing ring) {
+    final cacheKey = Object.hash(size.width, size.height);
+    final cache = _ringPathCache.putIfAbsent(
+      cacheKey,
+      () => _BoardRingPathCache(size),
+    );
+    return cache.paths[(segment, ring)];
+  }
+
   Color _highlightColor(_BoardRing ring) {
     return switch (ring) {
       _BoardRing.double || _BoardRing.bull => const Color(0xFFFFA1A1),
@@ -498,11 +536,100 @@ class _DartboardPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _DartboardPainter oldDelegate) {
+  bool shouldRepaint(covariant _DartboardOverlayPainter oldDelegate) {
     return oldDelegate.colorScheme != colorScheme ||
         oldDelegate.highlight != highlight ||
         oldDelegate.progress != progress ||
         oldDelegate.disabled != disabled;
+  }
+}
+
+class _BoardRingPathCache {
+  _BoardRingPathCache(Size size) : paths = _buildPaths(size);
+
+  final Map<(int, _BoardRing), Path> paths;
+
+  static Map<(int, _BoardRing), Path> _buildPaths(Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2;
+    final cache = <(int, _BoardRing), Path>{};
+
+    _addRingPaths(
+      cache,
+      center,
+      radius,
+      0.10,
+      0.54,
+      _BoardRing.innerSingle,
+    );
+    _addRingPaths(
+      cache,
+      center,
+      radius,
+      0.54,
+      0.62,
+      _BoardRing.triple,
+    );
+    _addRingPaths(
+      cache,
+      center,
+      radius,
+      0.62,
+      0.90,
+      _BoardRing.outerSingle,
+    );
+    _addRingPaths(
+      cache,
+      center,
+      radius,
+      0.90,
+      1.0,
+      _BoardRing.double,
+    );
+
+    return cache;
+  }
+
+  static void _addRingPaths(
+    Map<(int, _BoardRing), Path> cache,
+    Offset center,
+    double radius,
+    double innerFactor,
+    double outerFactor,
+    _BoardRing ring,
+  ) {
+    const sweep = math.pi / 10;
+    final innerRadius = radius * innerFactor;
+    final outerRadius = radius * outerFactor;
+
+    for (var index = 0;
+        index < InteractiveDartboard._segmentOrder.length;
+        index++) {
+      final segment = InteractiveDartboard._segmentOrder[index];
+      final start = (-math.pi / 2) + (index * sweep);
+      cache[(segment, ring)] = Path()
+        ..moveTo(
+          center.dx + (innerRadius * math.cos(start)),
+          center.dy + (innerRadius * math.sin(start)),
+        )
+        ..arcTo(
+          Rect.fromCircle(center: center, radius: outerRadius),
+          start,
+          sweep,
+          false,
+        )
+        ..lineTo(
+          center.dx + (innerRadius * math.cos(start + sweep)),
+          center.dy + (innerRadius * math.sin(start + sweep)),
+        )
+        ..arcTo(
+          Rect.fromCircle(center: center, radius: innerRadius),
+          start + sweep,
+          -sweep,
+          false,
+        )
+        ..close();
+    }
   }
 }
 

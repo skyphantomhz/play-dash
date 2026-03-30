@@ -122,13 +122,15 @@ class _X01GamePageState extends ConsumerState<X01GamePage> {
                   const SizedBox(width: 18),
                   Expanded(
                     flex: 42,
-                    child: _BoardStage(
-                      controller: controller,
-                      winner: winner,
-                      canUndo: canUndo,
-                      latestScore: latestScore,
-                      canEndTurn: winner == null &&
-                          state.game.currentTurnThrows.isNotEmpty,
+                    child: RepaintBoundary(
+                      child: _BoardStage(
+                        controller: controller,
+                        winner: winner,
+                        canUndo: canUndo,
+                        latestScore: latestScore,
+                        canEndTurn: winner == null &&
+                            state.game.currentTurnThrows.isNotEmpty,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 18),
@@ -162,14 +164,16 @@ class _X01GamePageState extends ConsumerState<X01GamePage> {
                     compact: true,
                   ),
                   const SizedBox(height: 12),
-                  _BoardStage(
-                    controller: controller,
-                    winner: winner,
-                    canUndo: canUndo,
-                    latestScore: latestScore,
-                    canEndTurn: winner == null &&
-                        state.game.currentTurnThrows.isNotEmpty,
-                    compact: true,
+                  RepaintBoundary(
+                    child: _BoardStage(
+                      controller: controller,
+                      winner: winner,
+                      canUndo: canUndo,
+                      latestScore: latestScore,
+                      canEndTurn: winner == null &&
+                          state.game.currentTurnThrows.isNotEmpty,
+                      compact: true,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   _ScoreRail(
@@ -344,10 +348,12 @@ class _BoardStage extends StatelessWidget {
                 'Tap the board to score. Buttons update from controller state.',
           ),
           const SizedBox(height: 14),
-          InteractiveDartboard(
-            enabled: winner == null,
-            compact: compact,
-            onThrow: controller.addThrow,
+          RepaintBoundary(
+            child: InteractiveDartboard(
+              enabled: winner == null,
+              compact: compact,
+              onThrow: controller.addThrow,
+            ),
           ),
           const SizedBox(height: 12),
           if (compact)
