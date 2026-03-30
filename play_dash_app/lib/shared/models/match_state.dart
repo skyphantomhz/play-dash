@@ -33,6 +33,8 @@ abstract class X01GameState with _$X01GameState {
     @Default(<String, int>{}) Map<String, int> scores,
     @Default(<DartThrow>[]) List<DartThrow> currentTurnThrows,
     String? winnerPlayerId,
+    /// True for exactly one state update after a bust occurs, then cleared.
+    @Default(false) bool lastTurnWasBust,
   }) = _X01GameState;
 
   factory X01GameState.fromJson(Map<String, dynamic> json) =>

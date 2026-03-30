@@ -61,6 +61,7 @@ _X01GameState _$X01GameStateFromJson(Map<String, dynamic> json) =>
               .toList() ??
           const <DartThrow>[],
       winnerPlayerId: json['winnerPlayerId'] as String?,
+      lastTurnWasBust: json['lastTurnWasBust'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$X01GameStateToJson(_X01GameState instance) =>
@@ -68,6 +69,7 @@ Map<String, dynamic> _$X01GameStateToJson(_X01GameState instance) =>
       'scores': instance.scores,
       'currentTurnThrows': instance.currentTurnThrows,
       'winnerPlayerId': instance.winnerPlayerId,
+      'lastTurnWasBust': instance.lastTurnWasBust,
     };
 
 _CricketGameState _$CricketGameStateFromJson(Map<String, dynamic> json) =>

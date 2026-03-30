@@ -625,6 +625,9 @@ mixin _$X01GameState {
   List<DartThrow> get currentTurnThrows;
   String? get winnerPlayerId;
 
+  /// True for exactly one state update after a bust occurs, then cleared.
+  bool get lastTurnWasBust;
+
   /// Create a copy of X01GameState
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -645,7 +648,9 @@ mixin _$X01GameState {
             const DeepCollectionEquality()
                 .equals(other.currentTurnThrows, currentTurnThrows) &&
             (identical(other.winnerPlayerId, winnerPlayerId) ||
-                other.winnerPlayerId == winnerPlayerId));
+                other.winnerPlayerId == winnerPlayerId) &&
+            (identical(other.lastTurnWasBust, lastTurnWasBust) ||
+                other.lastTurnWasBust == lastTurnWasBust));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -654,11 +659,12 @@ mixin _$X01GameState {
       runtimeType,
       const DeepCollectionEquality().hash(scores),
       const DeepCollectionEquality().hash(currentTurnThrows),
-      winnerPlayerId);
+      winnerPlayerId,
+      lastTurnWasBust);
 
   @override
   String toString() {
-    return 'X01GameState(scores: $scores, currentTurnThrows: $currentTurnThrows, winnerPlayerId: $winnerPlayerId)';
+    return 'X01GameState(scores: $scores, currentTurnThrows: $currentTurnThrows, winnerPlayerId: $winnerPlayerId, lastTurnWasBust: $lastTurnWasBust)';
   }
 }
 
@@ -671,7 +677,8 @@ abstract mixin class $X01GameStateCopyWith<$Res> {
   $Res call(
       {Map<String, int> scores,
       List<DartThrow> currentTurnThrows,
-      String? winnerPlayerId});
+      String? winnerPlayerId,
+      bool lastTurnWasBust});
 }
 
 /// @nodoc
@@ -689,6 +696,7 @@ class _$X01GameStateCopyWithImpl<$Res> implements $X01GameStateCopyWith<$Res> {
     Object? scores = null,
     Object? currentTurnThrows = null,
     Object? winnerPlayerId = freezed,
+    Object? lastTurnWasBust = null,
   }) {
     return _then(_self.copyWith(
       scores: null == scores
@@ -703,6 +711,10 @@ class _$X01GameStateCopyWithImpl<$Res> implements $X01GameStateCopyWith<$Res> {
           ? _self.winnerPlayerId
           : winnerPlayerId // ignore: cast_nullable_to_non_nullable
               as String?,
+      lastTurnWasBust: null == lastTurnWasBust
+          ? _self.lastTurnWasBust
+          : lastTurnWasBust // ignore: cast_nullable_to_non_nullable
+              as bool,
     ));
   }
 }
@@ -801,15 +813,15 @@ extension X01GameStatePatterns on X01GameState {
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>(
     TResult Function(Map<String, int> scores, List<DartThrow> currentTurnThrows,
-            String? winnerPlayerId)?
+            String? winnerPlayerId, bool lastTurnWasBust)?
         $default, {
     required TResult orElse(),
   }) {
     final _that = this;
     switch (_that) {
       case _X01GameState() when $default != null:
-        return $default(
-            _that.scores, _that.currentTurnThrows, _that.winnerPlayerId);
+        return $default(_that.scores, _that.currentTurnThrows,
+            _that.winnerPlayerId, _that.lastTurnWasBust);
       case _:
         return orElse();
     }
@@ -831,14 +843,14 @@ extension X01GameStatePatterns on X01GameState {
   @optionalTypeArgs
   TResult when<TResult extends Object?>(
     TResult Function(Map<String, int> scores, List<DartThrow> currentTurnThrows,
-            String? winnerPlayerId)
+            String? winnerPlayerId, bool lastTurnWasBust)
         $default,
   ) {
     final _that = this;
     switch (_that) {
       case _X01GameState():
-        return $default(
-            _that.scores, _that.currentTurnThrows, _that.winnerPlayerId);
+        return $default(_that.scores, _that.currentTurnThrows,
+            _that.winnerPlayerId, _that.lastTurnWasBust);
       case _:
         throw StateError('Unexpected subclass');
     }
@@ -858,15 +870,18 @@ extension X01GameStatePatterns on X01GameState {
 
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>(
-    TResult? Function(Map<String, int> scores,
-            List<DartThrow> currentTurnThrows, String? winnerPlayerId)?
+    TResult? Function(
+            Map<String, int> scores,
+            List<DartThrow> currentTurnThrows,
+            String? winnerPlayerId,
+            bool lastTurnWasBust)?
         $default,
   ) {
     final _that = this;
     switch (_that) {
       case _X01GameState() when $default != null:
-        return $default(
-            _that.scores, _that.currentTurnThrows, _that.winnerPlayerId);
+        return $default(_that.scores, _that.currentTurnThrows,
+            _that.winnerPlayerId, _that.lastTurnWasBust);
       case _:
         return null;
     }
@@ -879,7 +894,8 @@ class _X01GameState implements X01GameState {
   const _X01GameState(
       {final Map<String, int> scores = const <String, int>{},
       final List<DartThrow> currentTurnThrows = const <DartThrow>[],
-      this.winnerPlayerId})
+      this.winnerPlayerId,
+      this.lastTurnWasBust = false})
       : _scores = scores,
         _currentTurnThrows = currentTurnThrows;
   factory _X01GameState.fromJson(Map<String, dynamic> json) =>
@@ -907,6 +923,11 @@ class _X01GameState implements X01GameState {
   @override
   final String? winnerPlayerId;
 
+  /// True for exactly one state update after a bust occurs, then cleared.
+  @override
+  @JsonKey()
+  final bool lastTurnWasBust;
+
   /// Create a copy of X01GameState
   /// with the given fields replaced by the non-null parameter values.
   @override
@@ -931,7 +952,9 @@ class _X01GameState implements X01GameState {
             const DeepCollectionEquality()
                 .equals(other._currentTurnThrows, _currentTurnThrows) &&
             (identical(other.winnerPlayerId, winnerPlayerId) ||
-                other.winnerPlayerId == winnerPlayerId));
+                other.winnerPlayerId == winnerPlayerId) &&
+            (identical(other.lastTurnWasBust, lastTurnWasBust) ||
+                other.lastTurnWasBust == lastTurnWasBust));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -940,11 +963,12 @@ class _X01GameState implements X01GameState {
       runtimeType,
       const DeepCollectionEquality().hash(_scores),
       const DeepCollectionEquality().hash(_currentTurnThrows),
-      winnerPlayerId);
+      winnerPlayerId,
+      lastTurnWasBust);
 
   @override
   String toString() {
-    return 'X01GameState(scores: $scores, currentTurnThrows: $currentTurnThrows, winnerPlayerId: $winnerPlayerId)';
+    return 'X01GameState(scores: $scores, currentTurnThrows: $currentTurnThrows, winnerPlayerId: $winnerPlayerId, lastTurnWasBust: $lastTurnWasBust)';
   }
 }
 
@@ -959,7 +983,8 @@ abstract mixin class _$X01GameStateCopyWith<$Res>
   $Res call(
       {Map<String, int> scores,
       List<DartThrow> currentTurnThrows,
-      String? winnerPlayerId});
+      String? winnerPlayerId,
+      bool lastTurnWasBust});
 }
 
 /// @nodoc
@@ -978,6 +1003,7 @@ class __$X01GameStateCopyWithImpl<$Res>
     Object? scores = null,
     Object? currentTurnThrows = null,
     Object? winnerPlayerId = freezed,
+    Object? lastTurnWasBust = null,
   }) {
     return _then(_X01GameState(
       scores: null == scores
@@ -992,6 +1018,10 @@ class __$X01GameStateCopyWithImpl<$Res>
           ? _self.winnerPlayerId
           : winnerPlayerId // ignore: cast_nullable_to_non_nullable
               as String?,
+      lastTurnWasBust: null == lastTurnWasBust
+          ? _self.lastTurnWasBust
+          : lastTurnWasBust // ignore: cast_nullable_to_non_nullable
+              as bool,
     ));
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -26,6 +28,141 @@ String x01FormatThrow(DartThrow dartThrow) {
   };
 }
 
+// ---------------------------------------------------------------------------
+// Bust snack-bar entry point
+// ---------------------------------------------------------------------------
+
+/// Shows a glassmorphism-styled "BUST" overlay as a custom SnackBar.
+void _showBustSnackBar(BuildContext context, String playerName) {
+  ScaffoldMessenger.maybeOf(context)?.clearSnackBars();
+  ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+    SnackBar(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      padding: EdgeInsets.zero,
+      duration: const Duration(seconds: 2),
+      behavior: SnackBarBehavior.floating,
+      margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      content: _BustSnackBarContent(playerName: playerName),
+    ),
+  );
+}
+
+class _BustSnackBarContent extends StatelessWidget {
+  const _BustSnackBarContent({required this.playerName});
+
+  final String playerName;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            // Deep red-tinted glassmorphism background
+            color: const Color(0xCC1A0510),
+            border: Border.all(
+              color: const Color(0xFFFF3B5C).withValues(alpha: 0.55),
+              width: 1.1,
+            ),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                const Color(0xFFFF3B5C).withValues(alpha: 0.22),
+                const Color(0xFF8B0026).withValues(alpha: 0.14),
+                Colors.black.withValues(alpha: 0.30),
+              ],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFFFF3B5C).withValues(alpha: 0.28),
+                blurRadius: 32,
+                spreadRadius: 2,
+              ),
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.55),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          child: Row(
+            children: [
+              // Glowing bust icon
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFFFF3B5C).withValues(alpha: 0.18),
+                  border: Border.all(
+                    color: const Color(0xFFFF3B5C).withValues(alpha: 0.50),
+                    width: 1.2,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFFF3B5C).withValues(alpha: 0.35),
+                      blurRadius: 18,
+                      spreadRadius: 1,
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.cancel_rounded,
+                  color: Color(0xFFFF3B5C),
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // BUST headline
+                    ShaderMask(
+                      shaderCallback: (bounds) => const LinearGradient(
+                        colors: [Color(0xFFFF3B5C), Color(0xFFFF8FA3)],
+                      ).createShader(bounds),
+                      child: const Text(
+                        'BUST!',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.8,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '$playerName returns to previous score.',
+                      style: const TextStyle(
+                        color: Color(0xCCFFFFFF),
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Main page
+// ---------------------------------------------------------------------------
+
 class X01GamePage extends ConsumerStatefulWidget {
   const X01GamePage({super.key});
 
@@ -36,10 +173,13 @@ class X01GamePage extends ConsumerStatefulWidget {
 class _X01GamePageState extends ConsumerState<X01GamePage> {
   bool _dialogVisible = false;
   late final ProviderSubscription<X01MatchState> _winnerSubscription;
+  late final ProviderSubscription<X01MatchState> _bustSubscription;
 
   @override
   void initState() {
     super.initState();
+
+    // ---- winner dialog ----
     _winnerSubscription = ref.listenManual<X01MatchState>(x01ControllerProvider,
         (previous, next) {
       final winnerChanged =
@@ -78,11 +218,35 @@ class _X01GamePageState extends ConsumerState<X01GamePage> {
         _dialogVisible = false;
       });
     });
+
+    // ---- bust snack-bar ----
+    _bustSubscription = ref.listenManual<X01MatchState>(x01ControllerProvider,
+        (previous, next) {
+      // Only trigger when lastTurnWasBust flips from false → true.
+      final wasBust = previous?.game.lastTurnWasBust ?? false;
+      if (!wasBust && next.game.lastTurnWasBust) {
+        // The bust player was the *previous* active player (turn already
+        // advanced), so we reconstruct their name from the previous state.
+        final bustPlayerIndex = previous?.currentPlayerIndex ??
+            next.currentPlayerIndex;
+        final players = next.players;
+        final bustPlayer = players.isEmpty
+            ? null
+            : players[bustPlayerIndex.clamp(0, players.length - 1)];
+
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          FeedbackService.instance.playError();
+          _showBustSnackBar(context, bustPlayer?.name ?? 'Player');
+        });
+      }
+    });
   }
 
   @override
   void dispose() {
     _winnerSubscription.close();
+    _bustSubscription.close();
     super.dispose();
   }
 
@@ -99,6 +263,10 @@ class _X01GamePageState extends ConsumerState<X01GamePage> {
     final latestScore =
         latestThrow == null ? 0 : latestThrow.segment * latestThrow.multiplier;
 
+    // Current score for the active player — needed for double-in hint.
+    final activeScore =
+        state.game.scores[activePlayer?.id] ?? settings.startingScore;
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final desktop = constraints.maxWidth >= 1180;
@@ -110,8 +278,7 @@ class _X01GamePageState extends ConsumerState<X01GamePage> {
                     flex: 24,
                     child: _PlayerPanel(
                       name: activePlayer?.name ?? 'No Player',
-                      score: state.game.scores[activePlayer?.id] ??
-                          settings.startingScore,
+                      score: activeScore,
                       accent: const Color(0xFF37D8FF),
                       meta:
                           '${settings.startingScore}  |  ${settings.doubleOut ? 'Double Out' : 'Single Out'}',
@@ -119,6 +286,8 @@ class _X01GamePageState extends ConsumerState<X01GamePage> {
                           ? '${winner.name} wins'
                           : 'Throw ${state.game.currentTurnThrows.length + 1} of 3',
                       active: winner == null,
+                      settings: settings,
+                      startingScore: settings.startingScore,
                     ),
                   ),
                   const SizedBox(width: 18),
@@ -154,8 +323,7 @@ class _X01GamePageState extends ConsumerState<X01GamePage> {
                 children: [
                   _PlayerPanel(
                     name: activePlayer?.name ?? 'No Player',
-                    score: state.game.scores[activePlayer?.id] ??
-                        settings.startingScore,
+                    score: activeScore,
                     accent: const Color(0xFF37D8FF),
                     meta:
                         '${settings.startingScore}  |  ${settings.doubleOut ? 'Double Out' : 'Single Out'}',
@@ -164,6 +332,8 @@ class _X01GamePageState extends ConsumerState<X01GamePage> {
                         : 'Throw ${state.game.currentTurnThrows.length + 1} of 3',
                     active: winner == null,
                     compact: true,
+                    settings: settings,
+                    startingScore: settings.startingScore,
                   ),
                   const SizedBox(height: 12),
                   RepaintBoundary(
@@ -221,6 +391,32 @@ class _X01GamePageState extends ConsumerState<X01GamePage> {
   }
 }
 
+// ---------------------------------------------------------------------------
+// _PlayerPanel
+// ---------------------------------------------------------------------------
+
+/// Returns the hint text that should appear on the player panel, or null if
+/// no special rule applies to the current state.
+///
+/// Priority:
+///   1. doubleIn + player has not yet opened (score == startingScore) → "Double In Required"
+///   2. doubleOut → "Double Out Required"
+String? _resolveHintText({
+  required X01MatchSettings settings,
+  required int score,
+  required int startingScore,
+}) {
+  // Double-In: the player hasn't scored yet (score still equals startingScore).
+  if (settings.doubleIn && score == startingScore) {
+    return 'Double In Required';
+  }
+  // Double-Out: always shown when rule is active and game is ongoing.
+  if (settings.doubleOut) {
+    return 'Double Out Required';
+  }
+  return null;
+}
+
 class _PlayerPanel extends StatelessWidget {
   const _PlayerPanel({
     required this.name,
@@ -228,6 +424,8 @@ class _PlayerPanel extends StatelessWidget {
     required this.accent,
     required this.meta,
     required this.turnLabel,
+    required this.settings,
+    required this.startingScore,
     this.active = false,
     this.compact = false,
   });
@@ -239,9 +437,19 @@ class _PlayerPanel extends StatelessWidget {
   final String turnLabel;
   final bool active;
   final bool compact;
+  final X01MatchSettings settings;
+  final int startingScore;
 
   @override
   Widget build(BuildContext context) {
+    final hintText = active
+        ? _resolveHintText(
+            settings: settings,
+            score: score,
+            startingScore: startingScore,
+          )
+        : null;
+
     return NeonCard(
       accent: accent,
       secondaryAccent: const Color(0xFF4DA3FF),
@@ -314,11 +522,87 @@ class _PlayerPanel extends StatelessWidget {
               ),
             ),
           ),
+          // ---- Double-In / Double-Out hint badge ----
+          if (hintText != null) ...[
+            const SizedBox(height: 12),
+            Center(child: _RuleHintBadge(label: hintText)),
+          ],
         ],
       ),
     );
   }
 }
+
+// ---------------------------------------------------------------------------
+// _RuleHintBadge — glassmorphism pill for Double-In / Double-Out hints
+// ---------------------------------------------------------------------------
+
+class _RuleHintBadge extends StatelessWidget {
+  const _RuleHintBadge({required this.label});
+
+  final String label;
+
+  // Choose accent colours based on which rule we're hinting.
+  static const _doubleInColor = Color(0xFF37D8FF);   // cyan
+  static const _doubleOutColor = Color(0xFFFF4FD8);  // pink
+
+  @override
+  Widget build(BuildContext context) {
+    final isDoubleIn = label.contains('In');
+    final color = isDoubleIn ? _doubleInColor : _doubleOutColor;
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(999),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(999),
+            color: color.withValues(alpha: 0.12),
+            border: Border.all(
+              color: color.withValues(alpha: 0.45),
+              width: 1.0,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: 0.20),
+                blurRadius: 18,
+                spreadRadius: 1,
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                isDoubleIn
+                    ? Icons.login_rounded
+                    : Icons.logout_rounded,
+                size: 13,
+                color: color,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  color: color,
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.4,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// _BoardStage
+// ---------------------------------------------------------------------------
 
 class _BoardStage extends StatelessWidget {
   const _BoardStage({
@@ -456,6 +740,10 @@ class _LatestScoreCard extends StatelessWidget {
   }
 }
 
+// ---------------------------------------------------------------------------
+// _ScoreRail
+// ---------------------------------------------------------------------------
+
 class _ScoreRail extends StatelessWidget {
   const _ScoreRail({
     required this.players,
@@ -549,6 +837,10 @@ class _ScoreRail extends StatelessWidget {
     );
   }
 }
+
+// ---------------------------------------------------------------------------
+// _BottomActions
+// ---------------------------------------------------------------------------
 
 class _BottomActions extends StatelessWidget {
   const _BottomActions({

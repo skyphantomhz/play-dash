@@ -114,6 +114,8 @@ class X01Controller extends Notifier<X01MatchState> {
             ? const <DartThrow>[]
             : List.unmodifiable(updatedThrows),
         winnerPlayerId: winnerId,
+        // Signal the UI that a bust just occurred; cleared on the next throw.
+        lastTurnWasBust: turnResult.bust,
       ),
     );
 
