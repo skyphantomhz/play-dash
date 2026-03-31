@@ -947,9 +947,9 @@ class _AppBackground extends StatelessWidget {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Color(0xFF091B35),
-                  Color(0xFF241046),
-                  Color(0xFF020308),
+                  Color(0xFF000000),
+                  Color(0xFF1A0B2E),
+                  Color(0xFF000000),
                 ],
                 stops: [0.0, 0.48, 1.0],
               ),
@@ -961,7 +961,7 @@ class _AppBackground extends StatelessWidget {
           left: -90,
           child: _GlowBlob(
             size: 420,
-            colors: [Color(0x3337D8FF), Color(0x0037D8FF)],
+            colors: [Color(0x5500E5FF), Color(0x0000E5FF)],
           ),
         ),
         Positioned(
@@ -969,7 +969,7 @@ class _AppBackground extends StatelessWidget {
           right: -120,
           child: _GlowBlob(
             size: 360,
-            colors: [Color(0x2EFF4FD8), Color(0x00FF4FD8)],
+            colors: [Color(0x55FF00FF), Color(0x00FF00FF)],
           ),
         ),
         Positioned(
@@ -977,7 +977,7 @@ class _AppBackground extends StatelessWidget {
           left: 120,
           child: _GlowBlob(
             size: 460,
-            colors: [Color(0x268B5CF6), Color(0x008B5CF6)],
+            colors: [Color(0x3300E5FF), Color(0x0000E5FF)],
           ),
         ),
       ],

@@ -175,9 +175,9 @@ class _InteractiveDartboardState extends State<InteractiveDartboard>
           spacing: 10,
           runSpacing: 10,
           children: [
-            const _LegendChip(label: 'Single', color: Color(0xFFF0E2CA)),
-            const _LegendChip(label: 'Double', color: Color(0xFFE56A6E)),
-            const _LegendChip(label: 'Triple', color: Color(0xFF3CC9A3)),
+            const _LegendChip(label: 'Single', color: Color(0xFF00E5FF)),
+            const _LegendChip(label: 'Double', color: Color(0xFFFF00FF)),
+            const _LegendChip(label: 'Triple', color: Color(0xFF00E5FF)),
             _LegendChip(
               label: _lastHit == null
                   ? 'Ready'
@@ -320,14 +320,14 @@ class _DartboardBasePainter extends CustomPainter {
         ).createShader(Rect.fromCircle(center: center, radius: radius)),
     );
 
-    _drawRing(canvas, center, radius, 0.62, 0.90, const Color(0xFFF0E2CA),
-        const Color(0xFF17202F));
-    _drawRing(canvas, center, radius, 0.54, 0.62, const Color(0xFF3CC9A3),
-        const Color(0xFFE56A6E));
-    _drawRing(canvas, center, radius, 0.10, 0.54, const Color(0xFF17202F),
-        const Color(0xFFF0E2CA));
-    _drawRing(canvas, center, radius, 0.90, 1.0, const Color(0xFFE56A6E),
-        const Color(0xFF3CC9A3));
+    _drawRing(canvas, center, radius, 0.62, 0.90, const Color(0xFF00E5FF),
+        const Color(0xFF0D001A));
+    _drawRing(canvas, center, radius, 0.54, 0.62, const Color(0xFFFF00FF),
+        const Color(0xFF00E5FF));
+    _drawRing(canvas, center, radius, 0.10, 0.54, const Color(0xFF0D001A),
+        const Color(0xFF00E5FF));
+    _drawRing(canvas, center, radius, 0.90, 1.0, const Color(0xFFFF00FF),
+        const Color(0xFF00E5FF));
 
     _drawBull(canvas, center, radius);
     _drawWires(canvas, center, radius);
@@ -398,9 +398,9 @@ class _DartboardBasePainter extends CustomPainter {
 
   void _drawBull(Canvas canvas, Offset center, double radius) {
     canvas.drawCircle(
-        center, radius * 0.10, Paint()..color = const Color(0xFF3CC9A3));
+        center, radius * 0.10, Paint()..color = const Color(0xFF00E5FF));
     canvas.drawCircle(
-        center, radius * 0.05, Paint()..color = const Color(0xFFE56A6E));
+        center, radius * 0.05, Paint()..color = const Color(0xFFFF00FF));
   }
 
   void _drawWires(Canvas canvas, Offset center, double radius) {
