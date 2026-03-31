@@ -92,15 +92,22 @@ class _InteractiveDartboardState extends State<InteractiveDartboard>
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 boxShadow: [
+                  // Intense mixed cyan/magenta glow around the board
                   BoxShadow(
-                    color: scheme.primary.withValues(alpha: 0.08 * pulse),
-                    blurRadius: 18,
-                    spreadRadius: 1,
+                    color: const Color(0xFF00E5FF).withValues(alpha: 0.22 + 0.08 * pulse),
+                    blurRadius: 60,
+                    spreadRadius: 4,
                   ),
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.26),
-                    blurRadius: 20,
-                    offset: const Offset(0, 14),
+                    color: const Color(0xFFFF00CC).withValues(alpha: 0.18 + 0.07 * pulse),
+                    blurRadius: 80,
+                    spreadRadius: 8,
+                    offset: const Offset(10, 0),
+                  ),
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.42),
+                    blurRadius: 28,
+                    offset: const Offset(0, 16),
                   ),
                 ],
               ),
@@ -310,23 +317,28 @@ class _DartboardBasePainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2;
 
+    // Deep cosmic base
     canvas.drawCircle(
       center,
       radius,
       Paint()
         ..shader = const RadialGradient(
-          colors: [Color(0xFF223149), Color(0xFF0A101B)],
-          stops: [0.12, 1],
+          colors: [Color(0xFF1A2240), Color(0xFF060A14)],
+          stops: [0.10, 1],
         ).createShader(Rect.fromCircle(center: center, radius: radius)),
     );
 
-    _drawRing(canvas, center, radius, 0.62, 0.90, const Color(0xFF00E5FF),
-        const Color(0xFF0D001A));
-    _drawRing(canvas, center, radius, 0.54, 0.62, const Color(0xFFFF00FF),
-        const Color(0xFF00E5FF));
-    _drawRing(canvas, center, radius, 0.10, 0.54, const Color(0xFF0D001A),
-        const Color(0xFF00E5FF));
-    _drawRing(canvas, center, radius, 0.90, 1.0, const Color(0xFFFF00FF),
+    // Outer single (62-90%): alternating dark navy / dark
+    _drawRing(canvas, center, radius, 0.62, 0.90, const Color(0xFF0D1428),
+        const Color(0xFF070B18));
+    // Triple ring (54-62%): vivid Cyan / Magenta
+    _drawRing(canvas, center, radius, 0.54, 0.62, const Color(0xFF00E5FF),
+        const Color(0xFFFF00CC));
+    // Inner single (10-54%): dark navy / dark
+    _drawRing(canvas, center, radius, 0.10, 0.54, const Color(0xFF0D1428),
+        const Color(0xFF070B18));
+    // Double ring (90-100%): vivid Magenta / Cyan
+    _drawRing(canvas, center, radius, 0.90, 1.0, const Color(0xFFFF00CC),
         const Color(0xFF00E5FF));
 
     _drawBull(canvas, center, radius);
@@ -338,8 +350,8 @@ class _DartboardBasePainter extends CustomPainter {
       radius,
       Paint()
         ..style = PaintingStyle.stroke
-        ..strokeWidth = radius * 0.022
-        ..color = Colors.white.withValues(alpha: 0.14),
+        ..strokeWidth = radius * 0.025
+        ..color = const Color(0xFF00E5FF).withValues(alpha: 0.22),
     );
   }
 
@@ -391,21 +403,37 @@ class _DartboardBasePainter extends CustomPainter {
         Paint()
           ..style = PaintingStyle.stroke
           ..strokeWidth = 1
-          ..color = Colors.white.withValues(alpha: 0.14),
+          ..color = Colors.white.withValues(alpha: 0.20),
       );
     }
   }
 
   void _drawBull(Canvas canvas, Offset center, double radius) {
+    // Outer bull: vivid cyan with glow
+    canvas.drawCircle(center, radius * 0.10,
+        Paint()..color = const Color(0xFF00E5FF));
+    // Outer bull glow layer
     canvas.drawCircle(
-        center, radius * 0.10, Paint()..color = const Color(0xFF00E5FF));
+        center,
+        radius * 0.11,
+        Paint()
+          ..color = const Color(0x5500E5FF)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6));
+    // Inner bull: vivid magenta
+    canvas.drawCircle(center, radius * 0.05,
+        Paint()..color = const Color(0xFFFF00CC));
+    // Inner bull glow
     canvas.drawCircle(
-        center, radius * 0.05, Paint()..color = const Color(0xFFFF00FF));
+        center,
+        radius * 0.06,
+        Paint()
+          ..color = const Color(0x66FF00CC)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5));
   }
 
   void _drawWires(Canvas canvas, Offset center, double radius) {
     final paint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.18)
+      ..color = Colors.white.withValues(alpha: 0.26)
       ..strokeWidth = 1;
 
     for (var index = 0;
@@ -436,11 +464,14 @@ class _DartboardBasePainter extends CustomPainter {
       painter.text = TextSpan(
         text: '${InteractiveDartboard._segmentOrder[index]}',
         style: TextStyle(
-          color: colorScheme.onSurface,
+          color: const Color(0xFFD8F8FF), // glowing white-cyan
           fontWeight: FontWeight.w800,
           fontSize: radius * 0.075,
           shadows: const [
-            Shadow(color: Colors.black54, blurRadius: 8, offset: Offset(0, 2)),
+            Shadow(
+                color: Color(0xCC00E5FF), blurRadius: 12, offset: Offset(0, 0)),
+            Shadow(
+                color: Colors.black87, blurRadius: 6, offset: Offset(0, 2)),
           ],
         ),
       );

@@ -42,8 +42,8 @@ class RootAppShell extends StatelessWidget {
               child: GlassPanel(
                 radius: 28,
                 blur: 26,
-                background: Colors.white.withValues(alpha: 0.05),
-                borderColor: Colors.white.withValues(alpha: 0.05),
+                background: const Color(0x1A0A1040),
+                borderColor: const Color(0x3337D8FF),
                 padding: EdgeInsets.all(isDesktop ? 14 : 8),
                 child: isDesktop
                     ? Row(
@@ -105,28 +105,28 @@ class _ShellSurface extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(isDesktop ? 26 : 24),
         border:
-            Border.all(color: Colors.white.withValues(alpha: 0.08), width: 0.9),
+            Border.all(color: const Color(0xFF37D8FF).withValues(alpha: 0.12), width: 1.0),
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF091127), Color(0xFF11153A), Color(0xFF170A2F)],
+          colors: [Color(0xFF04091E), Color(0xFF0F0835), Color(0xFF130626)],
         ),
         boxShadow: [
           const BoxShadow(
-            color: Color(0x8A02030A),
-            blurRadius: 36,
-            offset: Offset(0, 20),
+            color: Color(0x9902030A),
+            blurRadius: 40,
+            offset: Offset(0, 22),
           ),
           BoxShadow(
-            color: const Color(0xFF37D8FF).withValues(alpha: 0.09),
-            blurRadius: 46,
-            spreadRadius: -12,
+            color: const Color(0xFF37D8FF).withValues(alpha: 0.14),
+            blurRadius: 54,
+            spreadRadius: -10,
           ),
           BoxShadow(
-            color: const Color(0xFF8B5CF6).withValues(alpha: 0.08),
-            blurRadius: 58,
-            spreadRadius: -20,
-            offset: const Offset(0, 8),
+            color: const Color(0xFFFF00CC).withValues(alpha: 0.10),
+            blurRadius: 68,
+            spreadRadius: -18,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
@@ -174,8 +174,8 @@ class GlassPanel extends StatelessWidget {
     this.padding = const EdgeInsets.all(24),
     this.radius = 20,
     this.blur = 20,
-    this.background = const Color(0x14FFFFFF),
-    this.borderColor = const Color(0x12FFFFFF),
+    this.background = const Color(0x1A0A1040), // very transparent dark blue/purple
+    this.borderColor = const Color(0x2837D8FF), // subtle cyan border by default
     this.glowColor,
     this.shadowColor = const Color(0x66000000),
     this.onTap,
@@ -207,16 +207,16 @@ class GlassPanel extends StatelessWidget {
           foregroundDecoration: BoxDecoration(
             borderRadius: BorderRadius.circular(radius),
             border: Border.all(
-              color: Colors.white.withValues(alpha: 0.10),
-              width: 0.7,
+              color: Colors.white.withValues(alpha: 0.13),
+              width: 0.8,
             ),
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                Colors.white.withValues(alpha: 0.11),
+                Colors.white.withValues(alpha: 0.14),
                 Colors.transparent,
-                Colors.white.withValues(alpha: 0.03),
+                Colors.white.withValues(alpha: 0.04),
               ],
               stops: const [0.0, 0.32, 1.0],
             ),
@@ -226,37 +226,37 @@ class GlassPanel extends StatelessWidget {
             color: background,
             border: Border.all(
               color: borderColor.withValues(
-                  alpha: (borderColor.a + 0.06).clamp(0.0, 1.0)),
-              width: 0.9,
+                  alpha: (borderColor.a + 0.10).clamp(0.0, 1.0)),
+              width: 1.2,
             ),
             boxShadow: [
               BoxShadow(
-                color: shadowColor.withValues(alpha: 0.48),
-                blurRadius: 28,
-                offset: const Offset(0, 18),
+                color: shadowColor.withValues(alpha: 0.52),
+                blurRadius: 32,
+                offset: const Offset(0, 20),
               ),
               if (glowColor != null) ...[
                 BoxShadow(
-                  color: glowColor!.withValues(alpha: 0.10),
-                  blurRadius: 38,
-                  spreadRadius: 1,
+                  color: glowColor!.withValues(alpha: 0.22),
+                  blurRadius: 42,
+                  spreadRadius: 2,
                 ),
                 BoxShadow(
-                  color: glowColor!.withValues(alpha: 0.05),
-                  blurRadius: 64,
-                  spreadRadius: 6,
+                  color: glowColor!.withValues(alpha: 0.10),
+                  blurRadius: 72,
+                  spreadRadius: 8,
                 ),
               ] else ...[
                 BoxShadow(
-                  color: const Color(0xFF37D8FF).withValues(alpha: 0.045),
-                  blurRadius: 34,
-                  spreadRadius: -2,
+                  color: const Color(0xFF37D8FF).withValues(alpha: 0.09),
+                  blurRadius: 38,
+                  spreadRadius: -1,
                 ),
                 BoxShadow(
-                  color: const Color(0xFFFF4FD8).withValues(alpha: 0.035),
-                  blurRadius: 54,
-                  spreadRadius: -6,
-                  offset: const Offset(0, 4),
+                  color: const Color(0xFFFF4FD8).withValues(alpha: 0.07),
+                  blurRadius: 60,
+                  spreadRadius: -4,
+                  offset: const Offset(0, 6),
                 ),
               ],
             ],
@@ -306,19 +306,19 @@ class NeonCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(radius),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.34),
-              blurRadius: 26,
-              offset: const Offset(0, 18),
+              color: Colors.black.withValues(alpha: 0.40),
+              blurRadius: 30,
+              offset: const Offset(0, 20),
             ),
             BoxShadow(
-              color: accent.withValues(alpha: 0.11),
-              blurRadius: 34,
-              spreadRadius: 1,
+              color: accent.withValues(alpha: 0.26),
+              blurRadius: 44,
+              spreadRadius: 2,
             ),
             BoxShadow(
-              color: (secondaryAccent ?? accent).withValues(alpha: 0.07),
-              blurRadius: 58,
-              spreadRadius: 4,
+              color: (secondaryAccent ?? accent).withValues(alpha: 0.14),
+              blurRadius: 72,
+              spreadRadius: 6,
             ),
           ],
         ),
@@ -326,8 +326,8 @@ class NeonCard extends StatelessWidget {
           radius: radius,
           padding: padding,
           blur: 24,
-          background: Colors.white.withValues(alpha: 0.06),
-          borderColor: Colors.white.withValues(alpha: 0.06),
+          background: const Color(0x1A0A1040),
+          borderColor: accent.withValues(alpha: 0.55),
           glowColor: accent,
           onTap: onTap == null ? null : () { FeedbackService.instance.playImpact(); onTap!(); },
           child: child,
@@ -390,44 +390,50 @@ class _GlassButtonState extends State<GlassButton> {
                         BorderRadius.circular(widget.compact ? 12 : 16),
                     gradient: widget.highlight
                         ? const LinearGradient(
-                            colors: [Color(0xFF37D8FF), Color(0xFFFF4FD8)])
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [Color(0xFF00D4FF), Color(0xFFFF00CC)],
+                          )
                         : const LinearGradient(
-                            colors: [Color(0x22FFFFFF), Color(0x18FFFFFF)]),
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [Color(0xFF1A2755), Color(0xFF0E1535)],
+                          ),
                     border: Border.all(
-                      color: Colors.white.withValues(
-                        alpha: widget.highlight ? 0.12 : 0.08,
-                      ),
-                      width: 0.9,
+                      color: widget.highlight
+                          ? Colors.white.withValues(alpha: 0.25)
+                          : const Color(0xFF37D8FF).withValues(alpha: 0.22),
+                      width: widget.highlight ? 1.4 : 1.0,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.28),
-                        blurRadius: 22,
-                        offset: const Offset(0, 14),
+                        color: Colors.black.withValues(alpha: 0.36),
+                        blurRadius: 26,
+                        offset: const Offset(0, 16),
                       ),
                       BoxShadow(
                         color: (widget.highlight
-                                ? const Color(0xFF37D8FF)
+                                ? const Color(0xFF00D4FF)
                                 : const Color(0xFF37D8FF))
                             .withValues(
                           alpha: widget.highlight
-                              ? (_hovered ? 0.16 : 0.11)
-                              : (_hovered ? 0.07 : 0.045),
+                              ? (_hovered ? 0.32 : 0.22)
+                              : (_hovered ? 0.12 : 0.07),
                         ),
-                        blurRadius: widget.highlight ? 34 : 26,
-                        spreadRadius: widget.highlight ? 1 : 0,
+                        blurRadius: widget.highlight ? 42 : 28,
+                        spreadRadius: widget.highlight ? 2 : 0,
                       ),
                       BoxShadow(
                         color: (widget.highlight
-                                ? const Color(0xFFFF4FD8)
+                                ? const Color(0xFFFF00CC)
                                 : const Color(0xFF8B5CF6))
                             .withValues(
                           alpha: widget.highlight
-                              ? (_hovered ? 0.12 : 0.08)
-                              : (_hovered ? 0.05 : 0.03),
+                              ? (_hovered ? 0.24 : 0.16)
+                              : (_hovered ? 0.07 : 0.04),
                         ),
-                        blurRadius: widget.highlight ? 52 : 34,
-                        spreadRadius: widget.highlight ? 2 : 0,
+                        blurRadius: widget.highlight ? 64 : 38,
+                        spreadRadius: widget.highlight ? 4 : 0,
                       ),
                     ],
                   ),
@@ -451,7 +457,14 @@ class _GlassButtonState extends State<GlassButton> {
                               style: TextStyle(
                                   color: Colors.white,
                                   fontSize: widget.compact ? 14 : 16,
-                                  fontWeight: FontWeight.w700)),
+                                  fontWeight: FontWeight.w800,
+                                  shadows: const [
+                                    Shadow(
+                                      color: Color(0x99000000),
+                                      blurRadius: 8,
+                                      offset: Offset(0, 2),
+                                    ),
+                                  ])),
                         ),
                         if (widget.trailingIcon != Icons.not_interested) ...[
                           const SizedBox(width: 8),
@@ -745,8 +758,8 @@ class _DesktopSidebar extends StatelessWidget {
     return GlassPanel(
       radius: 24,
       blur: 24,
-      background: Colors.white.withValues(alpha: 0.05),
-      borderColor: Colors.white.withValues(alpha: 0.05),
+      background: const Color(0x1A0A1040),
+      borderColor: const Color(0x3337D8FF),
       padding: const EdgeInsets.all(14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -765,8 +778,8 @@ class _DesktopSidebar extends StatelessWidget {
           const GlassPanel(
             radius: 18,
             blur: 18,
-            background: Color(0x14FFFFFF),
-            borderColor: Color(0x1FFFFFFF),
+            background: Color(0x220A1040),
+            borderColor: Color(0x3337D8FF),
             padding: EdgeInsets.all(12),
             child: Text('Cosmic glass UI\nwith cyan + pink glow.',
                 style: TextStyle(
@@ -893,8 +906,8 @@ class _MobileBottomBar extends StatelessWidget {
     return GlassPanel(
       radius: 18,
       blur: 20,
-      background: Colors.white.withValues(alpha: 0.06),
-      borderColor: Colors.white.withValues(alpha: 0.05),
+      background: const Color(0x220A1040),
+      borderColor: const Color(0x3337D8FF),
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
       child: Row(
         children: _primaryNavItems.map((item) {
@@ -940,6 +953,7 @@ class _AppBackground extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Stack(
       children: [
+        // Vibrant cosmic base: dark navy top-left → deep space purple → dark bottom-right
         Positioned.fill(
           child: DecoratedBox(
             decoration: BoxDecoration(
@@ -947,37 +961,40 @@ class _AppBackground extends StatelessWidget {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Color(0xFF000000),
-                  Color(0xFF1A0B2E),
-                  Color(0xFF000000),
+                  Color(0xFF03071A), // dark navy blue
+                  Color(0xFF12063A), // deep space purple
+                  Color(0xFF050113), // dark bottom right
                 ],
-                stops: [0.0, 0.48, 1.0],
+                stops: [0.0, 0.50, 1.0],
               ),
             ),
           ),
         ),
+        // Top-left vivid blue/cyan blob (~600 size, opacity 0.4)
         Positioned(
-          top: -120,
-          left: -90,
+          top: -160,
+          left: -120,
           child: _GlowBlob(
-            size: 420,
-            colors: [Color(0x5500E5FF), Color(0x0000E5FF)],
+            size: 600,
+            colors: [Color(0x6600E5FF), Color(0x0000E5FF)],
           ),
         ),
+        // Middle-right / bottom vivid magenta/pink blob (~500 size, opacity 0.4)
         Positioned(
-          top: -80,
-          right: -120,
+          bottom: -100,
+          right: -80,
           child: _GlowBlob(
-            size: 360,
-            colors: [Color(0x55FF00FF), Color(0x00FF00FF)],
+            size: 500,
+            colors: [Color(0x66FF00CC), Color(0x00FF00CC)],
           ),
         ),
+        // Extra upper-right subtle blue accent
         Positioned(
-          bottom: -180,
-          left: 120,
+          top: -60,
+          right: -140,
           child: _GlowBlob(
-            size: 460,
-            colors: [Color(0x3300E5FF), Color(0x0000E5FF)],
+            size: 380,
+            colors: [Color(0x330080FF), Color(0x000080FF)],
           ),
         ),
       ],
@@ -999,9 +1016,9 @@ class _InnerCosmos extends StatelessWidget {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Color(0xFF08152D),
-                  Color(0xFF1E103E),
-                  Color(0xFF04050B),
+                  Color(0xFF040C22), // dark navy
+                  Color(0xFF160840), // deep purple
+                  Color(0xFF030610), // near-black
                 ],
                 stops: [0.0, 0.5, 1.0],
               ),
@@ -1009,27 +1026,27 @@ class _InnerCosmos extends StatelessWidget {
           ),
         ),
         Positioned(
-          top: -100,
-          left: -70,
+          top: -120,
+          left: -80,
           child: _GlowBlob(
-            size: 300,
-            colors: [Color(0x2237D8FF), Color(0x0037D8FF)],
+            size: 380,
+            colors: [Color(0x4437D8FF), Color(0x0037D8FF)],
           ),
         ),
         Positioned(
-          top: 40,
-          right: -110,
-          child: _GlowBlob(
-            size: 260,
-            colors: [Color(0x20FF4FD8), Color(0x00FF4FD8)],
-          ),
-        ),
-        Positioned(
-          bottom: -140,
-          right: 80,
+          top: 30,
+          right: -130,
           child: _GlowBlob(
             size: 320,
-            colors: [Color(0x188B5CF6), Color(0x008B5CF6)],
+            colors: [Color(0x44FF4FD8), Color(0x00FF4FD8)],
+          ),
+        ),
+        Positioned(
+          bottom: -160,
+          right: 60,
+          child: _GlowBlob(
+            size: 360,
+            colors: [Color(0x338B5CF6), Color(0x008B5CF6)],
           ),
         ),
       ],

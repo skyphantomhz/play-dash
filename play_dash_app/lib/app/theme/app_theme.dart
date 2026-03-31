@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class AppTheme {
   const AppTheme._();
 
-  static const Color _bg = Color(0xFF000000);
+  static const Color _bg = Color(0xFF03071A);
   static const Color _cyan = Color(0xFF37D8FF);
   static const Color _blue = Color(0xFF4DA3FF);
   static const Color _purple = Color(0xFF8B5CF6);
@@ -20,7 +20,7 @@ class AppTheme {
       primary: _cyan,
       secondary: _blue,
       tertiary: _pink,
-      surface: _bg,
+      surface: const Color(0xFF03071A),
       onSurface: Colors.white,
       onSurfaceVariant: Colors.white70,
       outline: const Color(0x33FFFFFF),
@@ -30,7 +30,7 @@ class AppTheme {
     final base = ThemeData(
       brightness: brightness,
       colorScheme: scheme,
-      scaffoldBackgroundColor: _bg,
+      scaffoldBackgroundColor: const Color(0xFF03071A),
       useMaterial3: true,
       fontFamily: 'Inter',
     );
