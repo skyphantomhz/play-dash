@@ -11,6 +11,7 @@ import '../../../shared/widgets/app_shell.dart';
 import '../../../shared/widgets/game_over_dialog.dart';
 import '../../../shared/widgets/interactive_dartboard.dart';
 import '../../../shared/services/feedback_service.dart';
+import '../../../features/settings/application/feedback_settings_provider.dart';
 import '../application/x01_controller.dart';
 
 String x01FormatThrow(DartThrow dartThrow) {
@@ -604,7 +605,7 @@ class _RuleHintBadge extends StatelessWidget {
 // _BoardStage
 // ---------------------------------------------------------------------------
 
-class _BoardStage extends StatelessWidget {
+class _BoardStage extends ConsumerWidget {
   const _BoardStage({
     required this.controller,
     required this.winner,
@@ -622,7 +623,10 @@ class _BoardStage extends StatelessWidget {
   final bool compact;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final feedbackSettings = ref.watch(feedbackSettingsProvider);
+    final audioEnabled = feedbackSettings.audioEnabled;
+
     return NeonCard(
       accent: const Color(0xFF37D8FF),
       secondaryAccent: const Color(0xFFFF4FD8),
@@ -632,6 +636,7 @@ class _BoardStage extends StatelessWidget {
             title: winner == null ? 'Game Screen' : '${winner!.name} Wins',
             subtitle:
                 'Tap the board to score. Buttons update from controller state.',
+            trailing: _MuteToggleButton(audioEnabled: audioEnabled),
           ),
           const SizedBox(height: 14),
           RepaintBoundary(
@@ -842,7 +847,7 @@ class _ScoreRail extends StatelessWidget {
 // _BottomActions
 // ---------------------------------------------------------------------------
 
-class _BottomActions extends StatelessWidget {
+class _BottomActions extends ConsumerWidget {
   const _BottomActions({
     required this.controller,
     required this.canUndo,
@@ -854,7 +859,8 @@ class _BottomActions extends StatelessWidget {
   final bool canEndTurn;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final audioEnabled = ref.watch(feedbackSettingsProvider).audioEnabled;
     return Row(
       children: [
         Expanded(
@@ -865,6 +871,8 @@ class _BottomActions extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 10),
+        _MuteToggleButton(audioEnabled: audioEnabled),
+        const SizedBox(width: 10),
         Expanded(
           child: GlassButton(
             label: 'End Turn',
@@ -874,6 +882,58 @@ class _BottomActions extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// _MuteToggleButton — shared mute/unmute icon button
+// ---------------------------------------------------------------------------
+
+class _MuteToggleButton extends ConsumerWidget {
+  const _MuteToggleButton({required this.audioEnabled});
+
+  final bool audioEnabled;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Tooltip(
+      message: audioEnabled ? 'Mute audio' : 'Unmute audio',
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            ref
+                .read(feedbackSettingsProvider.notifier)
+                .setAudioEnabled(!audioEnabled);
+          },
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              color: audioEnabled
+                  ? Colors.white.withValues(alpha: 0.07)
+                  : const Color(0xFFFF4FD8).withValues(alpha: 0.15),
+              border: Border.all(
+                color: audioEnabled
+                    ? Colors.white.withValues(alpha: 0.10)
+                    : const Color(0xFFFF4FD8).withValues(alpha: 0.40),
+                width: 1.0,
+              ),
+            ),
+            child: Icon(
+              audioEnabled
+                  ? Icons.volume_up_rounded
+                  : Icons.volume_off_rounded,
+              size: 20,
+              color: audioEnabled
+                  ? Colors.white.withValues(alpha: 0.75)
+                  : const Color(0xFFFF4FD8),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

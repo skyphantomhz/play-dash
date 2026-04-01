@@ -8,6 +8,7 @@ import '../../../shared/widgets/app_shell.dart';
 import '../../../shared/widgets/game_over_dialog.dart';
 import '../../../shared/widgets/interactive_dartboard.dart';
 import '../../../shared/services/feedback_service.dart';
+import '../../../features/settings/application/feedback_settings_provider.dart';
 import '../application/cricket_controller.dart';
 
 String cricketFormatThrow(DartThrow dartThrow) {
@@ -100,6 +101,7 @@ class _CricketGamePageState extends ConsumerState<CricketGamePage> {
     final latestScore =
         latestThrow == null ? 0 : latestThrow.segment * latestThrow.multiplier;
     final canEndTurn = winner == null && currentTurnThrows.isNotEmpty;
+    final audioEnabled = ref.watch(feedbackSettingsProvider).audioEnabled;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -135,9 +137,16 @@ class _CricketGamePageState extends ConsumerState<CricketGamePage> {
                                   : '${winner.name} Wins',
                               subtitle:
                                   'Interactive board writes throws into the live Cricket controller.',
-                              trailing: ScoreBadge(
-                                value: canUndo ? 'Undo Ready' : 'Locked',
-                                highlight: canUndo,
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  _CricketMuteButton(audioEnabled: audioEnabled),
+                                  const SizedBox(width: 8),
+                                  ScoreBadge(
+                                    value: canUndo ? 'Undo Ready' : 'Locked',
+                                    highlight: canUndo,
+                                  ),
+                                ],
                               ),
                             ),
                             const SizedBox(height: 16),
@@ -271,9 +280,16 @@ class _CricketGamePageState extends ConsumerState<CricketGamePage> {
                                 : '${winner.name} Wins',
                             subtitle:
                                 'Mobile board view uses the same live controller state.',
-                            trailing: ScoreBadge(
-                              value: canUndo ? 'Undo' : 'Locked',
-                              highlight: canUndo,
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                _CricketMuteButton(audioEnabled: audioEnabled),
+                                const SizedBox(width: 8),
+                                ScoreBadge(
+                                  value: canUndo ? 'Undo' : 'Locked',
+                                  highlight: canUndo,
+                                ),
+                              ],
                             ),
                           ),
                           const SizedBox(height: 14),
@@ -600,6 +616,58 @@ class _CricketPlayerCard extends StatelessWidget {
             }).toList(),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// _CricketMuteButton — quick mute/unmute icon button for the board heading
+// ---------------------------------------------------------------------------
+
+class _CricketMuteButton extends ConsumerWidget {
+  const _CricketMuteButton({required this.audioEnabled});
+
+  final bool audioEnabled;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Tooltip(
+      message: audioEnabled ? 'Mute audio' : 'Unmute audio',
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            ref
+                .read(feedbackSettingsProvider.notifier)
+                .setAudioEnabled(!audioEnabled);
+          },
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              color: audioEnabled
+                  ? Colors.white.withValues(alpha: 0.07)
+                  : const Color(0xFFFF4FD8).withValues(alpha: 0.15),
+              border: Border.all(
+                color: audioEnabled
+                    ? Colors.white.withValues(alpha: 0.10)
+                    : const Color(0xFFFF4FD8).withValues(alpha: 0.40),
+                width: 1.0,
+              ),
+            ),
+            child: Icon(
+              audioEnabled
+                  ? Icons.volume_up_rounded
+                  : Icons.volume_off_rounded,
+              size: 20,
+              color: audioEnabled
+                  ? Colors.white.withValues(alpha: 0.75)
+                  : const Color(0xFFFF4FD8),
+            ),
+          ),
+        ),
       ),
     );
   }
