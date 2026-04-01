@@ -1109,6 +1109,12 @@ const _primaryNavItems = <_PrimaryNavItem>[
     label: 'Setup',
     shortLabel: 'Setup',
     branchIndex: 2,
-    icon: Icons.settings_outlined,
+    icon: Icons.sports_bar_rounded,
+  ),
+  _PrimaryNavItem(
+    label: 'Settings',
+    shortLabel: 'Prefs',
+    branchIndex: 3,
+    icon: Icons.tune_rounded,
   ),
 ];
