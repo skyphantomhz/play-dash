@@ -13,7 +13,7 @@ services:
     container_name: playdash_tunnel
     restart: unless-stopped
     # Use your specific Cloudflare Tunnel token
-    command: tunnel run --token YOUR_CLOUDFLARE_TUNNEL_TOKEN_HERE
+    command: tunnel run --token ${TUNNEL_TOKEN}
     # Use the web container's network so cloudflared can access "http://localhost:8000"
     # just like your local setup, without changing the Cloudflare Zero Trust Dashboard!
     network_mode: "service:web"
