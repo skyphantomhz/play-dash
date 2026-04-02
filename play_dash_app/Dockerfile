@@ -1,5 +1,5 @@
 # Stage 1: Build the Flutter Web app
-FROM ghcr.io/cirruslabs/flutter:3.22.0 AS build
+FROM ghcr.io/cirruslabs/flutter:3.41.6 AS build
 
 WORKDIR /app
 COPY . .
