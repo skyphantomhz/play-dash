@@ -19,12 +19,15 @@ COPY --from=build /app/build/web /usr/share/nginx/html
 
 # Cloudflare Tunnel expects port 8000 based on your current config
 # We create a custom nginx config to listen on 8000 and handle SPA routing
+# IMPORTANT: WebAssembly in Flutter requires COOP and COEP headers!
 RUN echo 'server { \
     listen 8000; \
     location / { \
         root /usr/share/nginx/html; \
         index index.html index.htm; \
         try_files $uri $uri/ /index.html; \
+        add_header Cross-Origin-Embedder-Policy "require-corp"; \
+        add_header Cross-Origin-Opener-Policy "same-origin"; \
     } \
 }' > /etc/nginx/conf.d/default.conf
 
